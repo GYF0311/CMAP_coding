@@ -67,3 +67,13 @@ confidence: medium
 **Verification:** `pnpm test tests/integration/cli-errors.test.ts` and `pnpm smoke` passed after fixes.
 **Memory Impact:** Added smoke script to MAP/VERIFY/tests module.
 **Next:** Run full verification and commit.
+
+## 2026-05-10 — verify L0 drift hardening
+
+**Goal:** Make `verify` catch more real `.context` drift before users trust a stale map.
+**Changed:** Added checks for MAP module table docs, AGENTS/CLAUDE entrypoint drift, and TODO residue inside module docs.
+**Tried:** Wrote failing integration tests first; enhanced verify then exposed a real placeholder residue in this repo's own `verify` module doc.
+**Result:** Fixed the self-detected residue and updated verify module responsibilities.
+**Verification:** `pnpm test tests/integration/verify-l0.test.ts` and `pnpm dev verify` passed after fixes.
+**Memory Impact:** Updated VERIFY and tests module docs.
+**Next:** Run full verification plus smoke, then commit.

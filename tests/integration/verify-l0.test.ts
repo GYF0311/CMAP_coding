@@ -1,0 +1,66 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { describe, expect, test } from "vitest";
+import { createTempProject, runCmap } from "../helpers.js";
+
+describe("verify L0 drift checks", () => {
+  test("reports MAP module table docs that do not exist", async () => {
+    const cwd = await createTempProject("verify-map-doc");
+    await runCmap(["init", "--auto"], cwd);
+    const mapPath = path.join(cwd, ".context", "MAP.md");
+    const map = await readFile(mapPath, "utf8");
+    await writeFile(
+      mapPath,
+      map.replace(
+        "| TODO(ai-fill) | TODO(ai-fill) | TODO(ai-fill) | TODO(ai-fill) | TODO(ai-fill) |",
+        "| billing | Payments | `src/billing` | `.context/modules/billing.md` | billing |"
+      ),
+      "utf8"
+    );
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("MAP.md references missing module doc: .context/modules/billing.md");
+  });
+
+  test("warns when AGENTS.md and CLAUDE.md drift apart", async () => {
+    const cwd = await createTempProject("verify-entrypoints");
+    await runCmap(["init", "--auto"], cwd);
+    await runCmap(["install", "--host", "both"], cwd);
+    await writeFile(path.join(cwd, "CLAUDE.md"), "# Different\n", "utf8");
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("AGENTS.md and CLAUDE.md differ");
+  });
+
+  test("warns about TODO(ai-fill) inside module docs", async () => {
+    const cwd = await createTempProject("verify-module-todo");
+    await runCmap(["init", "--auto"], cwd);
+    await mkdir(path.join(cwd, ".context", "modules"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context", "modules", "chat.md"),
+      `---
+context_type: module
+module: chat
+paths:
+  - src/chat
+aliases:
+  - chat
+confidence: candidate
+---
+# Module: chat
+
+## Purpose
+TODO(ai-fill)
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.stdout).toContain(".context/modules/chat.md contains TODO(ai-fill)");
+  });
+});

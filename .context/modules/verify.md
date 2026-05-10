@@ -14,7 +14,7 @@ aliases:
   - drift
   - 校验
   - 检查
-  - TODO(ai-fill)
+  - placeholder
 ---
 # Module: verify
 
@@ -28,8 +28,11 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Check required files exist.
 - Parse frontmatter and warn on missing `context_type`.
 - Check required headings in canonical files.
-- Warn on `TODO(ai-fill)` placeholders.
+- Warn on generated placeholder residue.
 - Check module frontmatter paths stay inside the project and exist.
+- Check MAP module table docs exist.
+- Warn when AGENTS.md and CLAUDE.md drift apart.
+- Warn about AI-fill placeholders inside module docs.
 - Return exit code 1 only for errors.
 
 ## Depends On

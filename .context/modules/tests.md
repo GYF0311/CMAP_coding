@@ -29,6 +29,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m3.test.ts`
 - `tests/integration/m4m5.test.ts`
 - `tests/integration/cli-errors.test.ts`
+- `tests/integration/verify-l0.test.ts`
 - `scripts/smoke-test.mjs`
 
 ## Responsibilities

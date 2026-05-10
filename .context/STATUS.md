@@ -3,37 +3,34 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-10T10:14:11.780Z'
+updated_at: '2026-05-10T10:17:32.599Z'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Harden cmap v0.1 with built-CLI smoke testing
+Harden verify L0 drift detection
 
 ## Done Recently
-Fixed usage-error exit semantics and added pnpm smoke for built dist/cli.js
+Added tests and implementation for MAP module doc references, AGENTS/CLAUDE drift, and module-doc placeholder residue
 
 ## Left Off
-Smoke test and targeted cli-errors test passed; full verification pending
+Targeted verify-l0 tests and self-verify pass
 
 ## Next Steps
-Run pnpm test, pnpm typecheck, pnpm build, pnpm dev verify, pnpm smoke; commit if clean
+Run full test/typecheck/build/self-verify/smoke; commit if clean
 
 ## Changed Files
-- src/cli.ts
-- tests/integration/cli-errors.test.ts
-- package.json
-- scripts/smoke-test.mjs
-- README.md
-- .context/MAP.md
+- src/commands/verify.ts
+- tests/integration/verify-l0.test.ts
+- .context/modules/verify.md
 - .context/VERIFY.md
 - .context/modules/tests.md
 - .context/logs/current.md
 - .context/STATUS.md
 
 ## Risks
-Smoke leaves temporary projects under OS temp for inspection instead of deleting them
+Stricter module-doc placeholder detection may warn on documentation that mentions the literal placeholder string
 
 ## Last Verified
-pnpm test tests/integration/cli-errors.test.ts passed; pnpm smoke passed
+pnpm test tests/integration/verify-l0.test.ts passed; pnpm dev verify passed with zero warnings

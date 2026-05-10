@@ -68,7 +68,9 @@ export async function verifyContext(cwd: string): Promise<VerifyReport> {
     await checkMarkdownFile(path.join(contextRoot, relative), relative, report);
   }
 
+  await checkMapModuleDocs(contextRoot, report);
   await checkModuleReferences(contextRoot, report);
+  await checkEntrypoints(cwd, report);
 
   return report;
 }
@@ -114,6 +116,9 @@ async function checkModuleReferences(contextRoot: string, report: VerifyReport):
   for (const entry of entries.filter((item) => item.endsWith(".md"))) {
     const modulePath = path.join(modulesRoot, entry);
     const raw = await readFile(modulePath, "utf8");
+    if (raw.includes("TODO(ai-fill)")) {
+      report.issues.push({ level: "warning", message: `.context/modules/${entry} contains TODO(ai-fill)` });
+    }
     const parsed = matter(raw);
     const paths = parsed.data.paths;
     if (Array.isArray(paths)) {
@@ -130,6 +135,78 @@ async function checkModuleReferences(contextRoot: string, report: VerifyReport):
         }
       }
     }
+  }
+}
+
+async function checkMapModuleDocs(contextRoot: string, report: VerifyReport): Promise<void> {
+  const mapPath = path.join(contextRoot, "MAP.md");
+  if (!(await fileExists(mapPath))) {
+    return;
+  }
+
+  const map = await readFile(mapPath, "utf8");
+  for (const moduleDoc of moduleDocsFromMapTable(map)) {
+    const absoluteDoc = path.resolve(path.dirname(contextRoot), moduleDoc);
+    if (!(await isInside(path.dirname(contextRoot), absoluteDoc)) || !(await fileExists(absoluteDoc))) {
+      report.issues.push({ level: "error", message: `MAP.md references missing module doc: ${moduleDoc}` });
+    }
+  }
+}
+
+function moduleDocsFromMapTable(map: string): string[] {
+  const docs: string[] = [];
+  const lines = map.split(/\r?\n/);
+  let inModuleMap = false;
+  let docIndex = -1;
+
+  for (const line of lines) {
+    if (line.trim() === "## Module Map") {
+      inModuleMap = true;
+      continue;
+    }
+    if (inModuleMap && line.startsWith("## ")) {
+      break;
+    }
+    if (!inModuleMap || !line.trim().startsWith("|")) {
+      continue;
+    }
+
+    const cells = parseMarkdownTableRow(line);
+    if (cells.length === 0 || cells.every((cell) => /^-+$/.test(cell))) {
+      continue;
+    }
+    if (docIndex === -1) {
+      docIndex = cells.findIndex((cell) => cell.toLocaleLowerCase() === "doc");
+      continue;
+    }
+    const doc = cells[docIndex]?.replace(/`/g, "").trim();
+    if (doc && !doc.includes("TODO(ai-fill)") && doc.startsWith(".context/modules/")) {
+      docs.push(doc);
+    }
+  }
+
+  return docs;
+}
+
+function parseMarkdownTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+async function checkEntrypoints(cwd: string, report: VerifyReport): Promise<void> {
+  const agentsPath = path.join(cwd, "AGENTS.md");
+  const claudePath = path.join(cwd, "CLAUDE.md");
+  if (!(await fileExists(agentsPath)) || !(await fileExists(claudePath))) {
+    return;
+  }
+
+  const [agents, claude] = await Promise.all([readFile(agentsPath, "utf8"), readFile(claudePath, "utf8")]);
+  if (agents !== claude) {
+    report.issues.push({ level: "warning", message: "AGENTS.md and CLAUDE.md differ" });
   }
 }
 
