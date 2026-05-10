@@ -91,4 +91,5 @@ pnpm test
 pnpm typecheck
 pnpm build
 pnpm dev verify
+pnpm smoke
 ```

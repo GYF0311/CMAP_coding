@@ -27,6 +27,7 @@ confidence: ai-drafted
 - Tests: `tests/integration/*.test.ts`
 - Product spec: `cmap_v0.1_PRD_and_execution_manual.md`
 - User-facing README: `README.md`
+- Built CLI smoke test: `scripts/smoke-test.mjs`
 
 ## Module Map
 | Module | Purpose | Paths | Doc | Aliases |
@@ -43,7 +44,7 @@ confidence: ai-drafted
 | adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
 | module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
 | hooks-doctor | hook templates, hook reminder output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, 诊断 |
-| tests | integration behavior coverage for CLI milestones | `tests` | `.context/modules/tests.md` | test, vitest, 集成测试, 行为测试 |
+| tests | integration and built-CLI smoke coverage for CLI milestones | `tests`, `scripts/smoke-test.mjs` | `.context/modules/tests.md` | test, vitest, smoke, 自测, 集成测试, 行为测试 |
 
 ## Natural Language Route
 | User Words | Module | Read First |

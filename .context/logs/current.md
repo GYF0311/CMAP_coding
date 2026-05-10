@@ -57,3 +57,13 @@ confidence: medium
 **Verification:** Pending final full verification after this doc update.
 **Memory Impact:** Added README to MAP entrypoints.
 **Next:** Run final test/typecheck/build/self-verify and built CLI smoke test.
+
+## 2026-05-10 — Built CLI smoke and usage-error hardening
+
+**Goal:** Add a post-build self-test and fix CLI usage-error behavior.
+**Changed:** Added `tests/integration/cli-errors.test.ts`, changed unknown command handling to exit 2 without duplicate messages, added `pnpm smoke`, and added `scripts/smoke-test.mjs`.
+**Tried:** First smoke run failed because the temp project added a module path without creating the matching source directory.
+**Result:** Smoke script now creates the source path, then runs built CLI commands through version/init/install/add-module/route/checkpoint/verify/unknown-command checks.
+**Verification:** `pnpm test tests/integration/cli-errors.test.ts` and `pnpm smoke` passed after fixes.
+**Memory Impact:** Added smoke script to MAP/VERIFY/tests module.
+**Next:** Run full verification and commit.

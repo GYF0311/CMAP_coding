@@ -31,6 +31,7 @@ confidence: ai-drafted
 | adoption | `pnpm test tests/integration/m4m5.test.ts` | Adopt writes ADOPTION candidate signals without promoting them into MAP. |
 | module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
 | hooks-doctor | `pnpm test tests/integration/m4m5.test.ts` | install writes hook templates; hooks print reminders; doctor sees state. |
+| release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.

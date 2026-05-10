@@ -8,9 +8,12 @@ confidence: ai-drafted
 module: tests
 paths:
   - tests
+  - scripts/smoke-test.mjs
 aliases:
   - test
   - vitest
+  - smoke
+  - 自测
   - 集成测试
   - 行为测试
   - red green
@@ -18,20 +21,27 @@ aliases:
 # Module: tests
 
 ## Purpose
-Prove public CLI behavior with reproducible integration tests.
+Prove public CLI behavior with reproducible integration tests and built-CLI smoke checks.
 
 ## Code Paths
 - `tests/integration/m1.test.ts`
+- `tests/integration/m2.test.ts`
+- `tests/integration/m3.test.ts`
+- `tests/integration/m4m5.test.ts`
+- `tests/integration/cli-errors.test.ts`
+- `scripts/smoke-test.mjs`
 
 ## Responsibilities
 - Spawn the CLI in temporary project directories.
 - Assert stdout/stderr-sensitive behavior and exit codes.
 - Assert generated files contain expected content and do not invent project semantics.
+- Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On
 - Vitest
 - Node child_process, fs, os, path APIs
 - Repo-local `node_modules/.bin/tsx`
+- Built `dist/cli.js` for smoke tests
 
 ## Used By
 - Development workflow before claiming completion.
@@ -52,6 +62,7 @@ Temporary directories under the system temp path.
 
 ## Tests / Verification
 - `pnpm test`
+- `pnpm smoke`
 
 ## When to Update This Doc
 When changing test harness strategy, adding fixtures, or changing public behavior contracts.

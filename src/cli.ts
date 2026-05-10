@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { Command } from "commander";
+import { Command, CommanderError } from "commander";
 import { runAddModule } from "./commands/add-module.js";
 import { runAdopt } from "./commands/adopt.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
@@ -14,6 +14,7 @@ import { runLogAdd } from "./commands/log.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
 import { runVerify } from "./commands/verify.js";
+import { CmapCommandError } from "./errors.js";
 import { readPackageVersion } from "./version.js";
 
 const program = new Command();
@@ -198,12 +199,12 @@ program
 try {
   await program.parseAsync(process.argv);
 } catch (error) {
-  if (error && typeof error === "object" && "exitCode" in error) {
+  if (error instanceof CmapCommandError) {
+    process.exitCode = error.exitCode;
+    process.stderr.write(`${error.message}\n`);
+  } else if (error instanceof CommanderError) {
     const commanderError = error as { exitCode: number; message: string };
-    process.exitCode = commanderError.exitCode === 0 ? 0 : commanderError.exitCode;
-    if (commanderError.exitCode !== 0) {
-      process.stderr.write(`${commanderError.message}\n`);
-    }
+    process.exitCode = commanderError.exitCode === 0 ? 0 : 2;
   } else {
     process.exitCode = 2;
     process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);

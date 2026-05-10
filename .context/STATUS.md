@@ -3,31 +3,37 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-10T10:09:48.965Z'
+updated_at: '2026-05-10T10:14:11.780Z'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Finish cmap v0.1 release-facing baseline
+Harden cmap v0.1 with built-CLI smoke testing
 
 ## Done Recently
-v0.1 command surface implemented and README added
+Fixed usage-error exit semantics and added pnpm smoke for built dist/cli.js
 
 ## Left Off
-Final verification pending after README/context update
+Smoke test and targeted cli-errors test passed; full verification pending
 
 ## Next Steps
-Run pnpm test, pnpm typecheck, pnpm build, pnpm dev verify, and node dist/cli.js version; commit if clean
+Run pnpm test, pnpm typecheck, pnpm build, pnpm dev verify, pnpm smoke; commit if clean
 
 ## Changed Files
+- src/cli.ts
+- tests/integration/cli-errors.test.ts
+- package.json
+- scripts/smoke-test.mjs
 - README.md
 - .context/MAP.md
+- .context/VERIFY.md
+- .context/modules/tests.md
 - .context/logs/current.md
 - .context/STATUS.md
 
 ## Risks
-v0.1 is local-only and deterministic; no package publish workflow has been added yet
+Smoke leaves temporary projects under OS temp for inspection instead of deleting them
 
 ## Last Verified
-Previous full verification passed before README update
+pnpm test tests/integration/cli-errors.test.ts passed; pnpm smoke passed

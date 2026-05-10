@@ -9,7 +9,8 @@
     "build": "tsup src/cli.ts --format esm --dts",
     "test": "vitest run",
     "dev": "tsx src/cli.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "smoke": "pnpm build && node scripts/smoke-test.mjs"
   },
   "dependencies": {
     "commander": "latest",
