@@ -27,3 +27,13 @@ confidence: medium
 **Verification:** `pnpm test tests/integration/m2.test.ts` passed after the fix.
 **Memory Impact:** Added route and handoff modules to `MAP.md`.
 **Next:** Run full verification and move to M3.
+
+## 2026-05-10 — M3 cp, finish, log, idea
+
+**Goal:** Add deterministic file-block and closeout commands.
+**Changed:** Added `src/commands/cp.ts`, `src/commands/finish.ts`, `src/commands/log.ts`, `src/commands/idea.ts`, and shared fs helpers for safe paths, line-block manipulation, and backups.
+**Tried:** Wrote M3 integration tests first; initial run failed because commands were unregistered.
+**Result:** Implemented `cp copy/move/delete/restore`, `finish --changed`, `log add`, and `idea add`.
+**Verification:** `pnpm test`, `pnpm typecheck`, and `pnpm build` passed after implementation.
+**Memory Impact:** Added cp, finish, and memory-lite modules to the project map.
+**Next:** Implement M4/M5: `adopt`, `add-module`, `doctor`, and optional hook generation.

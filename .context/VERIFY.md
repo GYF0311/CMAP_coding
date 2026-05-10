@@ -25,6 +25,9 @@ confidence: ai-drafted
 | host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
 | route | `pnpm dev route "checkpoint 更新当前主线"` | Should recommend handoff, not verify through `check` substring. |
 | handoff | `pnpm dev status` | Prints current `STATUS.md`; checkpoint writes only explicit fields. |
+| cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
+| finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report and does not modify trusted memory. |
+| memory-lite | `pnpm test tests/integration/m3.test.ts` | `log add` and `idea add` append only to logs/ideas. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.
@@ -32,6 +35,7 @@ confidence: ai-drafted
 ## Manual Verification
 - Inspect generated `.context/MAP.md` from `init` and confirm it contains placeholders, not guessed modules.
 - Inspect generated `AGENTS.md`/`CLAUDE.md` and confirm they are short entrypoints, not full PRD copies.
+- For any command that rewrites files, inspect whether it creates a backup or only appends to non-canonical logs/ideas.
 
 ## Known Flaky Checks
 None known yet.

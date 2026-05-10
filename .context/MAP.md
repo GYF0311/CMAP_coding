@@ -36,6 +36,9 @@ confidence: ai-drafted
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
 | route | keyword and alias based module routing | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
 | handoff | current status printing and explicit checkpoint updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
+| cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
+| finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
+| memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
 | tests | integration behavior coverage for CLI milestones | `tests` | `.context/modules/tests.md` | test, vitest, 集成测试, 行为测试 |
 
 ## Natural Language Route
@@ -47,6 +50,9 @@ confidence: ai-drafted
 | AGENTS、CLAUDE、宿主入口、host | host | `.context/modules/host.md`, `src/host/entrypoint-template.ts` |
 | route、alias、模块定位、推荐读取文件 | route | `.context/modules/route.md`, `src/commands/route.ts` |
 | checkpoint、status、续接、上下文压缩、当前主线 | handoff | `.context/modules/handoff.md`, `src/commands/checkpoint.ts`, `src/commands/status.ts` |
+| cp、copy、move、delete、restore、行块、搬运、备份 | cp | `.context/modules/cp.md`, `src/commands/cp.ts`, `src/fs/line-block.ts` |
+| finish、收尾、closeout、context review | finish | `.context/modules/finish.md`, `src/commands/finish.ts` |
+| log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
 | 测试、红绿、M1 验收、fixture | tests | `.context/modules/tests.md`, `tests/integration/m1.test.ts` |
 
 ## Module Relationships
@@ -56,6 +62,9 @@ confidence: ai-drafted
 - `host` generates entrypoint text used by `install`.
 - `route` reads module docs and recommends context files; it must not propose nonexistent modules.
 - `handoff` reads and writes `STATUS.md` from explicit user/AI fields.
+- `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
+- `finish` reads changed file hints and module docs to produce a read-only closeout report.
+- `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
@@ -81,4 +90,4 @@ None in v0.1. The CLI is local-only and has no telemetry, no cloud account, no m
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories.
 
 ## Handoff Notes
-Current implementation covers M1 and M2. Next work should add M3 commands with tests first: `cp` line-block operations, `finish` report, `log add`, and `idea add`.
+Current implementation covers M1, M2, and M3. Next work should add M4/M5 commands with tests first: `adopt`, `add-module`, `doctor`, and optional hooks reminder/maintain generation.

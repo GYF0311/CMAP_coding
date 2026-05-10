@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-10T09:52:53.952Z'
+updated_at: '2026-05-10T10:01:38.685Z'
 confidence: ai-drafted
 ---
 # Status
@@ -12,27 +12,30 @@ confidence: ai-drafted
 Build cmap v0.1 from zero through staged CLI milestones
 
 ## Done Recently
-M1 and M2 implemented: version/init/verify/install plus route/status/checkpoint with integration tests
+M1, M2, and M3 implemented: core init/verify/install, route/status/checkpoint, cp/finish/log/idea
 
 ## Left Off
-Ready to start M3 after full verification
+Ready to implement M4/M5 after committing M3
 
 ## Next Steps
-Implement cp line-block operations, finish report, log add, and idea add with tests first
+Implement adopt, add-module, doctor, and optional hooks reminder/maintain with tests first
 
 ## Changed Files
-- src/commands/route.ts
-- src/commands/status.ts
-- src/commands/checkpoint.ts
-- src/cli.ts
-- tests/integration/m2.test.ts
-- tests/helpers.ts
+- src/commands/cp.ts
+- src/commands/finish.ts
+- src/commands/log.ts
+- src/commands/idea.ts
+- src/fs/safe-path.ts
+- src/fs/line-block.ts
+- src/fs/backup.ts
+- tests/integration/m3.test.ts
 - .context/MAP.md
-- .context/modules/route.md
-- .context/modules/handoff.md
+- .context/modules/cp.md
+- .context/modules/finish.md
+- .context/modules/memory-lite.md
 
 ## Risks
-No git repository yet; route is deterministic keyword matching and must not be treated as semantic truth
+cp rewrites file content; keep backup/restore behavior covered before expanding syntax
 
 ## Last Verified
-pnpm test tests/integration/m2.test.ts passed; full verification still pending
+pnpm test, pnpm typecheck, and pnpm build passed after M3 implementation

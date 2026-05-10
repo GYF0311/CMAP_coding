@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { runCheckpoint } from "./commands/checkpoint.js";
+import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
+import { runFinish } from "./commands/finish.js";
+import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
+import { runLogAdd } from "./commands/log.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
 import { runVerify } from "./commands/verify.js";
@@ -83,6 +87,58 @@ program
     }
   );
 
+const cp = program.command("cp").description("Move/copy/delete/restore existing line blocks");
+
+cp.command("copy")
+  .argument("<from>", "file:start-end")
+  .argument("<to>", "file:start|end|line")
+  .action(async (from: string, to: string) => {
+    await runCpCopy(process.cwd(), from, to);
+  });
+
+cp.command("move")
+  .argument("<from>", "file:start-end")
+  .argument("<to>", "file:start|end|line")
+  .action(async (from: string, to: string) => {
+    await runCpMove(process.cwd(), from, to);
+  });
+
+cp.command("delete")
+  .argument("<target>", "file:start-end")
+  .action(async (target: string) => {
+    await runCpDelete(process.cwd(), target);
+  });
+
+cp.command("restore")
+  .argument("<backupId>", "Backup id printed by move/delete")
+  .action(async (backupId: string) => {
+    await runCpRestore(process.cwd(), backupId);
+  });
+
+const log = program.command("log").description("Append work logs");
+log
+  .command("add")
+  .argument("<text>", "Work log summary")
+  .action(async (text: string) => {
+    await runLogAdd(process.cwd(), text);
+  });
+
+const idea = program.command("idea").description("Append non-canonical ideas");
+idea
+  .command("add")
+  .argument("<text>", "Idea summary")
+  .action(async (text: string) => {
+    await runIdeaAdd(process.cwd(), text);
+  });
+
+program
+  .command("finish")
+  .description("Print a QA-lite context closeout report")
+  .option("--changed <csv>", "Changed files, comma-separated")
+  .action(async (options: { changed?: string }) => {
+    await runFinish(process.cwd(), options);
+  });
+
 program
   .command("install")
   .description("Install short AI host entrypoints")
@@ -97,7 +153,7 @@ try {
 } catch (error) {
   if (error && typeof error === "object" && "exitCode" in error) {
     const commanderError = error as { exitCode: number; message: string };
-    process.exitCode = commanderError.exitCode === 0 ? 0 : 2;
+    process.exitCode = commanderError.exitCode === 0 ? 0 : commanderError.exitCode;
     if (commanderError.exitCode !== 0) {
       process.stderr.write(`${commanderError.message}\n`);
     }
