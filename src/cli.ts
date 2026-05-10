@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { runAddModule } from "./commands/add-module.js";
+import { runAdopt } from "./commands/adopt.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
+import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
+import { runHookSessionStart, runHookStop } from "./commands/hooks.js";
 import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
@@ -33,6 +37,13 @@ program
   .option("--auto", "Create default templates without prompting")
   .action(async (options: { auto?: boolean }) => {
     await runInit(process.cwd(), options);
+  });
+
+program
+  .command("adopt")
+  .description("Create an adoption workspace for an existing project")
+  .action(async () => {
+    await runAdopt(process.cwd());
   });
 
 program
@@ -87,6 +98,21 @@ program
     }
   );
 
+function collect(value: string, previous: string[]): string[] {
+  previous.push(value);
+  return previous;
+}
+
+program
+  .command("add-module")
+  .description("Create a candidate module doc")
+  .argument("<name>", "Module name")
+  .option("--path <path>", "Code path for this module", collect, [])
+  .option("--alias <alias>", "Natural-language alias", collect, [])
+  .action(async (name: string, options: { path: string[]; alias: string[] }) => {
+    await runAddModule(process.cwd(), name, options);
+  });
+
 const cp = program.command("cp").description("Move/copy/delete/restore existing line blocks");
 
 cp.command("copy")
@@ -137,6 +163,27 @@ program
   .option("--changed <csv>", "Changed files, comma-separated")
   .action(async (options: { changed?: string }) => {
     await runFinish(process.cwd(), options);
+  });
+
+const hooks = program.command("hooks").description("Print hook reminders");
+hooks
+  .command("session-start")
+  .option("--profile <profile>", "reminder or maintain", "reminder")
+  .action(async (options: { profile: "reminder" | "maintain" }) => {
+    await runHookSessionStart(process.cwd(), options);
+  });
+hooks
+  .command("stop")
+  .option("--profile <profile>", "reminder or maintain", "reminder")
+  .action(async (options: { profile: "reminder" | "maintain" }) => {
+    await runHookStop(process.cwd(), options);
+  });
+
+program
+  .command("doctor")
+  .description("Diagnose cmap context, entrypoints, and hook templates")
+  .action(async () => {
+    await runDoctor(process.cwd());
   });
 
 program

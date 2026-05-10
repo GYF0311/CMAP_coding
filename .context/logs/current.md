@@ -37,3 +37,13 @@ confidence: medium
 **Verification:** `pnpm test`, `pnpm typecheck`, and `pnpm build` passed after implementation.
 **Memory Impact:** Added cp, finish, and memory-lite modules to the project map.
 **Next:** Implement M4/M5: `adopt`, `add-module`, `doctor`, and optional hook generation.
+
+## 2026-05-10 — M4/M5 adopt, module docs, hooks, doctor
+
+**Goal:** Complete the remaining v0.1 CLI command surface.
+**Changed:** Added `adopt`, `add-module`, `doctor`, hook reminder commands, hook template generation in `install --hooks`, and adoption scanning.
+**Tried:** Wrote M4/M5 integration tests first; initial run failed because commands and hook template generation were missing.
+**Result:** Existing-project adoption now writes `ADOPTION.md` candidate signals, add-module creates candidate module docs, hooks only print reminders, and doctor diagnoses context/entrypoint/hook state.
+**Verification:** `pnpm test`, `pnpm typecheck`, and `pnpm build` passed after implementation.
+**Memory Impact:** Added adoption, module-docs, and hooks-doctor modules to MAP.
+**Next:** Polish README and release-facing docs, then run final v0.1 verification.

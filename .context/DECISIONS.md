@@ -23,3 +23,11 @@ confidence: high
 **Why:** This catches command wiring, cwd behavior, and filesystem side effects better than isolated function tests.
 **Impact:** Tests use this repo's local `node_modules/.bin/tsx` as the loader, while cwd stays inside a temp project.
 **Revisit if:** The package gains a stable built binary test harness.
+
+## 2026-05-10 — Hook install writes project-local templates only
+
+**Context:** v0.1 hooks should lower maintenance cost without taking over a host's global config or writing trusted memory.
+**Decision:** `install --hooks reminder|maintain` writes JSON templates under `.context/hooks/` and `cmap hooks ...` only prints reminders.
+**Why:** Project-local templates are inspectable, git-friendly, and avoid surprising host-level side effects.
+**Impact:** Users or future installers can copy these templates into host configs, while `doctor` can still detect the project-local hook profile.
+**Revisit if:** A later version adds explicit, confirmed host config installation.

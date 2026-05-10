@@ -39,6 +39,9 @@ confidence: ai-drafted
 | cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
+| adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
+| module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
+| hooks-doctor | hook templates, hook reminder output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, 诊断 |
 | tests | integration behavior coverage for CLI milestones | `tests` | `.context/modules/tests.md` | test, vitest, 集成测试, 行为测试 |
 
 ## Natural Language Route
@@ -53,6 +56,9 @@ confidence: ai-drafted
 | cp、copy、move、delete、restore、行块、搬运、备份 | cp | `.context/modules/cp.md`, `src/commands/cp.ts`, `src/fs/line-block.ts` |
 | finish、收尾、closeout、context review | finish | `.context/modules/finish.md`, `src/commands/finish.ts` |
 | log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
+| adopt、接管已有项目、候选模块、ADOPTION | adoption | `.context/modules/adoption.md`, `src/commands/adopt.ts` |
+| add-module、新模块文档、module template | module-docs | `.context/modules/module-docs.md`, `src/commands/add-module.ts` |
+| hooks、doctor、reminder、maintain、诊断 | hooks-doctor | `.context/modules/hooks-doctor.md`, `src/commands/hooks.ts`, `src/commands/doctor.ts` |
 | 测试、红绿、M1 验收、fixture | tests | `.context/modules/tests.md`, `tests/integration/m1.test.ts` |
 
 ## Module Relationships
@@ -65,6 +71,9 @@ confidence: ai-drafted
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
 - `finish` reads changed file hints and module docs to produce a read-only closeout report.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
+- `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
+- `module-docs` creates candidate module docs without editing MAP.
+- `hooks-doctor` writes project-local hook templates, prints reminders, and diagnoses install state.
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
@@ -90,4 +99,4 @@ None in v0.1. The CLI is local-only and has no telemetry, no cloud account, no m
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories.
 
 ## Handoff Notes
-Current implementation covers M1, M2, and M3. Next work should add M4/M5 commands with tests first: `adopt`, `add-module`, `doctor`, and optional hooks reminder/maintain generation.
+Current implementation covers v0.1 CLI commands. Next work should polish docs and run dogfood evaluation notes before treating v0.1 as release-ready.

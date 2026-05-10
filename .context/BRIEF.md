@@ -41,7 +41,7 @@ v0.1 先完成本地 TypeScript CLI：init、adopt、install、route、status、
 - 删除和搬运必须可恢复；涉及删除优先走备份或系统 Trash 语义。
 
 ## Current Stage
-M1/M2/M3 已实现：TS CLI、Vitest、`version`、`init --auto`、`verify`、`install --host both`、`route`、`status`、`checkpoint`、`cp`、`finish`、`log add`、`idea add`。下一阶段是 M4/M5：`adopt`、`add-module`、`doctor`、hooks reminder/maintain skeleton。
+v0.1 CLI 功能闭环已实现：`version`、`init --auto`、`adopt`、`install --host both`、`route`、`status`、`checkpoint`、`verify`、`finish`、`add-module`、`cp`、`log add`、`idea add`、`doctor`、hooks reminder/maintain skeleton。下一阶段是收尾：README、CLI polish、dogfood eval notes、发布前检查。
 
 ## Notes for AI
 先读 `MAP.md` 和 `STATUS.md`，再按任务用模块文档缩小读取范围。不要为了赶进度把 v0.2 能力塞进 v0.1，也不要让 CLI 代替 AI 编造项目事实。

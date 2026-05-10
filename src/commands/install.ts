@@ -1,6 +1,7 @@
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { hostEntrypoint } from "../host/entrypoint-template.js";
+import { writeHookTemplates, type HookHost, type HookProfile } from "../hooks/templates.js";
 
 type InstallOptions = {
   host: string;
@@ -32,6 +33,7 @@ export async function runInstall(cwd: string, options: InstallOptions): Promise<
 
   process.stdout.write(`Installed ${targets.join(", ")}\n`);
   if (options.hooks !== "none") {
-    process.stdout.write(`Hook profile "${options.hooks}" is reserved for a later milestone.\n`);
+    const written = await writeHookTemplates(cwd, options.host as HookHost, options.hooks as Exclude<HookProfile, "none">);
+    process.stdout.write(`Installed hook templates: ${written.join(", ")}\n`);
   }
 }

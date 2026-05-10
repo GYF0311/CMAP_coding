@@ -28,6 +28,9 @@ confidence: ai-drafted
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report and does not modify trusted memory. |
 | memory-lite | `pnpm test tests/integration/m3.test.ts` | `log add` and `idea add` append only to logs/ideas. |
+| adoption | `pnpm test tests/integration/m4m5.test.ts` | Adopt writes ADOPTION candidate signals without promoting them into MAP. |
+| module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
+| hooks-doctor | `pnpm test tests/integration/m4m5.test.ts` | install writes hook templates; hooks print reminders; doctor sees state. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.
@@ -36,6 +39,7 @@ confidence: ai-drafted
 - Inspect generated `.context/MAP.md` from `init` and confirm it contains placeholders, not guessed modules.
 - Inspect generated `AGENTS.md`/`CLAUDE.md` and confirm they are short entrypoints, not full PRD copies.
 - For any command that rewrites files, inspect whether it creates a backup or only appends to non-canonical logs/ideas.
+- Inspect `.context/hooks/*.json` and confirm templates call reminder commands only.
 
 ## Known Flaky Checks
 None known yet.
