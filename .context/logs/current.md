@@ -47,3 +47,13 @@ confidence: medium
 **Verification:** `pnpm test`, `pnpm typecheck`, and `pnpm build` passed after implementation.
 **Memory Impact:** Added adoption, module-docs, and hooks-doctor modules to MAP.
 **Next:** Polish README and release-facing docs, then run final v0.1 verification.
+
+## 2026-05-10 — v0.1 README polish
+
+**Goal:** Add release-facing README and close the v0.1 implementation loop.
+**Changed:** Added README with product positioning, quick start, command table, boundary rules, and verification commands.
+**Tried:** Kept README concise and aligned with the PRD's "project map, not AI coding full stack" boundary.
+**Result:** README now gives a usable first screen and command overview.
+**Verification:** Pending final full verification after this doc update.
+**Memory Impact:** Added README to MAP entrypoints.
+**Next:** Run final test/typecheck/build/self-verify and built CLI smoke test.

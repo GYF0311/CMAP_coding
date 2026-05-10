@@ -3,39 +3,31 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-10T10:08:16.265Z'
+updated_at: '2026-05-10T10:09:48.965Z'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Finish cmap v0.1 CLI and prepare release-facing docs
+Finish cmap v0.1 release-facing baseline
 
 ## Done Recently
-M1-M5 command surface implemented: init/adopt/install/route/status/checkpoint/verify/finish/add-module/cp/log/idea/doctor/hooks
+v0.1 command surface implemented and README added
 
 ## Left Off
-Core v0.1 commands are implemented and tested; README polish remains
+Final verification pending after README/context update
 
 ## Next Steps
-Write README first screen and usage examples, then run final verification and commit
+Run pnpm test, pnpm typecheck, pnpm build, pnpm dev verify, and node dist/cli.js version; commit if clean
 
 ## Changed Files
-- src/commands/adopt.ts
-- src/commands/add-module.ts
-- src/commands/doctor.ts
-- src/commands/hooks.ts
-- src/hooks/templates.ts
-- src/context/adoption-scanner.ts
-- src/commands/install.ts
-- tests/integration/m4m5.test.ts
+- README.md
 - .context/MAP.md
-- .context/modules/adoption.md
-- .context/modules/module-docs.md
-- .context/modules/hooks-doctor.md
+- .context/logs/current.md
+- .context/STATUS.md
 
 ## Risks
-Hook templates are project-local and not automatically installed into host global config
+v0.1 is local-only and deterministic; no package publish workflow has been added yet
 
 ## Last Verified
-pnpm test, pnpm typecheck, and pnpm build passed after M4/M5 implementation
+Previous full verification passed before README update

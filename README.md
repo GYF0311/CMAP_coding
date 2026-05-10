@@ -1,0 +1,94 @@
+# cmap
+
+给 AI coding 的项目小地图。
+
+cmap 在你的项目里维护一组 `.context/` 文件，记录项目目标、模块关系、当前主线、历史决策、验证方式、工作日志和灵感池。人能看，AI 也能看。
+
+当你从 0 到 1 做项目、上下文被压缩、新会话重新接手、或者项目模块越来越多时，AI 可以先读这张地图，快速知道：
+
+- 现在在做什么
+- 该改哪个模块
+- 会影响哪些地方
+- 哪些决策不能忘
+- 改完怎么验证
+
+cmap 不是 AI coding 全家桶。它只做一件事：让项目持续可理解。
+
+## Install
+
+```bash
+pnpm install
+pnpm build
+node dist/cli.js version
+```
+
+During local development:
+
+```bash
+pnpm dev --help
+```
+
+## Quick Start
+
+New project:
+
+```bash
+cmap init --auto
+cmap install --host both
+cmap verify
+```
+
+Existing project:
+
+```bash
+cmap adopt
+cmap install --host both
+cmap verify
+```
+
+Daily task:
+
+```bash
+cmap route "多人对话页面消息发不出去"
+cmap checkpoint --goal "..." --done "..." --left-off "..." --next "..."
+cmap finish
+cmap verify --changed
+```
+
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `cmap version` | Print version. |
+| `cmap init --auto` | Create `.context` skeleton for a new project. |
+| `cmap adopt` | Create adoption workspace and candidate signals for an existing project. |
+| `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
+| `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
+| `cmap route "<task>"` | Recommend context files to read. |
+| `cmap status` | Print `.context/STATUS.md`. |
+| `cmap checkpoint ...` | Update `.context/STATUS.md` from explicit handoff fields. |
+| `cmap verify [--changed]` | Check context structure. |
+| `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
+| `cmap add-module <name>` | Create a candidate module doc. |
+| `cmap cp copy/move/delete/restore` | Move existing line blocks with backups for destructive edits. |
+| `cmap log add "..."` | Append a work log entry. |
+| `cmap idea add "..."` | Append a non-canonical idea. |
+| `cmap doctor` | Diagnose context, entrypoints, and hook templates. |
+
+## Boundary
+
+cmap CLI does not generate trusted project semantics.
+
+- CLI creates skeletons, scans deterministic signals, routes by aliases, and checks structure.
+- AI or users write project purpose, module responsibilities, decisions, and current state.
+- Hooks only remind. They do not update `MAP.md`, `STATUS.md`, `DECISIONS.md`, or module docs.
+- `logs/`, `ideas/`, and `pending/` are not canonical project facts.
+
+## Verify
+
+```bash
+pnpm test
+pnpm typecheck
+pnpm build
+pnpm dev verify
+```

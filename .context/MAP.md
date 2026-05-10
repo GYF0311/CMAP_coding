@@ -26,6 +26,7 @@ confidence: ai-drafted
 - Package bin: `cmap`
 - Tests: `tests/integration/*.test.ts`
 - Product spec: `cmap_v0.1_PRD_and_execution_manual.md`
+- User-facing README: `README.md`
 
 ## Module Map
 | Module | Purpose | Paths | Doc | Aliases |
