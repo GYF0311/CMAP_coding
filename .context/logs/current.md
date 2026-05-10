@@ -77,3 +77,13 @@ confidence: medium
 **Verification:** `pnpm test tests/integration/verify-l0.test.ts` and `pnpm dev verify` passed after fixes.
 **Memory Impact:** Updated VERIFY and tests module docs.
 **Next:** Run full verification plus smoke, then commit.
+
+## 2026-05-10 — verify command and pending checks
+
+**Goal:** Continue filling L0 verify gaps from the PRD.
+**Changed:** Added warnings for common package verification scripts missing from `VERIFY.md`, and for pending files exceeding the v0.1 review threshold.
+**Tried:** Wrote failing tests first for missing `build` script documentation and four pending updates.
+**Result:** Tests pass; self-verify caught that this repo's `VERIFY.md` omitted `pnpm smoke`, which was added to Required Commands.
+**Verification:** `pnpm test tests/integration/verify-l0.test.ts` and `pnpm dev verify` passed.
+**Memory Impact:** Updated verify module responsibilities and verification checklist.
+**Next:** Run full verification and commit.

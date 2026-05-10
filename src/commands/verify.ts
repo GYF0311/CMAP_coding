@@ -71,6 +71,8 @@ export async function verifyContext(cwd: string): Promise<VerifyReport> {
   await checkMapModuleDocs(contextRoot, report);
   await checkModuleReferences(contextRoot, report);
   await checkEntrypoints(cwd, report);
+  await checkVerifyCommands(cwd, contextRoot, report);
+  await checkPendingThreshold(contextRoot, report);
 
   return report;
 }
@@ -207,6 +209,82 @@ async function checkEntrypoints(cwd: string, report: VerifyReport): Promise<void
   const [agents, claude] = await Promise.all([readFile(agentsPath, "utf8"), readFile(claudePath, "utf8")]);
   if (agents !== claude) {
     report.issues.push({ level: "warning", message: "AGENTS.md and CLAUDE.md differ" });
+  }
+}
+
+async function checkVerifyCommands(cwd: string, contextRoot: string, report: VerifyReport): Promise<void> {
+  const packagePath = path.join(cwd, "package.json");
+  const verifyPath = path.join(contextRoot, "VERIFY.md");
+  if (!(await fileExists(packagePath)) || !(await fileExists(verifyPath))) {
+    return;
+  }
+
+  const rawPackage = await readFile(packagePath, "utf8");
+  const parsed = JSON.parse(rawPackage) as { scripts?: Record<string, string> };
+  const scripts = Object.keys(parsed.scripts ?? {}).filter((script) =>
+    ["test", "typecheck", "lint", "build", "smoke"].includes(script)
+  );
+  if (scripts.length === 0) {
+    return;
+  }
+
+  const verify = await readFile(verifyPath, "utf8");
+  for (const script of scripts) {
+    if (!verifyMentionsScript(verify, script)) {
+      report.issues.push({ level: "warning", message: `VERIFY.md does not mention package script: ${script}` });
+    }
+  }
+}
+
+function verifyMentionsScript(verify: string, script: string): boolean {
+  const commands = commandCellsFromVerify(verify);
+  const accepted = script === "test" ? ["npm test", "pnpm test", "yarn test"] : [`npm run ${script}`, `pnpm ${script}`, `yarn ${script}`];
+  return commands.some((command) => accepted.includes(command));
+}
+
+function commandCellsFromVerify(verify: string): string[] {
+  const commands: string[] = [];
+  let inRequiredCommands = false;
+  let commandIndex = -1;
+
+  for (const line of verify.split(/\r?\n/)) {
+    if (line.trim() === "## Required Commands") {
+      inRequiredCommands = true;
+      continue;
+    }
+    if (inRequiredCommands && line.startsWith("## ")) {
+      break;
+    }
+    if (!inRequiredCommands || !line.trim().startsWith("|")) {
+      continue;
+    }
+    const cells = parseMarkdownTableRow(line);
+    if (cells.length === 0 || cells.every((cell) => /^-+$/.test(cell))) {
+      continue;
+    }
+    if (commandIndex === -1) {
+      commandIndex = cells.findIndex((cell) => cell.toLocaleLowerCase() === "command");
+      continue;
+    }
+    const command = cells[commandIndex]?.replace(/`/g, "").trim();
+    if (command) {
+      commands.push(command);
+    }
+  }
+
+  return commands;
+}
+
+async function checkPendingThreshold(contextRoot: string, report: VerifyReport): Promise<void> {
+  const pendingRoot = path.join(contextRoot, "pending");
+  if (!(await fileExists(pendingRoot))) {
+    return;
+  }
+
+  const entries = await readdir(pendingRoot);
+  const pendingFiles = entries.filter((entry) => entry.endsWith(".md"));
+  if (pendingFiles.length > 3) {
+    report.issues.push({ level: "warning", message: `Pending: ${pendingFiles.length} pending updates need review` });
   }
 }
 

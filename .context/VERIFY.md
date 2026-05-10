@@ -15,6 +15,7 @@ confidence: ai-drafted
 | typecheck | `pnpm typecheck` | exit 0 | before claiming done |
 | build | `pnpm build` | exit 0 | before release or handoff |
 | cmap self-verify | `pnpm dev verify` | exit 0 or warnings understood | after `.context` edits |
+| smoke | `pnpm smoke` | exit 0 | before release or handoff |
 
 ## Module-specific Checks
 | Module | Command | Manual Check |
@@ -33,6 +34,7 @@ confidence: ai-drafted
 | hooks-doctor | `pnpm test tests/integration/m4m5.test.ts` | install writes hook templates; hooks print reminders; doctor sees state. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
 | verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
+| verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.

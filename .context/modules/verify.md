@@ -33,6 +33,8 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Check MAP module table docs exist.
 - Warn when AGENTS.md and CLAUDE.md drift apart.
 - Warn about AI-fill placeholders inside module docs.
+- Warn when `.context/VERIFY.md` omits common package verification scripts.
+- Warn when pending updates exceed the v0.1 review threshold.
 - Return exit code 1 only for errors.
 
 ## Depends On
