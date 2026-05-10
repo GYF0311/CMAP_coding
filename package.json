@@ -1,0 +1,28 @@
+{
+  "name": "cmap",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "cmap": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup src/cli.ts --format esm --dts",
+    "test": "vitest run",
+    "dev": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "latest",
+    "fast-glob": "latest",
+    "gray-matter": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "tsup": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "vitest": "latest"
+  },
+  "packageManager": "pnpm@10.32.1"
+}

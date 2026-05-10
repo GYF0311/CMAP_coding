@@ -1,0 +1,130 @@
+import { execFile } from "node:child_process";
+import { mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
+import { describe, expect, test } from "vitest";
+
+const execFileAsync = promisify(execFile);
+const repoRoot = path.resolve(import.meta.dirname, "../..");
+const cliPath = path.join(repoRoot, "src/cli.ts");
+
+type CmapResult = {
+  code: number;
+  stdout: string;
+  stderr: string;
+};
+
+async function runCmap(args: string[], cwd: string): Promise<CmapResult> {
+  try {
+    const result = await execFileAsync(process.execPath, ["--import", "tsx", cliPath, ...args], {
+      cwd,
+      encoding: "utf8"
+    });
+    return { code: 0, stdout: result.stdout, stderr: result.stderr };
+  } catch (error) {
+    const err = error as Error & {
+      code?: number;
+      stdout?: string;
+      stderr?: string;
+    };
+    return {
+      code: typeof err.code === "number" ? err.code : 1,
+      stdout: err.stdout ?? "",
+      stderr: err.stderr ?? err.message
+    };
+  }
+}
+
+async function createTempProject(name: string): Promise<string> {
+  return mkdtemp(path.join(tmpdir(), `cmap-${name}-`));
+}
+
+async function expectFile(filePath: string): Promise<string> {
+  await expect(stat(filePath)).resolves.toMatchObject({ isFile: expect.any(Function) });
+  return readFile(filePath, "utf8");
+}
+
+describe("M1 CLI skeleton", () => {
+  test("prints the package version", async () => {
+    const cwd = await createTempProject("version");
+
+    const result = await runCmap(["version"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    expect(result.stdout.trim()).toBe("0.1.0");
+  });
+
+  test("init --auto creates the required .context skeleton without inventing project semantics", async () => {
+    const cwd = await createTempProject("init");
+    await writeFile(path.join(cwd, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }));
+
+    const result = await runCmap(["init", "--auto"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    expect(result.stdout).toContain("Created .context");
+
+    const requiredFiles = [
+      "BRIEF.md",
+      "MAP.md",
+      "STATUS.md",
+      "DECISIONS.md",
+      "VERIFY.md",
+      "logs/_index.md",
+      "logs/current.md",
+      "ideas/_inbox.md",
+      "ideas/parking-lot.md",
+      "ideas/rejected.md",
+      "refs/glossary.md"
+    ];
+
+    for (const relative of requiredFiles) {
+      await expectFile(path.join(cwd, ".context", relative));
+    }
+
+    const map = await expectFile(path.join(cwd, ".context", "MAP.md"));
+    expect(map).toContain("TODO(ai-fill)");
+    expect(map).toContain("## Natural Language Route");
+    expect(map).not.toContain("chat");
+
+    const verify = await expectFile(path.join(cwd, ".context", "VERIFY.md"));
+    expect(verify).toContain("| test | `npm test` |");
+  });
+
+  test("verify reports missing required files as errors", async () => {
+    const cwd = await createTempProject("verify-missing");
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("Missing required file: .context/BRIEF.md");
+    expect(result.stdout).toContain("Errors:");
+  });
+
+  test("verify accepts a freshly initialized context and warns about ai-fill placeholders", async () => {
+    const cwd = await createTempProject("verify-init");
+    await runCmap(["init", "--auto"], cwd);
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Structure: all required files exist");
+    expect(result.stdout).toContain("TODO(ai-fill)");
+    expect(result.stdout).toContain("Warnings:");
+  });
+
+  test("install --host both writes matching AGENTS and CLAUDE entrypoints", async () => {
+    const cwd = await createTempProject("install");
+    await runCmap(["init", "--auto"], cwd);
+
+    const result = await runCmap(["install", "--host", "both"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    const agents = await expectFile(path.join(cwd, "AGENTS.md"));
+    const claude = await expectFile(path.join(cwd, "CLAUDE.md"));
+
+    expect(agents).toBe(claude);
+    expect(agents).toContain("Read `.context/MAP.md`");
+    expect(agents).toContain("cmap verify --changed");
+  });
+});
