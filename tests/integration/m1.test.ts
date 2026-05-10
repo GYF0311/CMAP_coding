@@ -8,6 +8,7 @@ import { describe, expect, test } from "vitest";
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(import.meta.dirname, "../..");
 const cliPath = path.join(repoRoot, "src/cli.ts");
+const tsxBin = path.join(repoRoot, "node_modules/.bin/tsx");
 
 type CmapResult = {
   code: number;
@@ -17,7 +18,7 @@ type CmapResult = {
 
 async function runCmap(args: string[], cwd: string): Promise<CmapResult> {
   try {
-    const result = await execFileAsync(process.execPath, ["--import", "tsx", cliPath, ...args], {
+    const result = await execFileAsync(tsxBin, [cliPath, ...args], {
       cwd,
       encoding: "utf8"
     });
