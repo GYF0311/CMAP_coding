@@ -51,4 +51,4 @@ None known yet.
 ## Environment Assumptions
 - Node.js 20 or newer; current local Node is v22.22.2.
 - pnpm is available through Corepack/local install; current local pnpm is 10.32.1.
-- This directory is not yet a git repository, so source commit and changed-file checks may be unavailable.
+- This directory is now a git repository; `cmap verify --changed` currently runs and returns 0 warnings.
