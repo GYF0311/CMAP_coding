@@ -20,7 +20,9 @@ relations:
   dispatches_to:
     - route
     - brief
+    - benchmark
     - obsidian-adapter
+    - reconcile-adapter
     - finish
     - verify
 ---
@@ -37,6 +39,8 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register user-facing commands with commander.
 - Keep command handlers small and delegate domain work to modules.
 - Register `brief` and `obsidian` command groups without embedding domain logic in `cli.ts`.
+- Register `benchmark route` as a public evaluation command.
+- Register `reconcile` as a dry-run external artifact adapter command.
 - Convert expected CLI errors into exit code 2.
 - Preserve command-specific exit codes such as `verify` returning 1 on structural errors.
 
@@ -45,7 +49,9 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `verify` for structure checks.
 - `host` for entrypoint generation.
 - `brief` for AI coding startup packages.
+- `benchmark` for route fixture evaluation.
 - `obsidian-adapter` for Obsidian view commands.
+- `reconcile-adapter` for external workflow candidate reports.
 
 ## Used By
 - Package bin `cmap`.

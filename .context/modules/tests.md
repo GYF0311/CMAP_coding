@@ -38,6 +38,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert stdout/stderr-sensitive behavior and exit codes.
 - Assert generated files contain expected content and do not invent project semantics.
 - Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
+- Assert coverage, pull dry-run, and benchmark commands surface candidate issues without canonical writes.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On

@@ -38,10 +38,12 @@ confidence: ai-drafted
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
 | route | keyword and alias based module routing | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
 | brief | AI coding startup brief from route/status/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
+| benchmark | route benchmark over JSONL task fixtures | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
 | handoff | current status printing and explicit checkpoint updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
 | cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
 | obsidian-adapter | Obsidian-friendly markdown export and module note links | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
+| reconcile-adapter | dry-run candidate facts from external workflow artifacts | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
 | adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
 | module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
@@ -57,10 +59,12 @@ confidence: ai-drafted
 | AGENTS、CLAUDE、宿主入口、host | host | `.context/modules/host.md`, `src/host/entrypoint-template.ts` |
 | route、alias、模块定位、推荐读取文件 | route | `.context/modules/route.md`, `src/commands/route.ts` |
 | brief、AI brief、开工包、AI 开工包、启动包 | brief | `.context/modules/brief.md`, `src/commands/brief.ts`, `.context/STATUS.md` |
+| benchmark、bench、route benchmark、评测、命中率、top-k | benchmark | `.context/modules/benchmark.md`, `src/commands/benchmark.ts`, `bench/tasks.jsonl` |
 | checkpoint、status、续接、上下文压缩、当前主线 | handoff | `.context/modules/handoff.md`, `src/commands/checkpoint.ts`, `src/commands/status.ts` |
 | cp、copy、move、delete、restore、行块、搬运、备份 | cp | `.context/modules/cp.md`, `src/commands/cp.ts`, `src/fs/line-block.ts` |
 | finish、收尾、closeout、context review | finish | `.context/modules/finish.md`, `src/commands/finish.ts` |
 | obsidian、图谱、关系图谱、可视化、export、vault | obsidian-adapter | `.context/modules/obsidian-adapter.md`, `src/commands/obsidian.ts` |
+| reconcile、GSD adapter、gsd-v1、gsd-v2、外部产物、候选事实 | reconcile-adapter | `.context/modules/reconcile-adapter.md`, `src/commands/reconcile.ts` |
 | log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
 | adopt、接管已有项目、候选模块、ADOPTION | adoption | `.context/modules/adoption.md`, `src/commands/adopt.ts` |
 | add-module、新模块文档、module template | module-docs | `.context/modules/module-docs.md`, `src/commands/add-module.ts` |
@@ -74,10 +78,12 @@ confidence: ai-drafted
 - `host` generates entrypoint text used by `install`.
 - `route` reads the shared module index and recommends context files; it must not propose nonexistent modules.
 - `brief` packages route result, `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
+- `benchmark` runs JSONL task fixtures through route scoring and reports top-k hit rates.
 - `handoff` reads and writes `STATUS.md` from explicit user/AI fields.
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
 - `finish` reads changed file hints through the shared module index and produces a read-only closeout report.
 - `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph.
+- `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
 - `module-docs` creates candidate module docs without editing MAP.
@@ -92,6 +98,8 @@ User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under
 - Task-local generated outputs: `.context/out/`
 - Candidate fact inbox for future adapters: `.context/inbox/`
 - Obsidian view export: `_cmap/<project>/`
+- Route benchmark fixtures: `bench/tasks.jsonl`
+- External workflow candidates: `.context/inbox/`
 - Host entrypoints: `AGENTS.md`, `CLAUDE.md`
 - Build output: `dist/`
 - Dependency lock: `pnpm-lock.yaml`
@@ -111,4 +119,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. New brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus the first AI brief and Obsidian view-layer workflow. Next work should dogfood `cmap brief`, inspect `_cmap/CMAP_coding` in Obsidian, then add coverage checks before attempting GSD/reconcile adapters.
+Current implementation covers v0.1 CLI commands plus AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, and conservative GSD v1/v2 dry-run reconciliation. Next work should inspect `_cmap/CMAP_coding` in Obsidian and dogfood `reconcile` against real `.planning` / `.gsd` artifacts before adding richer adapters.

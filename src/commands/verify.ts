@@ -1,10 +1,17 @@
+import { execFile } from "node:child_process";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
+import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
+
+const execFileAsync = promisify(execFile);
 
 type VerifyOptions = {
   changed?: boolean;
+  changedFiles?: string;
+  coverage?: boolean;
   format?: string;
 };
 
@@ -37,7 +44,7 @@ const requiredHeadings: Record<string, string[]> = {
 };
 
 export async function runVerify(cwd: string, options: VerifyOptions): Promise<number> {
-  const report = await verifyContext(cwd);
+  const report = await verifyContext(cwd, options);
 
   if (options.format === "json") {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
@@ -48,7 +55,7 @@ export async function runVerify(cwd: string, options: VerifyOptions): Promise<nu
   return report.issues.some((issue) => issue.level === "error") ? 1 : 0;
 }
 
-export async function verifyContext(cwd: string): Promise<VerifyReport> {
+export async function verifyContext(cwd: string, options: VerifyOptions = {}): Promise<VerifyReport> {
   const contextRoot = path.join(cwd, ".context");
   const report: VerifyReport = { ok: [], issues: [] };
   const missing: string[] = [];
@@ -69,10 +76,15 @@ export async function verifyContext(cwd: string): Promise<VerifyReport> {
   }
 
   await checkMapModuleDocs(contextRoot, report);
-  await checkModuleReferences(contextRoot, report);
+  const modules = await loadModuleIndex(cwd);
+  await checkModuleReferences(cwd, contextRoot, modules, report);
+  checkModuleRelations(modules, report);
   await checkEntrypoints(cwd, report);
   await checkVerifyCommands(cwd, contextRoot, report);
   await checkPendingThreshold(contextRoot, report);
+  if (options.changed || options.coverage) {
+    await checkChangedCoverage(cwd, modules, options, report);
+  }
 
   return report;
 }
@@ -102,7 +114,12 @@ async function checkMarkdownFile(filePath: string, relative: string, report: Ver
   }
 }
 
-async function checkModuleReferences(contextRoot: string, report: VerifyReport): Promise<void> {
+async function checkModuleReferences(
+  cwd: string,
+  contextRoot: string,
+  modules: Awaited<ReturnType<typeof loadModuleIndex>>,
+  report: VerifyReport
+): Promise<void> {
   const modulesRoot = path.join(contextRoot, "modules");
   if (!(await fileExists(modulesRoot))) {
     return;
@@ -116,27 +133,48 @@ async function checkModuleReferences(contextRoot: string, report: VerifyReport):
   }
 
   for (const entry of entries.filter((item) => item.endsWith(".md"))) {
-    const modulePath = path.join(modulesRoot, entry);
-    const raw = await readFile(modulePath, "utf8");
+    const raw = await readFile(path.join(modulesRoot, entry), "utf8");
     if (raw.includes("TODO(ai-fill)")) {
       report.issues.push({ level: "warning", message: `.context/modules/${entry} contains TODO(ai-fill)` });
     }
-    const parsed = matter(raw);
-    const paths = parsed.data.paths;
-    if (Array.isArray(paths)) {
-      for (const moduleRelativePath of paths) {
-        if (typeof moduleRelativePath !== "string") {
-          continue;
-        }
-        const candidate = path.resolve(path.dirname(contextRoot), moduleRelativePath);
-        if (!(await isInside(path.dirname(contextRoot), candidate)) || !(await fileExists(candidate))) {
+  }
+
+  for (const module of modules) {
+    for (const moduleRelativePath of module.pathsInclude) {
+      if (moduleRelativePath.includes("*")) {
+        continue;
+      }
+      const candidate = path.resolve(cwd, moduleRelativePath);
+      if (!(await isInside(cwd, candidate)) || !(await fileExists(candidate))) {
+        report.issues.push({
+          level: "error",
+          message: `${module.docPath} points to missing path ${moduleRelativePath}`
+        });
+      }
+    }
+  }
+}
+
+function checkModuleRelations(modules: Awaited<ReturnType<typeof loadModuleIndex>>, report: VerifyReport): void {
+  const ids = new Set(modules.map((module) => module.id));
+  let checked = 0;
+
+  for (const module of modules) {
+    for (const [relation, targets] of Object.entries(module.relations)) {
+      for (const target of targets) {
+        checked += 1;
+        if (!ids.has(target)) {
           report.issues.push({
             level: "error",
-            message: `.context/modules/${entry} points to missing path ${moduleRelativePath}`
+            message: `${module.docPath} relation ${relation} points to missing module: ${target}`
           });
         }
       }
     }
+  }
+
+  if (checked > 0) {
+    report.ok.push(`Relations: ${checked} typed relation targets checked`);
   }
 }
 
@@ -286,6 +324,52 @@ async function checkPendingThreshold(contextRoot: string, report: VerifyReport):
   if (pendingFiles.length > 3) {
     report.issues.push({ level: "warning", message: `Pending: ${pendingFiles.length} pending updates need review` });
   }
+}
+
+async function checkChangedCoverage(
+  cwd: string,
+  modules: Awaited<ReturnType<typeof loadModuleIndex>>,
+  options: VerifyOptions,
+  report: VerifyReport
+): Promise<void> {
+  const changedFiles = options.changedFiles ? splitCsv(options.changedFiles) : await readTrackedChangedFiles(cwd);
+  if (changedFiles.length === 0) {
+    report.ok.push("Changed file coverage: no changed tracked files detected");
+    return;
+  }
+
+  const mapping = mapChangedFilesToModules(changedFiles, modules);
+  if (mapping.unmapped.length === 0) {
+    report.ok.push(`Changed file coverage: ${changedFiles.length}/${changedFiles.length} files mapped`);
+    return;
+  }
+
+  for (const file of mapping.unmapped) {
+    report.issues.push({ level: "warning", message: `Changed file is not mapped to a module: ${file}` });
+  }
+  report.ok.push(
+    `Changed file coverage: ${changedFiles.length - mapping.unmapped.length}/${changedFiles.length} files mapped`
+  );
+}
+
+async function readTrackedChangedFiles(cwd: string): Promise<string[]> {
+  try {
+    const [unstaged, staged] = await Promise.all([
+      execFileAsync("git", ["diff", "--name-only"], { cwd, encoding: "utf8" }),
+      execFileAsync("git", ["diff", "--name-only", "--cached"], { cwd, encoding: "utf8" })
+    ]);
+    return uniqueLines(`${unstaged.stdout}\n${staged.stdout}`);
+  } catch {
+    return [];
+  }
+}
+
+function uniqueLines(value: string): string[] {
+  return [...new Set(value.split(/\r?\n/).map((line) => line.trim()).filter(Boolean))];
+}
+
+function splitCsv(value: string): string[] {
+  return value.split(",").map((item) => item.trim()).filter(Boolean);
 }
 
 async function isInside(root: string, target: string): Promise<boolean> {

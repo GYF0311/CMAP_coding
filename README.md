@@ -53,7 +53,10 @@ cmap route "多人对话页面消息发不出去"
 cmap brief "多人对话页面消息发不出去" --out .context/out/brief.md
 cmap checkpoint --goal "..." --done "..." --left-off "..." --next "..."
 cmap finish
-cmap verify --changed
+cmap verify --coverage --changed
+cmap obsidian export
+cmap benchmark route --file bench/tasks.jsonl
+cmap reconcile --adapter gsd-v1 --from .planning
 ```
 
 ## Commands
@@ -73,6 +76,9 @@ cmap verify --changed
 | `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
+| `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
+| `cmap benchmark route --file bench/tasks.jsonl` | Measure route top-k accuracy against JSONL task fixtures. |
+| `cmap reconcile --adapter gsd-v1\|gsd-v2 --from <dir>` | Dry-run candidate facts from external workflow artifacts. |
 | `cmap add-module <name>` | Create a candidate module doc. |
 | `cmap cp copy/move/delete/restore` | Move existing line blocks with backups for destructive edits. |
 | `cmap log add "..."` | Append a work log entry. |

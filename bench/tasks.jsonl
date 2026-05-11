@@ -1,0 +1,4 @@
+{"task":"生成 AI 开工包并带上当前状态","expected_modules":["brief"],"bad_modules":["cp"]}
+{"task":"Obsidian 导出后图谱没有连线","expected_modules":["obsidian-adapter"],"bad_modules":["finish"]}
+{"task":"检查 changed files 是否都映射到模块","expected_modules":["verify"],"bad_modules":["memory-lite"]}
+{"task":"任务结束前提示哪些 context 文件要更新","expected_modules":["finish"],"bad_modules":["obsidian-adapter"]}

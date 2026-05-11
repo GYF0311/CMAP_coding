@@ -15,6 +15,10 @@ aliases:
   - report
   - 收尾
   - 上下文收尾
+  - 任务结束
+  - 任务结束前
+  - 更新 context
+  - context 文件
 relations:
   depends_on:
     - module-docs

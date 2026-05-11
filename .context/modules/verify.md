@@ -30,6 +30,8 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Check required headings in canonical files.
 - Warn on generated placeholder residue.
 - Check module frontmatter paths stay inside the project and exist.
+- Check typed module relations point to existing modules.
+- Check changed-file coverage when `--coverage` or `--changed` is requested.
 - Check MAP module table docs exist.
 - Warn when AGENTS.md and CLAUDE.md drift apart.
 - Warn about AI-fill placeholders inside module docs.
@@ -40,6 +42,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 ## Depends On
 - `gray-matter`
 - `context/scanner.ts` for file existence.
+- `core/module-index.ts` for module relation and changed-file coverage.
 
 ## Used By
 - `cmap verify`
@@ -60,7 +63,9 @@ Read-only.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m1.test.ts`
+- `pnpm test tests/integration/verify-l0.test.ts`
 - `pnpm dev verify`
+- `pnpm dev verify --coverage --changed-files src/commands/verify.ts`
 
 ## When to Update This Doc
 When adding new L0/L1 checks or changing error/warning semantics.

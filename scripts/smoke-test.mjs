@@ -39,6 +39,7 @@ function assertIncludes(value, expected, label) {
 const project = await mkdtemp(path.join(tmpdir(), "cmap-smoke-"));
 await writeFile(path.join(project, "package.json"), JSON.stringify({ scripts: { test: "vitest run" } }), "utf8");
 await mkdir(path.join(project, "src", "features", "chat"), { recursive: true });
+await writeFile(path.join(project, "src", "features", "chat", "send.ts"), "export const send = true;\n", "utf8");
 
 const version = await run(["version"], project);
 assertIncludes(version.stdout, "0.1.0", "version output");
@@ -79,6 +80,26 @@ await run(
 
 const verify = await run(["verify"], project);
 assertIncludes(verify.stdout, "Errors: 0", "verify output");
+
+const coverage = await run(["verify", "--coverage", "--changed-files", "src/features/chat/send.ts"], project);
+assertIncludes(coverage.stdout, "Changed file coverage: 1/1 files mapped", "coverage output");
+
+const pull = await run(["obsidian", "pull", "--from", "_cmap/Smoke"], project);
+assertIncludes(pull.stdout, "# Obsidian Pull Dry Run", "obsidian pull output");
+
+await mkdir(path.join(project, "bench"), { recursive: true });
+await writeFile(
+  path.join(project, "bench", "tasks.jsonl"),
+  `${JSON.stringify({ task: "chat message failing", expected_modules: ["chat"] })}\n`,
+  "utf8"
+);
+const benchmark = await run(["benchmark", "route", "--file", "bench/tasks.jsonl"], project);
+assertIncludes(benchmark.stdout, "Top-1: 1/1", "benchmark output");
+
+await mkdir(path.join(project, ".planning"), { recursive: true });
+await writeFile(path.join(project, ".planning", "STATE.md"), "- Decision: keep cmap canonical facts in `.context`.\n", "utf8");
+const reconcile = await run(["reconcile", "--adapter", "gsd-v1", "--from", ".planning"], project);
+assertIncludes(reconcile.stdout, "# gsd-v1 Reconcile Dry Run", "reconcile output");
 
 const unknown = await run(["not-a-command"], project, 2);
 const unknownCount = (unknown.stderr.match(/unknown command/g) ?? []).length;

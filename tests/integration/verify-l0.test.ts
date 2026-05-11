@@ -91,4 +91,68 @@ TODO(ai-fill)
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("Pending: 4 pending updates need review");
   });
+
+  test("reports broken typed module relations", async () => {
+    const cwd = await createTempProject("verify-broken-relations");
+    await runCmap(["init", "--auto"], cwd);
+    await mkdir(path.join(cwd, "src/chat"), { recursive: true });
+    await mkdir(path.join(cwd, ".context", "modules"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context", "modules", "chat.md"),
+      `---
+context_type: module
+module: chat
+paths:
+  - src/chat
+aliases:
+  - chat
+relations:
+  depends_on:
+    - missing-module
+confidence: ai-drafted
+---
+# Module: chat
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain(".context/modules/chat.md relation depends_on points to missing module: missing-module");
+  });
+
+  test("checks changed file coverage from explicit changed-files input", async () => {
+    const cwd = await createTempProject("verify-changed-coverage");
+    await runCmap(["init", "--auto"], cwd);
+    await mkdir(path.join(cwd, "src/chat"), { recursive: true });
+    await mkdir(path.join(cwd, "src/billing"), { recursive: true });
+    await writeFile(path.join(cwd, "src/chat/send.ts"), "export const send = true;\n", "utf8");
+    await writeFile(path.join(cwd, "src/billing/invoice.ts"), "export const invoice = true;\n", "utf8");
+    await mkdir(path.join(cwd, ".context", "modules"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context", "modules", "chat.md"),
+      `---
+context_type: module
+module: chat
+paths:
+  - src/chat
+aliases:
+  - chat
+confidence: ai-drafted
+---
+# Module: chat
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(
+      ["verify", "--changed-files", "src/chat/send.ts,src/billing/invoice.ts", "--coverage"],
+      cwd
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Changed file coverage: 1/2 files mapped");
+    expect(result.stdout).toContain("Changed file is not mapped to a module: src/billing/invoice.ts");
+  });
 });

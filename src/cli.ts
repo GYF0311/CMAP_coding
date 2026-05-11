@@ -2,6 +2,7 @@
 import { Command, CommanderError } from "commander";
 import { runAddModule } from "./commands/add-module.js";
 import { runAdopt } from "./commands/adopt.js";
+import { runBenchmarkRoute } from "./commands/benchmark.js";
 import { runBrief } from "./commands/brief.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
@@ -12,7 +13,8 @@ import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
 import { runLogAdd } from "./commands/log.js";
-import { runObsidianExport, runObsidianOpen } from "./commands/obsidian.js";
+import { runObsidianExport, runObsidianOpen, runObsidianPull } from "./commands/obsidian.js";
+import { runReconcile } from "./commands/reconcile.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
 import { runVerify } from "./commands/verify.js";
@@ -52,9 +54,11 @@ program
 program
   .command("verify")
   .description("Check .context structure and trusted map files")
-  .option("--changed", "Reserve checks for changed files when git is available")
+  .option("--changed", "Check tracked changed file coverage when git is available")
+  .option("--changed-files <csv>", "Changed files to check, comma-separated")
+  .option("--coverage", "Check map coverage signals")
   .option("--format <format>", "Output format: text or json", "text")
-  .action(async (options: { changed?: boolean; format?: string }) => {
+  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; format?: string }) => {
     const code = await runVerify(process.cwd(), options);
     process.exitCode = code;
   });
@@ -208,6 +212,36 @@ obsidian
   .option("--vault-name <name>", "Obsidian vault name", "corpus")
   .action(async (module: string, options: { vaultName?: string }) => {
     await runObsidianOpen(process.cwd(), module, options);
+  });
+obsidian
+  .command("pull")
+  .description("Dry-run candidate updates from an Obsidian export")
+  .option("--from <dir>", "Project-relative Obsidian export directory; defaults to _cmap/<project>")
+  .option("--dry-run", "Preview candidates without canonical writes", true)
+  .option("--write-inbox", "Write the dry-run report to .context/inbox/")
+  .action(async (options: { from?: string; dryRun?: boolean; writeInbox?: boolean }) => {
+    await runObsidianPull(process.cwd(), options);
+  });
+
+const benchmark = program.command("benchmark").description("Run cmap behavior benchmarks");
+benchmark
+  .command("route")
+  .description("Measure route top-k accuracy from a JSONL task file")
+  .option("--file <path>", "Project-relative JSONL file", "bench/tasks.jsonl")
+  .action(async (options: { file?: string }) => {
+    const code = await runBenchmarkRoute(process.cwd(), options);
+    process.exitCode = code;
+  });
+
+program
+  .command("reconcile")
+  .description("Dry-run candidate facts from external workflow artifacts")
+  .option("--adapter <adapter>", "gsd-v1 or gsd-v2", "gsd-v1")
+  .option("--from <dir>", "Project-relative source directory")
+  .option("--dry-run", "Preview candidates without canonical writes", true)
+  .option("--write-inbox", "Write the dry-run report to .context/inbox/")
+  .action(async (options: { adapter?: string; from?: string; dryRun?: boolean; writeInbox?: boolean }) => {
+    await runReconcile(process.cwd(), options);
   });
 
 program

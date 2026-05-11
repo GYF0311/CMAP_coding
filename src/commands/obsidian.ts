@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
 import {
   type ContextModule,
@@ -17,6 +18,18 @@ type ObsidianExportOptions = {
 
 type ObsidianOpenOptions = {
   vaultName?: string;
+};
+
+type ObsidianPullOptions = {
+  from?: string;
+  dryRun?: boolean;
+  writeInbox?: boolean;
+};
+
+type ObsidianCandidate = {
+  notePath: string;
+  sourcePath: string;
+  reason: string;
 };
 
 export async function runObsidianExport(cwd: string, options: ObsidianExportOptions): Promise<void> {
@@ -60,6 +73,29 @@ export async function runObsidianOpen(cwd: string, moduleId: string, options: Ob
   process.stdout.write(`${obsidianUri(options.vaultName || "corpus", project.projectId, moduleNoteTitle(module))}\n`);
 }
 
+export async function runObsidianPull(cwd: string, options: ObsidianPullOptions): Promise<void> {
+  const project = await loadProjectInfo(cwd);
+  const exportRoot = await resolveInsideRoot(cwd, options.from || path.join("_cmap", project.projectId));
+  const modulesRoot = path.join(exportRoot, "modules");
+  if (!(await fileExists(modulesRoot))) {
+    process.stdout.write(`No Obsidian module export found at ${projectRelative(cwd, modulesRoot)}\n`);
+    return;
+  }
+
+  const candidates = await detectObsidianCandidates(cwd, modulesRoot);
+  const report = renderPullReport(candidates);
+  if (options.writeInbox && candidates.length > 0) {
+    const inboxRoot = path.join(cwd, ".context", "inbox");
+    await mkdir(inboxRoot, { recursive: true });
+    const target = path.join(inboxRoot, `obsidian-${dateStamp()}.md`);
+    await writeFile(target, report, "utf8");
+    process.stdout.write(`Wrote ${projectRelative(cwd, target)}\n`);
+    return;
+  }
+
+  process.stdout.write(report);
+}
+
 function renderModuleNote(projectId: string, module: ContextModule, lookup: Map<string, ContextModule>): string {
   const title = moduleNoteTitle(module);
   const relationLines = renderRelationLinks(module, lookup);
@@ -73,7 +109,7 @@ function renderModuleNote(projectId: string, module: ContextModule, lookup: Map<
     `layer: ${yamlString(module.layer || "unknown")}`,
     `risk: ${yamlString(module.risk || "unknown")}`,
     `source_path: ${yamlString(module.docPath)}`,
-    `source_hash: ${yamlString(`sha256:${sha256(module.body)}`)}`,
+    `source_hash: ${yamlString(`sha256:${moduleBodyHash(module.body)}`)}`,
     "tags:",
     `  - ${yamlString("cmap/module")}`,
     `  - ${yamlString(`cmap/project/${projectId}`)}`,
@@ -190,4 +226,94 @@ function yamlList(values: string[]): string[] {
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function moduleBodyHash(value: string): string {
+  return sha256(value.trim());
+}
+
+async function detectObsidianCandidates(cwd: string, modulesRoot: string): Promise<ObsidianCandidate[]> {
+  const entries = await readdir(modulesRoot);
+  const candidates: ObsidianCandidate[] = [];
+
+  for (const entry of entries.filter((file) => file.endsWith(".md")).sort()) {
+    const absoluteNotePath = path.join(modulesRoot, entry);
+    const raw = await readFile(absoluteNotePath, "utf8");
+    const parsed = matter(raw);
+    const sourcePath = typeof parsed.data.source_path === "string" ? parsed.data.source_path : "";
+    if (!sourcePath.startsWith(".context/modules/")) {
+      continue;
+    }
+
+    const sourceAbsolute = path.join(cwd, sourcePath);
+    if (!(await fileExists(sourceAbsolute))) {
+      candidates.push({
+        notePath: projectRelative(cwd, absoluteNotePath),
+        sourcePath,
+        reason: "source module doc is missing"
+      });
+      continue;
+    }
+
+    const exportedBody = extractSourceModuleDoc(raw);
+    if (!exportedBody) {
+      continue;
+    }
+    const currentBody = matter(await readFile(sourceAbsolute, "utf8")).content;
+    if (moduleBodyHash(exportedBody) !== moduleBodyHash(currentBody)) {
+      candidates.push({
+        notePath: projectRelative(cwd, absoluteNotePath),
+        sourcePath,
+        reason: "exported Source Module Doc differs from canonical module doc"
+      });
+    }
+  }
+
+  return candidates;
+}
+
+function extractSourceModuleDoc(raw: string): string {
+  const marker = "\n## Source Module Doc\n";
+  const markerIndex = raw.indexOf(marker);
+  if (markerIndex === -1) {
+    return "";
+  }
+  return raw.slice(markerIndex + marker.length).trim();
+}
+
+function renderPullReport(candidates: ObsidianCandidate[]): string {
+  const lines = [
+    "# Obsidian Pull Dry Run",
+    "",
+    "This report is candidate input only. It does not modify canonical `.context` facts.",
+    "",
+    "## Detected Edits",
+    ""
+  ];
+
+  if (candidates.length === 0) {
+    lines.push("- None");
+  } else {
+    for (const candidate of candidates) {
+      lines.push(`- ${candidate.notePath}`);
+      lines.push(`  - source: \`${candidate.sourcePath}\``);
+      lines.push(`  - reason: ${candidate.reason}`);
+    }
+  }
+
+  lines.push(
+    "",
+    "## Suggested Action",
+    "",
+    "- Review each candidate manually.",
+    "- Promote durable facts into `.context/modules/*.md`, `.context/DECISIONS.md`, or `.context/VERIFY.md` yourself.",
+    "- Keep raw Obsidian thinking in `_cmap` or `.context/inbox`; do not auto-write canonical facts.",
+    ""
+  );
+
+  return lines.join("\n");
+}
+
+function dateStamp(): string {
+  return new Date().toISOString().slice(0, 10);
 }

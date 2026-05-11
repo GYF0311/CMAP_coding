@@ -40,6 +40,8 @@ Export `.context` into Obsidian-friendly Markdown notes so humans can read modul
 - Render module frontmatter as Obsidian Properties.
 - Render typed `relations` as body wikilinks so Obsidian Graph can draw edges.
 - Print `obsidian://open` links for individual module notes.
+- Detect edited exported module notes with `pull --dry-run`.
+- Write candidate reports to `.context/inbox/` with `--write-inbox` without changing canonical facts.
 
 ## Depends On
 - `module-docs`
@@ -49,10 +51,12 @@ Export `.context` into Obsidian-friendly Markdown notes so humans can read modul
 ## Used By
 - `cmap obsidian export`
 - `cmap obsidian open <module>`
+- `cmap obsidian pull --dry-run`
 - `cmap brief --obsidian`
 
 ## Data Flow
-`.context/modules/*.md` -> module index -> Obsidian note renderer -> `_cmap/<project>/`.
+Export: `.context/modules/*.md` -> module index -> Obsidian note renderer -> `_cmap/<project>/`.
+Pull dry-run: `_cmap/<project>/modules/*.md` -> source hash/body comparison -> candidate report or `.context/inbox/`.
 
 ## State / Storage
 Writes view files under `_cmap/<project>/`. These files are generated reading/visualization artifacts, not canonical facts.
@@ -69,6 +73,7 @@ Writes view files under `_cmap/<project>/`. These files are generated reading/vi
 ## Tests / Verification
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm dev obsidian export --out _cmap/CMAP_coding`
+- `pnpm dev obsidian pull --from _cmap/CMAP_coding`
 
 ## When to Update This Doc
 When export structure, note naming, relation rendering, or open-link behavior changes.
