@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:35:00+08:00
+updated_at: 2026-05-12T01:55:00+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -81,7 +81,7 @@ confidence: ai-drafted
 - `benchmark` runs JSONL task fixtures through route scoring and reports top-k hit rates.
 - `handoff` reads `STATUS.md`, writes task-local `CHECKPOINT.md`, and keeps the legacy explicit `STATUS.md` update path compatible.
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
-- `finish` reads changed file hints through the shared module index and produces a read-only closeout report.
+- `finish` reads changed file hints through the shared module index and produces a read-only closeout report, including checkpoint write/close reminders.
 - `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph.
 - `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.

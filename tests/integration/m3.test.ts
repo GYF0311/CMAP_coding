@@ -107,6 +107,8 @@ confidence: ai-drafted
     expect(result.stdout).toContain("# Finish Report");
     expect(result.stdout).toContain("chat");
     expect(result.stdout).toContain("STATUS.md");
+    expect(result.stdout).toContain("CHECKPOINT.md");
+    expect(result.stdout).toContain("cmap checkpoint close");
     expect(result.stdout).toContain("cmap verify --changed");
     await expect(readFile(path.join(cwd, ".context/STATUS.md"), "utf8")).resolves.toBe(statusBefore);
   });

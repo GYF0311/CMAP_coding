@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T18:08:00+08:00
+updated_at: 2026-05-12T01:55:00+08:00
 confidence: ai-drafted
 module: finish
 paths:
@@ -37,7 +37,8 @@ Produce a QA-lite closeout report focused on project memory and verification rem
 ## Responsibilities
 - Collect changed files from `--changed` or `git status --short`.
 - Match changed files to module docs through the shared module index.
-- Remind whether STATUS/modules/DECISIONS/traps/logs may need updates.
+- Remind whether STATUS/CHECKPOINT/modules/DECISIONS/traps/logs may need updates.
+- Suggest `checkpoint write` when work continues and `checkpoint close` when the task is complete.
 - Suggest `cmap verify --changed`.
 - Report unmapped changed files so map coverage gaps are visible.
 
@@ -62,6 +63,7 @@ Read-only in v0.1.
 
 ## Traps
 - Matching by path is deterministic but not semantic truth.
+- `finish` should remind about checkpoint lifecycle without closing or clearing it automatically.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m3.test.ts`

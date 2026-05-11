@@ -30,12 +30,17 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
     "",
     "## Context Updates Needed",
     "- STATUS.md: check whether current main thread changed",
+    "- CHECKPOINT.md: update, close, or clear the current handoff state",
     ...(affectedModules.length
       ? affectedModules.map((module) => `- ${module.docPath}: maybe, if responsibilities/dependencies/data flow changed`)
       : ["- modules/*.md: no changed module detected"]),
     "- DECISIONS.md: only if a long-lived design tradeoff was made",
     "- traps/: only if a repeatable pitfall was discovered",
     "- logs/current.md: consider `cmap log add \"...\"` for task-end summaries",
+    "",
+    "## Handoff Actions",
+    "- Suggested: cmap checkpoint write --task \"current task\" --next \"next step\" if work continues",
+    "- Suggested: cmap checkpoint close if the task is complete",
     "",
     "## Pending Updates",
     "- None generated automatically in v0.1",
