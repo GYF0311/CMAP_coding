@@ -244,4 +244,4 @@ Recent work lives in \`.context/logs/current.md\`.
   ]);
 }
 
-export const contextDirectories = ["modules", "logs", "ideas", "pending", "traps", "refs"];
+export const contextDirectories = ["modules", "logs", "ideas", "pending", "traps", "refs", "inbox", "out"];

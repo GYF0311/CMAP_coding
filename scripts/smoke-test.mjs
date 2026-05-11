@@ -50,6 +50,16 @@ await run(["add-module", "chat", "--path", "src/features/chat", "--alias", "chat
 const route = await run(["route", "chat message failing"], project);
 assertIncludes(route.stdout, ".context/modules/chat.md", "route output");
 
+const brief = await run(["brief", "chat message failing", "--out", ".context/out/brief.md"], project);
+assertIncludes(brief.stdout, "Wrote .context/out/brief.md", "brief output");
+const briefFile = await readFile(path.join(project, ".context", "out", "brief.md"), "utf8");
+assertIncludes(briefFile, "# AI Coding Brief", "brief file");
+
+const obsidian = await run(["obsidian", "export", "--out", "_cmap/Smoke"], project);
+assertIncludes(obsidian.stdout, "Exported Obsidian view to _cmap/Smoke", "obsidian export output");
+const obsidianNote = await readFile(path.join(project, "_cmap", "Smoke", "modules", "Chat.md"), "utf8");
+assertIncludes(obsidianNote, 'type: "cmap-module"', "obsidian note");
+
 await run(
   [
     "checkpoint",

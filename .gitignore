@@ -3,3 +3,5 @@ dist/
 coverage/
 .DS_Store
 .obsidian/
+.context/out/
+_cmap/

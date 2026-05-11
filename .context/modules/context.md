@@ -28,6 +28,7 @@ Create and describe `.context` files without inventing trusted project meaning.
 ## Responsibilities
 - Provide Markdown templates with frontmatter.
 - Create default directory names.
+- Include non-canonical `.context/inbox/` and `.context/out/` directories for candidate facts and generated task outputs.
 - Infer deterministic verification commands from package scripts.
 - Offer filesystem existence helpers shared by commands.
 
@@ -55,4 +56,4 @@ Writes `.context/**` through `init`.
 - `pnpm test tests/integration/m1.test.ts`
 
 ## When to Update This Doc
-When adding `.context` files, changing template headings, or changing deterministic scan behavior.
+When adding `.context` files/directories, changing template headings, or changing deterministic scan behavior.

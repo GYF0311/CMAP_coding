@@ -2,6 +2,7 @@
 import { Command, CommanderError } from "commander";
 import { runAddModule } from "./commands/add-module.js";
 import { runAdopt } from "./commands/adopt.js";
+import { runBrief } from "./commands/brief.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
@@ -11,6 +12,7 @@ import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
 import { runLogAdd } from "./commands/log.js";
+import { runObsidianExport, runObsidianOpen } from "./commands/obsidian.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
 import { runVerify } from "./commands/verify.js";
@@ -64,6 +66,17 @@ program
   .option("--format <format>", "Output format: text or json", "text")
   .action(async (task: string, options: { format?: string }) => {
     await runRoute(process.cwd(), task, options);
+  });
+
+program
+  .command("brief")
+  .description("Render an AI coding brief from route, status, and module docs")
+  .argument("<task>", "Natural-language task description")
+  .option("--out <path>", "Write brief to a project-relative file")
+  .option("--obsidian", "Include Obsidian open links for routed module notes")
+  .option("--vault-name <name>", "Obsidian vault name for obsidian:// links", "corpus")
+  .action(async (task: string, options: { out?: string; obsidian?: boolean; vaultName?: string }) => {
+    await runBrief(process.cwd(), task, options);
   });
 
 program
@@ -178,6 +191,23 @@ hooks
   .option("--profile <profile>", "reminder or maintain", "reminder")
   .action(async (options: { profile: "reminder" | "maintain" }) => {
     await runHookStop(process.cwd(), options);
+  });
+
+const obsidian = program.command("obsidian").description("Export and open Obsidian-friendly cmap views");
+obsidian
+  .command("export")
+  .description("Export .context modules to Obsidian-friendly markdown")
+  .option("--out <dir>", "Project-relative export directory; defaults to _cmap/<project>")
+  .action(async (options: { out?: string }) => {
+    await runObsidianExport(process.cwd(), options);
+  });
+obsidian
+  .command("open")
+  .description("Print an obsidian:// link for a module note")
+  .argument("<module>", "Module id or name")
+  .option("--vault-name <name>", "Obsidian vault name", "corpus")
+  .action(async (module: string, options: { vaultName?: string }) => {
+    await runObsidianOpen(process.cwd(), module, options);
   });
 
 program

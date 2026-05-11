@@ -50,6 +50,7 @@ Daily task:
 
 ```bash
 cmap route "多人对话页面消息发不出去"
+cmap brief "多人对话页面消息发不出去" --out .context/out/brief.md
 cmap checkpoint --goal "..." --done "..." --left-off "..." --next "..."
 cmap finish
 cmap verify --changed
@@ -65,10 +66,13 @@ cmap verify --changed
 | `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
 | `cmap route "<task>"` | Recommend context files to read. |
+| `cmap brief "<task>"` | Render an AI coding brief from route, status, and module docs. |
 | `cmap status` | Print `.context/STATUS.md`. |
 | `cmap checkpoint ...` | Update `.context/STATUS.md` from explicit handoff fields. |
 | `cmap verify [--changed]` | Check context structure. |
 | `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
+| `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
+| `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap add-module <name>` | Create a candidate module doc. |
 | `cmap cp copy/move/delete/restore` | Move existing line blocks with backups for destructive edits. |
 | `cmap log add "..."` | Append a work log entry. |

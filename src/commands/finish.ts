@@ -1,9 +1,6 @@
 import { execFile } from "node:child_process";
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
 import { promisify } from "node:util";
-import matter from "gray-matter";
-import { fileExists } from "../context/scanner.js";
+import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -11,18 +8,13 @@ type FinishOptions = {
   changed?: string;
 };
 
-type ModuleInfo = {
-  name: string;
-  docPath: string;
-  paths: string[];
-};
-
 export async function runFinish(cwd: string, options: FinishOptions): Promise<void> {
   const changedFiles = options.changed
     ? splitCsv(options.changed)
     : await readGitChangedFiles(cwd);
-  const modules = await readModules(cwd);
-  const affectedModules = affectedByChangedFiles(changedFiles, modules);
+  const modules = await loadModuleIndex(cwd);
+  const mapping = mapChangedFilesToModules(changedFiles, modules);
+  const affectedModules = mapping.affectedModules;
 
   const lines = [
     "# Finish Report",
@@ -31,7 +23,10 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
     ...(changedFiles.length ? changedFiles.map((file) => `- ${file}`) : ["- None detected"]),
     "",
     "## Changed Modules",
-    ...(affectedModules.length ? affectedModules.map((module) => `- ${module.name}`) : ["- None detected"]),
+    ...(affectedModules.length ? affectedModules.map((module) => `- ${module.id}`) : ["- None detected"]),
+    "",
+    "## Unmapped Changed Files",
+    ...(mapping.unmapped.length ? mapping.unmapped.map((file) => `- ${file}`) : ["- None"]),
     "",
     "## Context Updates Needed",
     "- STATUS.md: check whether current main thread changed",
@@ -64,32 +59,6 @@ async function readGitChangedFiles(cwd: string): Promise<string[]> {
   } catch {
     return [];
   }
-}
-
-async function readModules(cwd: string): Promise<ModuleInfo[]> {
-  const modulesRoot = path.join(cwd, ".context", "modules");
-  if (!(await fileExists(modulesRoot))) {
-    return [];
-  }
-
-  const entries = await readdir(modulesRoot);
-  const modules: ModuleInfo[] = [];
-  for (const entry of entries.filter((file) => file.endsWith(".md"))) {
-    const raw = await readFile(path.join(modulesRoot, entry), "utf8");
-    const parsed = matter(raw);
-    const name = typeof parsed.data.module === "string" ? parsed.data.module : path.basename(entry, ".md");
-    const paths = Array.isArray(parsed.data.paths)
-      ? parsed.data.paths.filter((item: unknown): item is string => typeof item === "string")
-      : [];
-    modules.push({ name, docPath: `.context/modules/${entry}`, paths });
-  }
-  return modules;
-}
-
-function affectedByChangedFiles(changedFiles: string[], modules: ModuleInfo[]): ModuleInfo[] {
-  return modules.filter((module) =>
-    changedFiles.some((file) => module.paths.some((modulePath) => file === modulePath || file.startsWith(`${modulePath}/`)))
-  );
 }
 
 function splitCsv(value: string): string[] {

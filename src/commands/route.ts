@@ -1,13 +1,12 @@
-import { readdir, readFile } from "node:fs/promises";
-import path from "node:path";
-import matter from "gray-matter";
-import { fileExists } from "../context/scanner.js";
+import type { ContextModule } from "../core/module-index.js";
+import { loadModuleIndex } from "../core/module-index.js";
 
 type RouteOptions = {
   format?: string;
 };
 
-type ModuleCandidate = {
+export type ModuleCandidate = {
+  id: string;
   name: string;
   docPath: string;
   aliases: string[];
@@ -18,65 +17,59 @@ type ModuleCandidate = {
   matchedPathKeywords: string[];
 };
 
+export type RouteReport = {
+  task: string;
+  modules: ModuleCandidate[];
+  ranked: ModuleCandidate[];
+  lowConfidence: boolean;
+  readFirst: string[];
+};
+
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
-  const candidates = await readModuleCandidates(cwd);
+  const report = await routeTask(cwd, task);
+
+  if (options.format === "json") {
+    process.stdout.write(`${JSON.stringify(toJsonReport(report), null, 2)}\n`);
+    return;
+  }
+
+  process.stdout.write(formatRouteReport(task, report.modules, report.ranked));
+}
+
+export async function routeTask(cwd: string, task: string): Promise<RouteReport> {
+  const candidates = (await loadModuleIndex(cwd)).map(toRouteCandidate);
   const ranked = candidates
     .map((candidate) => scoreCandidate(candidate, task))
     .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
 
   const strong = ranked.filter((candidate) => candidate.score > 0 && hasHighConfidenceSignal(candidate));
-  const report = {
+  return {
     task,
     modules: strong,
+    ranked,
     lowConfidence: strong.length === 0,
     readFirst: buildReadFirst(strong)
   };
-
-  if (options.format === "json") {
-    process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
-    return;
-  }
-
-  process.stdout.write(formatRouteReport(task, strong, ranked));
 }
 
-async function readModuleCandidates(cwd: string): Promise<ModuleCandidate[]> {
-  const modulesRoot = path.join(cwd, ".context", "modules");
-  if (!(await fileExists(modulesRoot))) {
-    return [];
-  }
-
-  const entries = await readdir(modulesRoot);
-  const candidates: ModuleCandidate[] = [];
-
-  for (const entry of entries.filter((file) => file.endsWith(".md"))) {
-    const absolutePath = path.join(modulesRoot, entry);
-    const raw = await readFile(absolutePath, "utf8");
-    const parsed = matter(raw);
-    const fallbackName = path.basename(entry, ".md");
-    const aliases = normalizeStringArray(parsed.data.aliases);
-    const modulePaths = normalizeStringArray(parsed.data.paths);
-    const moduleName = typeof parsed.data.module === "string" ? parsed.data.module : fallbackName;
-
-    candidates.push({
-      name: moduleName,
-      docPath: `.context/modules/${entry}`,
-      aliases,
-      paths: modulePaths,
-      score: 0,
-      matchedAliases: [],
-      matchedModuleName: false,
-      matchedPathKeywords: []
-    });
-  }
-
-  return candidates;
+function toRouteCandidate(module: ContextModule): ModuleCandidate {
+  return {
+    id: module.id,
+    name: module.id,
+    docPath: module.docPath,
+    aliases: module.aliases,
+    paths: module.pathsInclude,
+    score: 0,
+    matchedAliases: [],
+    matchedModuleName: false,
+    matchedPathKeywords: []
+  };
 }
 
 function scoreCandidate(candidate: ModuleCandidate, task: string): ModuleCandidate {
   const normalizedTask = task.toLocaleLowerCase();
   const matchedAliases = candidate.aliases.filter((alias) => matchesTerm(normalizedTask, alias));
-  const matchedModuleName = matchesTerm(normalizedTask, candidate.name);
+  const matchedModuleName = matchesTerm(normalizedTask, candidate.id) || matchesTerm(normalizedTask, candidate.name);
   const matchedPathKeywords = pathKeywords(candidate.paths).filter((keyword) =>
     matchesTerm(normalizedTask, keyword)
   );
@@ -114,7 +107,12 @@ function hasHighConfidenceSignal(candidate: ModuleCandidate): boolean {
 }
 
 function buildReadFirst(modules: ModuleCandidate[]): string[] {
-  return [".context/MAP.md", ".context/STATUS.md", ...modules.slice(0, 3).map((module) => module.docPath)];
+  return [
+    ".context/MAP.md",
+    ".context/STATUS.md",
+    ...modules.slice(0, 3).map((module) => module.docPath),
+    ".context/VERIFY.md"
+  ];
 }
 
 function formatRouteReport(task: string, modules: ModuleCandidate[], ranked: ModuleCandidate[]): string {
@@ -162,13 +160,6 @@ function formatMatchReason(module: ModuleCandidate): string {
   return `matched path keywords: ${module.matchedPathKeywords.join(", ")}`;
 }
 
-function normalizeStringArray(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  return value.filter((item): item is string => typeof item === "string").map((item) => item.trim()).filter(Boolean);
-}
-
 function pathKeywords(paths: string[]): string[] {
   const keywords = new Set<string>();
   for (const filePath of paths) {
@@ -179,4 +170,33 @@ function pathKeywords(paths: string[]): string[] {
     }
   }
   return [...keywords];
+}
+
+function toJsonReport(report: RouteReport): object {
+  return {
+    task: report.task,
+    modules: report.modules.map((module) => ({
+      id: module.id,
+      name: module.name,
+      docPath: module.docPath,
+      score: module.score,
+      evidence: evidence(module)
+    })),
+    lowConfidence: report.lowConfidence,
+    readFirst: report.readFirst
+  };
+}
+
+function evidence(module: ModuleCandidate): string[] {
+  const values: string[] = [];
+  for (const alias of module.matchedAliases) {
+    values.push(`alias matched: ${alias}`);
+  }
+  if (module.matchedModuleName) {
+    values.push(`module matched: ${module.id}`);
+  }
+  for (const keyword of module.matchedPathKeywords) {
+    values.push(`path keyword matched: ${keyword}`);
+  }
+  return values;
 }

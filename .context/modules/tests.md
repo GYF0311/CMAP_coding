@@ -28,6 +28,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m2.test.ts`
 - `tests/integration/m3.test.ts`
 - `tests/integration/m4m5.test.ts`
+- `tests/integration/m6-brief-obsidian.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `scripts/smoke-test.mjs`
@@ -36,6 +37,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Spawn the CLI in temporary project directories.
 - Assert stdout/stderr-sensitive behavior and exit codes.
 - Assert generated files contain expected content and do not invent project semantics.
+- Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On

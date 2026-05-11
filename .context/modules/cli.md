@@ -16,6 +16,13 @@ aliases:
   - version
   - init
   - install
+relations:
+  dispatches_to:
+    - route
+    - brief
+    - obsidian-adapter
+    - finish
+    - verify
 ---
 # Module: cli
 
@@ -29,6 +36,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 ## Responsibilities
 - Register user-facing commands with commander.
 - Keep command handlers small and delegate domain work to modules.
+- Register `brief` and `obsidian` command groups without embedding domain logic in `cli.ts`.
 - Convert expected CLI errors into exit code 2.
 - Preserve command-specific exit codes such as `verify` returning 1 on structural errors.
 
@@ -36,6 +44,8 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `context` for init templates and deterministic scanning.
 - `verify` for structure checks.
 - `host` for entrypoint generation.
+- `brief` for AI coding startup packages.
+- `obsidian-adapter` for Obsidian view commands.
 
 ## Used By
 - Package bin `cmap`.
