@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T17:55:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: verify
 paths:
@@ -28,6 +28,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Check required files exist.
 - Parse frontmatter and warn on missing `context_type`.
 - Check required headings in canonical files.
+- Require `CHECKPOINT.md` with the current checkpoint headings.
 - Warn on generated placeholder residue.
 - Check module frontmatter paths stay inside the project and exist.
 - Check typed module relations point to existing modules.

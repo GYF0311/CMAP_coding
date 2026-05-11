@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T18:02:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: handoff
 paths:
@@ -20,7 +20,7 @@ aliases:
 # Module: handoff
 
 ## Purpose
-Keep the current project thread resumable through `STATUS.md`.
+Keep the current project thread resumable through durable `STATUS.md` and task-local `CHECKPOINT.md`.
 
 ## Code Paths
 - `src/commands/status.ts`
@@ -28,8 +28,11 @@ Keep the current project thread resumable through `STATUS.md`.
 
 ## Responsibilities
 - `status` prints `.context/STATUS.md`.
-- `checkpoint` updates `STATUS.md` from explicit fields.
+- Legacy `checkpoint --goal ...` updates `STATUS.md` from explicit fields.
 - `checkpoint --from-stdin` can replace `STATUS.md` with caller-provided markdown.
+- `checkpoint write` updates `.context/CHECKPOINT.md` from explicit task, next-step, verification, and do-not-redo fields.
+- `checkpoint read` prints `CHECKPOINT.md`, falling back to `STATUS.md` if no checkpoint exists.
+- `checkpoint close` marks the current checkpoint closed; `checkpoint clear` resets it to an empty cleared checkpoint.
 
 ## Depends On
 - `gray-matter`
@@ -37,24 +40,27 @@ Keep the current project thread resumable through `STATUS.md`.
 
 ## Used By
 - Long sessions before compaction.
+- `brief`, which prefers `CHECKPOINT.md` over `STATUS.md` for session startup context.
 - Future `finish` flow.
 
 ## Data Flow
-Explicit CLI fields -> `STATUS.md` sections. No transcript auto-summary.
+Explicit CLI fields -> `CHECKPOINT.md` or `STATUS.md` sections. No transcript auto-summary.
 
 ## State / Storage
-Writes `.context/STATUS.md`.
+Writes `.context/CHECKPOINT.md` for active handoff state and `.context/STATUS.md` for durable project status.
 
 ## Constraints
 - Missing key checkpoint fields are command errors.
 - The CLI must not summarize conversation history by itself.
 
 ## Traps
+- `CHECKPOINT.md` is resumable working state, not a replacement for long-lived status or module facts.
 - `--from-stdin` trusts the caller's markdown; it should be used by AI/user-generated checkpoint text, not raw transcript.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m2.test.ts`
+- `pnpm dev checkpoint read`
 - `pnpm dev status`
 
 ## When to Update This Doc
-When STATUS schema, checkpoint options, or compaction workflow changes.
+When STATUS schema, CHECKPOINT schema, checkpoint options, or compaction workflow changes.

@@ -22,12 +22,12 @@ export async function runBrief(cwd: string, task: string, options: BriefOptions)
     .slice(0, 3)
     .map((candidate) => moduleLookup.get(candidate.id))
     .filter((module): module is NonNullable<typeof module> => Boolean(module));
-  const status = await readOptionalFile(path.join(cwd, ".context", "STATUS.md"));
+  const checkpoint = await readCurrentCheckpoint(cwd);
   const brief = renderBrief({
     task,
     route,
     selectedModules,
-    status,
+    checkpoint,
     projectId: project.projectId,
     includeObsidian: Boolean(options.obsidian),
     vaultName: options.vaultName || "corpus"
@@ -48,7 +48,7 @@ function renderBrief(input: {
   task: string;
   route: Awaited<ReturnType<typeof routeTask>>;
   selectedModules: Awaited<ReturnType<typeof loadModuleIndex>>;
-  status: string;
+  checkpoint: { label: string; content: string };
   projectId: string;
   includeObsidian: boolean;
   vaultName: string;
@@ -89,8 +89,8 @@ function renderBrief(input: {
     }
   }
 
-  lines.push("", "## Current Status", "");
-  lines.push(input.status.trim() ? excerptStatus(input.status) : "No `.context/STATUS.md` found.");
+  lines.push("", `## ${input.checkpoint.label}`, "");
+  lines.push(input.checkpoint.content.trim() ? excerptMarkdown(input.checkpoint.content) : "No checkpoint or status found.");
 
   lines.push("", "## Module Context", "");
   for (const module of input.selectedModules) {
@@ -157,7 +157,15 @@ async function readOptionalFile(filePath: string): Promise<string> {
   return readFile(filePath, "utf8");
 }
 
-function excerptStatus(status: string): string {
+async function readCurrentCheckpoint(cwd: string): Promise<{ label: string; content: string }> {
+  const checkpoint = await readOptionalFile(path.join(cwd, ".context", "CHECKPOINT.md"));
+  if (checkpoint.trim()) {
+    return { label: "Current Checkpoint", content: checkpoint };
+  }
+  return { label: "Current Status", content: await readOptionalFile(path.join(cwd, ".context", "STATUS.md")) };
+}
+
+function excerptMarkdown(status: string): string {
   const lines = status.trim().split(/\r?\n/);
   const withoutFrontmatter = lines[0] === "---" ? lines.slice(lines.indexOf("---", 1) + 1) : lines;
   return withoutFrontmatter.join("\n").trim();

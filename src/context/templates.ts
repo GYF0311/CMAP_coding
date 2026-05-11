@@ -139,6 +139,33 @@ TODO(ai-fill)
 `
     ],
     [
+      "CHECKPOINT.md",
+      `${frontmatter(input, "checkpoint")}
+# Current Checkpoint
+
+## Current Task
+TODO(ai-fill)
+
+## Current Hypothesis
+TODO(ai-fill)
+
+## Changed Files
+TODO(ai-fill)
+
+## Verified
+TODO(ai-fill)
+
+## Failed / Pending
+TODO(ai-fill)
+
+## Next Step
+TODO(ai-fill)
+
+## Do Not Redo
+TODO(ai-fill)
+`
+    ],
+    [
       "DECISIONS.md",
       `${frontmatter(input, "decision", "high")}
 # Decisions

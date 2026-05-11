@@ -164,4 +164,67 @@ confidence: ai-drafted
     expect(updated).toContain("- tests/integration/m2.test.ts");
     expect(updated).toContain("M2 tests red before implementation");
   });
+
+  test("checkpoint write/read/close maintains CHECKPOINT.md without touching STATUS.md", async () => {
+    const cwd = await createTempProject("m2-current-checkpoint");
+    await runCmap(["init", "--auto"], cwd);
+    const statusBefore = await expectFile(path.join(cwd, ".context/STATUS.md"));
+
+    const writeResult = await runCmap(
+      [
+        "checkpoint",
+        "write",
+        "--task",
+        "Implement explicit checkpoint workflow",
+        "--hypothesis",
+        "Briefs should prefer CHECKPOINT.md over STATUS.md",
+        "--files",
+        "src/commands/checkpoint.ts,src/commands/brief.ts",
+        "--verified",
+        "Targeted tests pending",
+        "--failed",
+        "Full suite not run yet",
+        "--next",
+        "Update project map docs",
+        "--do-not-redo",
+        "Do not regenerate the Obsidian view as canonical facts"
+      ],
+      cwd
+    );
+
+    expect(writeResult).toMatchObject({ code: 0 });
+    expect(writeResult.stdout).toContain("Updated .context/CHECKPOINT.md");
+    expect(await expectFile(path.join(cwd, ".context/STATUS.md"))).toBe(statusBefore);
+
+    const checkpoint = await expectFile(path.join(cwd, ".context/CHECKPOINT.md"));
+    expect(checkpoint).toContain("context_type: checkpoint");
+    expect(checkpoint).toContain("status: active");
+    expect(checkpoint).toContain("## Current Task\nImplement explicit checkpoint workflow");
+    expect(checkpoint).toContain("- src/commands/checkpoint.ts");
+    expect(checkpoint).toContain("- src/commands/brief.ts");
+    expect(checkpoint).toContain("## Next Step\nUpdate project map docs");
+    expect(checkpoint).toContain("Do not regenerate the Obsidian view as canonical facts");
+
+    const readResult = await runCmap(["checkpoint", "read"], cwd);
+    expect(readResult).toMatchObject({ code: 0 });
+    expect(readResult.stdout).toContain("# Current Checkpoint");
+    expect(readResult.stdout).toContain("Implement explicit checkpoint workflow");
+
+    const closeResult = await runCmap(["checkpoint", "close"], cwd);
+    expect(closeResult).toMatchObject({ code: 0 });
+    expect(closeResult.stdout).toContain("Closed .context/CHECKPOINT.md");
+    const closed = await expectFile(path.join(cwd, ".context/CHECKPOINT.md"));
+    expect(closed).toContain("status: closed");
+    expect(closed).toContain("Implement explicit checkpoint workflow");
+  });
+
+  test("checkpoint rejects unknown actions", async () => {
+    const cwd = await createTempProject("m2-checkpoint-unknown");
+    await runCmap(["init", "--auto"], cwd);
+
+    const result = await runCmap(["checkpoint", "unknown"], cwd);
+
+    expect(result).toMatchObject({ code: 2 });
+    expect(result.stderr).toContain("unknown checkpoint action: unknown");
+  });
 });

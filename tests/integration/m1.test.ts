@@ -26,6 +26,7 @@ describe("M1 CLI skeleton", () => {
       "BRIEF.md",
       "MAP.md",
       "STATUS.md",
+      "CHECKPOINT.md",
       "DECISIONS.md",
       "VERIFY.md",
       "logs/_index.md",

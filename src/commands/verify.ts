@@ -29,6 +29,7 @@ const requiredFiles = [
   "BRIEF.md",
   "MAP.md",
   "STATUS.md",
+  "CHECKPOINT.md",
   "DECISIONS.md",
   "VERIFY.md",
   "logs/_index.md",
@@ -40,6 +41,7 @@ const requiredHeadings: Record<string, string[]> = {
   "BRIEF.md": ["# Project Brief", "## One-liner", "## Non-goals"],
   "MAP.md": ["# Project Map", "## Module Map", "## Natural Language Route"],
   "STATUS.md": ["# Status", "## Active Goal", "## Next Steps", "## Last Verified"],
+  "CHECKPOINT.md": ["# Current Checkpoint", "## Current Task", "## Next Step"],
   "VERIFY.md": ["# Verification", "## Required Commands", "## Manual Verification"]
 };
 

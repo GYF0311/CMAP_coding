@@ -50,8 +50,8 @@ Daily task:
 
 ```bash
 cmap route "多人对话页面消息发不出去"
+cmap checkpoint write --task "多人对话页面消息发不出去" --next "Read routed module docs"
 cmap brief "多人对话页面消息发不出去" --out .context/out/brief.md
-cmap checkpoint --goal "..." --done "..." --left-off "..." --next "..."
 cmap finish
 cmap verify --coverage --changed
 cmap obsidian export
@@ -69,9 +69,12 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
 | `cmap route "<task>"` | Recommend context files to read. |
-| `cmap brief "<task>"` | Render an AI coding brief from route, status, and module docs. |
+| `cmap brief "<task>"` | Render an AI coding brief from route, checkpoint/status, and module docs. |
 | `cmap status` | Print `.context/STATUS.md`. |
-| `cmap checkpoint ...` | Update `.context/STATUS.md` from explicit handoff fields. |
+| `cmap checkpoint read` | Print `.context/CHECKPOINT.md`, falling back to `.context/STATUS.md`. |
+| `cmap checkpoint write --task ... --next ...` | Update `.context/CHECKPOINT.md` from explicit handoff fields. |
+| `cmap checkpoint close\|clear` | Close or clear the current `.context/CHECKPOINT.md`. |
+| `cmap checkpoint --goal ... --next ...` | Legacy-compatible update of `.context/STATUS.md`. |
 | `cmap verify [--changed]` | Check context structure. |
 | `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
@@ -91,7 +94,7 @@ cmap CLI does not generate trusted project semantics.
 
 - CLI creates skeletons, scans deterministic signals, routes by aliases, and checks structure.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
-- Hooks only remind. They do not update `MAP.md`, `STATUS.md`, `DECISIONS.md`, or module docs.
+- Hooks only remind. They do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, or module docs.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
 
 ## Verify

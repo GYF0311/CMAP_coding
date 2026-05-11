@@ -92,8 +92,11 @@ program
 
 program
   .command("checkpoint")
-  .description("Update .context/STATUS.md from explicit handoff fields")
+  .description("Read/write CHECKPOINT.md or update STATUS.md from explicit handoff fields")
+  .argument("[action]", "read, write, close, or clear")
   .option("--from-stdin", "Replace STATUS.md with markdown read from stdin")
+  .option("--task <text>", "Checkpoint task for `checkpoint write`")
+  .option("--hypothesis <text>", "Current hypothesis for `checkpoint write`")
   .option("--goal <text>", "Active goal")
   .option("--done <text>", "Done recently")
   .option("--left-off <text>", "Where work left off")
@@ -101,9 +104,14 @@ program
   .option("--files <csv>", "Changed files, comma-separated")
   .option("--risks <text>", "Risks")
   .option("--verified <text>", "Last verified")
+  .option("--failed <text>", "Failed or pending checks for `checkpoint write`")
+  .option("--do-not-redo <text>", "Work that should not be repeated")
+  .option("--status <text>", "Checkpoint status", "active")
   .action(
-    async (options: {
+    async (action: string | undefined, options: {
       fromStdin?: boolean;
+      task?: string;
+      hypothesis?: string;
       goal?: string;
       done?: string;
       leftOff?: string;
@@ -111,8 +119,11 @@ program
       files?: string;
       risks?: string;
       verified?: string;
+      failed?: string;
+      doNotRedo?: string;
+      status?: string;
     }) => {
-      await runCheckpoint(process.cwd(), options);
+      await runCheckpoint(process.cwd(), action, options);
     }
   );
 

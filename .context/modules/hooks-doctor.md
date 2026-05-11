@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T18:15:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: hooks-doctor
 paths:
@@ -32,7 +32,7 @@ Provide optional hook templates and diagnostics without writing trusted project 
 ## Responsibilities
 - `install --hooks reminder|maintain` writes project-local hook templates.
 - `hooks session-start` prints start reminders.
-- `hooks stop` prints reminder or maintain closeout prompts.
+- `hooks stop` prints reminder or maintain closeout prompts, including explicit `checkpoint write` guidance.
 - `doctor` checks `.context`, entrypoint parity, and hook template presence.
 
 ## Depends On
@@ -52,7 +52,7 @@ Install options -> hook JSON templates. Hook invocation -> stdout reminder only.
 Writes `.context/hooks/*.json` only when install is called with hooks.
 
 ## Constraints
-- Hooks do not modify MAP, STATUS, DECISIONS, modules, logs, or ideas.
+- Hooks do not modify MAP, CHECKPOINT, STATUS, DECISIONS, modules, logs, or ideas.
 - No automatic host-global config edits in v0.1.
 
 ## Traps

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T17:55:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -37,6 +37,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Spawn the CLI in temporary project directories.
 - Assert stdout/stderr-sensitive behavior and exit codes.
 - Assert generated files contain expected content and do not invent project semantics.
+- Assert `CHECKPOINT.md` write/read/close behavior and legacy `STATUS.md` checkpoint compatibility.
 - Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
 - Assert coverage, pull dry-run, and benchmark commands surface candidate issues without canonical writes.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T09:44:43.433Z
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -26,8 +26,8 @@ confidence: ai-drafted
 | verify coverage | `pnpm dev verify --coverage --changed-files src/commands/verify.ts` | Reports changed-file module coverage and relation validity. |
 | host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
 | route | `pnpm dev route "checkpoint 更新当前主线"` | Should recommend handoff, not verify through `check` substring. |
-| brief | `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md` | Writes a task-local AI brief with route result, status, module docs, verify reminder, and finish requirement. |
-| handoff | `pnpm dev status` | Prints current `STATUS.md`; checkpoint writes only explicit fields. |
+| brief | `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md` | Writes a task-local AI brief with route result, checkpoint/status, module docs, verify reminder, and finish requirement. |
+| handoff | `pnpm dev checkpoint read` | Prints current `CHECKPOINT.md`, falling back to `STATUS.md`; checkpoint writes only explicit fields. |
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report and does not modify trusted memory. |
 | obsidian-adapter | `pnpm dev obsidian export --out _cmap/CMAP_coding` | Writes Obsidian-friendly notes with Properties and relation wikilinks; generated files remain view-layer artifacts. |

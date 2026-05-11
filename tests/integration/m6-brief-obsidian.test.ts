@@ -55,12 +55,11 @@ Check project map health.
   await runCmap(
     [
       "checkpoint",
-      "--goal",
+      "write",
+      "--task",
       "Ship AI brief workflow",
-      "--done",
-      "Module docs exist",
-      "--left-off",
-      "Before brief command",
+      "--hypothesis",
+      "Module docs exist before the brief command",
       "--next",
       "Generate brief",
       "--verified",
@@ -73,7 +72,7 @@ Check project map health.
 }
 
 describe("M6 brief and Obsidian export", () => {
-  test("brief writes an AI coding brief with route, status, module docs, and Obsidian links", async () => {
+  test("brief writes an AI coding brief with route, checkpoint, module docs, and Obsidian links", async () => {
     const cwd = await createWorkflowProject();
 
     const result = await runCmap(["brief", "路由结果没有推荐模块", "--obsidian", "--out", ".context/out/brief.md"], cwd);
@@ -83,6 +82,7 @@ describe("M6 brief and Obsidian export", () => {
     const brief = await expectFile(path.join(cwd, ".context/out/brief.md"));
     expect(brief).toContain("# AI Coding Brief");
     expect(brief).toContain("## Route Result");
+    expect(brief).toContain("## Current Checkpoint");
     expect(brief).toContain("- route (score");
     expect(brief).toContain(".context/modules/route.md");
     expect(brief).toContain("Ship AI brief workflow");

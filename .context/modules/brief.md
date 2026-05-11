@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:10:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: brief
 paths:
@@ -24,7 +24,7 @@ relations:
 # Module: brief
 
 ## Purpose
-Render an AI coding brief from route results, current status, selected module docs, and verification reminders.
+Render an AI coding brief from route results, current checkpoint/status, selected module docs, and verification reminders.
 
 ## Code Paths
 - `src/commands/brief.ts`
@@ -33,7 +33,7 @@ Render an AI coding brief from route results, current status, selected module do
 
 ## Responsibilities
 - Run the same deterministic routing used by `cmap route`.
-- Read `.context/STATUS.md` as the current handoff/checkpoint source.
+- Read `.context/CHECKPOINT.md` as the preferred current handoff source, falling back to `.context/STATUS.md`.
 - Include the top routed module docs in a single AI-readable brief.
 - Optionally include `obsidian://` links for routed modules.
 - Write to `.context/out/brief.md` or another explicit project-relative output path.
@@ -49,7 +49,7 @@ Render an AI coding brief from route results, current status, selected module do
 - AI coding session startup prompts.
 
 ## Data Flow
-Task text -> route result -> status excerpt -> module docs -> Markdown brief -> stdout or `.context/out/*`.
+Task text -> route result -> checkpoint/status excerpt -> module docs -> Markdown brief -> stdout or `.context/out/*`.
 
 ## State / Storage
 Writes only explicit output files, usually under `.context/out/`. It does not modify canonical facts.

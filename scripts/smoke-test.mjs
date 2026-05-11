@@ -51,10 +51,31 @@ await run(["add-module", "chat", "--path", "src/features/chat", "--alias", "chat
 const route = await run(["route", "chat message failing"], project);
 assertIncludes(route.stdout, ".context/modules/chat.md", "route output");
 
+await run(
+  [
+    "checkpoint",
+    "write",
+    "--task",
+    "Smoke test",
+    "--hypothesis",
+    "Brief should include checkpoint context",
+    "--files",
+    "src/features/chat/send.ts",
+    "--next",
+    "Generate brief",
+    "--verified",
+    "Built CLI smoke"
+  ],
+  project
+);
+const checkpointRead = await run(["checkpoint", "read"], project);
+assertIncludes(checkpointRead.stdout, "# Current Checkpoint", "checkpoint read output");
+
 const brief = await run(["brief", "chat message failing", "--out", ".context/out/brief.md"], project);
 assertIncludes(brief.stdout, "Wrote .context/out/brief.md", "brief output");
 const briefFile = await readFile(path.join(project, ".context", "out", "brief.md"), "utf8");
 assertIncludes(briefFile, "# AI Coding Brief", "brief file");
+assertIncludes(briefFile, "Smoke test", "brief checkpoint context");
 
 const obsidian = await run(["obsidian", "export", "--out", "_cmap/Smoke"], project);
 assertIncludes(obsidian.stdout, "Exported Obsidian view to _cmap/Smoke", "obsidian export output");
@@ -109,5 +130,7 @@ if (unknownCount !== 1) {
 
 const status = await readFile(path.join(project, ".context", "STATUS.md"), "utf8");
 assertIncludes(status, "Smoke test", "STATUS.md");
+const checkpoint = await readFile(path.join(project, ".context", "CHECKPOINT.md"), "utf8");
+assertIncludes(checkpoint, "Smoke test", "CHECKPOINT.md");
 
 process.stdout.write(`Smoke test passed in ${project}\n`);

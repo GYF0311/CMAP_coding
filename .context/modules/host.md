@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T17:55:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: host
 paths:
@@ -28,6 +28,7 @@ Generate short host entrypoints for AI coding agents.
 ## Responsibilities
 - Generate same-source `AGENTS.md` and/or `CLAUDE.md`.
 - Keep entrypoints short and route-oriented.
+- Point agents to `CHECKPOINT.md` for current handoff and `STATUS.md` for durable status.
 - Validate host and hook profile options.
 
 ## Depends On

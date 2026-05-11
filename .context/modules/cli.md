@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T17:55:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -39,6 +39,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register user-facing commands with commander.
 - Keep command handlers small and delegate domain work to modules.
 - Register `brief` and `obsidian` command groups without embedding domain logic in `cli.ts`.
+- Register `checkpoint` actions while keeping the legacy option-only STATUS update path compatible.
 - Register `benchmark route` as a public evaluation command.
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Convert expected CLI errors into exit code 2.
@@ -49,6 +50,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `verify` for structure checks.
 - `host` for entrypoint generation.
 - `brief` for AI coding startup packages.
+- `handoff` for status and checkpoint command behavior.
 - `benchmark` for route fixture evaluation.
 - `obsidian-adapter` for Obsidian view commands.
 - `reconcile-adapter` for external workflow candidate reports.

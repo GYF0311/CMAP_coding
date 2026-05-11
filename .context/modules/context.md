@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T17:55:00+08:00
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 module: context
 paths:
@@ -27,6 +27,7 @@ Create and describe `.context` files without inventing trusted project meaning.
 
 ## Responsibilities
 - Provide Markdown templates with frontmatter.
+- Include `CHECKPOINT.md` as the explicit current handoff template.
 - Create default directory names.
 - Include non-canonical `.context/inbox/` and `.context/out/` directories for candidate facts and generated task outputs.
 - Infer deterministic verification commands from package scripts.

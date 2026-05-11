@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: brief
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T09:44:43.433Z
+updated_at: 2026-05-12T01:35:00+08:00
 confidence: ai-drafted
 ---
 # Project Brief
@@ -19,7 +19,7 @@ cmap 是给人和 AI 共用的 repo-local 项目小地图与公共记忆层，�
 ## Core Use Cases
 - `cmap init --auto` 为新项目创建 `.context` 骨架。
 - `cmap route "<task>"` 根据已有地图推荐先读哪些模块文档。
-- `cmap checkpoint` 保存当前主线，帮助上下文压缩或新会话续接。
+- `cmap checkpoint write --task ... --next ...` 保存当前 handoff，帮助上下文压缩或新会话续接。
 - `cmap verify` 做确定性结构检查，发现地图漂移和模板残留。
 - `cmap install --host both` 生成短入口，让 Codex/Claude 先读项目地图。
 
@@ -41,7 +41,7 @@ v0.1 先完成本地 TypeScript CLI：init、adopt、install、route、status、
 - 删除和搬运必须可恢复；涉及删除优先走备份或系统 Trash 语义。
 
 ## Current Stage
-v0.1 CLI 功能闭环已实现：`version`、`init --auto`、`adopt`、`install --host both`、`route`、`status`、`checkpoint`、`verify`、`finish`、`add-module`、`cp`、`log add`、`idea add`、`doctor`、hooks reminder/maintain skeleton。下一阶段是收尾：README、CLI polish、dogfood eval notes、发布前检查。
+v0.1 CLI 功能闭环已实现：`version`、`init --auto`、`adopt`、`install --host both`、`route`、`status`、`checkpoint read/write/close/clear`、`verify`、`finish`、`add-module`、`cp`、`log add`、`idea add`、`doctor`、hooks reminder/maintain skeleton。下一阶段是收尾：README、CLI polish、dogfood eval notes、发布前检查。
 
 ## Notes for AI
-先读 `MAP.md` 和 `STATUS.md`，再按任务用模块文档缩小读取范围。不要为了赶进度把 v0.2 能力塞进 v0.1，也不要让 CLI 代替 AI 编造项目事实。
+先读 `MAP.md`、`CHECKPOINT.md` 和 `STATUS.md`，再按任务用模块文档缩小读取范围。不要为了赶进度把 v0.2 能力塞进 v0.1，也不要让 CLI 代替 AI 编造项目事实。

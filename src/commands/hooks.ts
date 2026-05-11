@@ -6,7 +6,7 @@ export async function runHookSessionStart(_cwd: string, options: HookOptions): P
   process.stdout.write(`# cmap session reminder
 
 - Read .context/MAP.md for the project map.
-- Read .context/STATUS.md for the current main thread.
+- Read .context/CHECKPOINT.md for the current handoff, then .context/STATUS.md for durable status.
 - Use cmap route "<task>" before editing modules.
 - Treat logs/, ideas/, and pending/ as non-canonical.
 
@@ -25,12 +25,12 @@ Please check:
 2. Did module dependency change?
 3. Did data flow change?
 4. Was a new trap discovered?
-5. Should STATUS.md be updated?
+5. Should CHECKPOINT.md or STATUS.md be updated?
 6. Should a work log be added?
 
 Suggested commands:
 - cmap route "current task"
-- cmap checkpoint --from-stdin
+- cmap checkpoint write --task "current task" --next "next step"
 - cmap verify --changed
 `);
     return;
@@ -39,7 +39,7 @@ Suggested commands:
   process.stdout.write(`## cmap reminder
 
 Before ending work, consider:
-- cmap checkpoint --from-stdin
+- cmap checkpoint write --task "current task" --next "next step"
 - cmap finish
 - cmap verify --changed
 `);
