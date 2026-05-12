@@ -1,0 +1,33 @@
+{
+  "job_id": "2026-05-12-cmap-product-completion-deep-research",
+  "status": "collected",
+  "route": "chatgpt-deep-research",
+  "created_at": "2026-05-12T16:36:26+08:00",
+  "suggested_resume_after": "2026-05-12T17:05:00+08:00",
+  "deadline": "2026-05-12T18:00:00+08:00",
+  "collection_strategy": "user_resume",
+  "conversation_url": "https://chatgpt.com/c/6a02e5e1-88d8-83ea-a8d1-8bfcecb06f6d",
+  "mode_verified": "深度研究",
+  "collected_at": "2026-05-12T17:09:37+08:00",
+  "note": "The first message only attached the report and produced a normal greeting; a second explicit prompt was sent in the same conversation instructing ChatGPT to run Deep Research based on the attached report. The page then showed an active response and the assistant stated it would handle the task as deep research. Collection was performed through Computer Use page selection copy; the page showed Thought for 10m 59s and 124 network sources. The response itself says no background Deep Research task was created, and that it completed an immediate web-researched long report using a Deep Research standard.",
+  "transfer_method": "paste_compiled_text_auto_file_card_plus_explicit_prompt",
+  "input_files": [
+    {
+      "path": "/Users/gaoyifan/Desktop/CMAP_coding/research/cmap-pro-deep-review-handoff-20260512.md",
+      "sha256": "0d5e9725c8ce6a105b8276e41ec9eb10db2ef647b45cbd4d4c07f5aea0881ee6",
+      "bytes": 18783
+    }
+  ],
+  "prompt_summary": "Use Deep Research to review cmap's current product design, first-principles goal fit, missing hooks/autonomous-maintenance capabilities, public open-source projects to learn from, and a concrete roadmap to complete the project.",
+  "sink": {
+    "type": "local-markdown",
+    "path": "/Users/gaoyifan/Desktop/CMAP_coding/research/chatgpt-pro-cmap-product-completion-deep-research-response.md"
+  },
+  "capture": {
+    "method": "computer_use_page_selection_copy",
+    "raw_page_copy_path": "/Users/gaoyifan/Desktop/CMAP_coding/research/chatgpt-pro-cmap-product-completion-deep-research-response.computeruse-page-copy.txt",
+    "raw_dom_snapshot_path": "/Users/gaoyifan/Desktop/CMAP_coding/research/chatgpt-pro-cmap-product-completion-deep-research-response.raw-dom-snapshot.txt",
+    "clipboard_bytes": 66968,
+    "clean_report_bytes": 34471
+  }
+}

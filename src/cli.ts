@@ -8,7 +8,9 @@ import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
+import { runEvidenceAppend } from "./commands/evidence.js";
 import { runHookSessionStart, runHookStop } from "./commands/hooks.js";
+import { runInboxStatus } from "./commands/inbox.js";
 import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
@@ -58,8 +60,9 @@ program
   .option("--changed", "Check tracked changed file coverage when git is available")
   .option("--changed-files <csv>", "Changed files to check, comma-separated")
   .option("--coverage", "Check map coverage signals")
+  .option("--stale", "Warn when module docs appear older than owned files or inbox has pending candidates")
   .option("--format <format>", "Output format: text or json", "text")
-  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; format?: string }) => {
+  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; format?: string }) => {
     const code = await runVerify(process.cwd(), options);
     process.exitCode = code;
   });
@@ -185,6 +188,24 @@ idea
   .argument("<text>", "Idea summary")
   .action(async (text: string) => {
     await runIdeaAdd(process.cwd(), text);
+  });
+
+const evidence = program.command("evidence").description("Maintain generated evidence notes");
+evidence
+  .command("append")
+  .requiredOption("--module <id>", "Module id or alias")
+  .requiredOption("--file <path>", "Project-relative evidence file")
+  .requiredOption("--summary <text>", "Evidence summary")
+  .option("--command <cmd>", "Verification command or shell evidence")
+  .action(async (options: { module: string; file: string; summary: string; command?: string }) => {
+    await runEvidenceAppend(process.cwd(), options);
+  });
+
+const inbox = program.command("inbox").description("Inspect candidate context updates");
+inbox
+  .command("status")
+  .action(async () => {
+    await runInboxStatus(process.cwd());
   });
 
 program

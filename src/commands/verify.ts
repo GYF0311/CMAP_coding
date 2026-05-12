@@ -12,6 +12,7 @@ type VerifyOptions = {
   changed?: boolean;
   changedFiles?: string;
   coverage?: boolean;
+  stale?: boolean;
   format?: string;
 };
 
@@ -84,6 +85,10 @@ export async function verifyContext(cwd: string, options: VerifyOptions = {}): P
   await checkEntrypoints(cwd, report);
   await checkVerifyCommands(cwd, contextRoot, report);
   await checkPendingThreshold(contextRoot, report);
+  if (options.stale) {
+    await checkStaleModuleDocs(cwd, modules, report);
+    await checkInboxBacklog(contextRoot, report);
+  }
   if (options.changed || options.coverage) {
     await checkChangedCoverage(cwd, modules, options, report);
   }
@@ -326,6 +331,72 @@ async function checkPendingThreshold(contextRoot: string, report: VerifyReport):
   if (pendingFiles.length > 3) {
     report.issues.push({ level: "warning", message: `Pending: ${pendingFiles.length} pending updates need review` });
   }
+}
+
+async function checkStaleModuleDocs(
+  cwd: string,
+  modules: Awaited<ReturnType<typeof loadModuleIndex>>,
+  report: VerifyReport
+): Promise<void> {
+  let checked = 0;
+  for (const module of modules) {
+    let moduleStat;
+    try {
+      moduleStat = await stat(module.absolutePath);
+    } catch {
+      continue;
+    }
+
+    for (const moduleRelativePath of module.pathsInclude) {
+      if (moduleRelativePath.includes("*")) {
+        continue;
+      }
+      const candidate = path.resolve(cwd, moduleRelativePath);
+      if (!(await isInside(cwd, candidate)) || !(await fileExists(candidate))) {
+        continue;
+      }
+      checked += 1;
+      const targetStat = await stat(candidate);
+      if (targetStat.mtimeMs > moduleStat.mtimeMs + 1000) {
+        report.issues.push({
+          level: "warning",
+          message: `Module doc may be stale: ${module.docPath} is older than ${moduleRelativePath}`
+        });
+      }
+    }
+  }
+
+  if (checked > 0) {
+    report.ok.push(`Stale check: ${checked} owned paths checked`);
+  }
+}
+
+async function checkInboxBacklog(contextRoot: string, report: VerifyReport): Promise<void> {
+  const inboxRoot = path.join(contextRoot, "inbox");
+  if (!(await fileExists(inboxRoot))) {
+    report.ok.push("Inbox: no candidate inbox directory");
+    return;
+  }
+
+  const entries = await readdir(inboxRoot);
+  const inboxFiles = entries.filter((entry) => entry.endsWith(".md")).sort();
+  if (inboxFiles.length === 0) {
+    report.ok.push("Inbox: no pending candidates");
+    return;
+  }
+
+  let highRisk = 0;
+  for (const file of inboxFiles) {
+    const raw = await readFile(path.join(inboxRoot, file), "utf8");
+    if (/risk:\s*high/i.test(raw) || /high-risk/i.test(raw) || /operation is marked high risk/i.test(raw)) {
+      highRisk += 1;
+    }
+  }
+
+  report.issues.push({
+    level: "warning",
+    message: `Inbox: ${inboxFiles.length} candidate updates need review${highRisk > 0 ? ` (${highRisk} high-risk)` : ""}`
+  });
 }
 
 async function checkChangedCoverage(

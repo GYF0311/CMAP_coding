@@ -1,42 +1,47 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-12T13:36:08+08:00'
+updated_at: '2026-05-12T17:45:07+08:00'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Land P0 MapPatch/update-agent workflow
+Land the first v0.2 evidence-driven maintenance slice from the ChatGPT Pro cmap report.
 
 ## Current Hypothesis
-AI can maintain routine project-map state if it submits explicit MapPatch JSON and the CLI remains a deterministic policy gate: low-risk checkpoint updates can be applied with backup/audit, while semantic facts stay in inbox.
+Generated evidence, inbox visibility, and stale checks can reduce manual map-maintenance drift without letting the CLI auto-write project semantics.
 
 ## Changed Files
-- README.md
-- .context/MAP.md
 - .context/CHECKPOINT.md
+- .context/MAP.md
 - .context/STATUS.md
 - .context/VERIFY.md
 - .context/modules/cli.md
-- .context/modules/finish.md
-- .context/modules/handoff.md
+- .context/modules/evidence.md
+- .context/modules/tests.md
 - .context/modules/update-agent.md
+- .context/modules/verify.md
+- README.md
+- docs/superpowers/plans/2026-05-12-cmap-v0-2-evidence-stale-inbox.md
+- research/chatgpt-pro-cmap-product-completion-deep-research-20260512.manifest.json
+- research/chatgpt-pro-cmap-product-completion-deep-research-response.md
+- research/chatgpt-pro-cmap-product-completion-deep-research-response.computeruse-page-copy.txt
+- research/chatgpt-pro-cmap-product-completion-deep-research-response.raw-dom-snapshot.txt
 - src/cli.ts
-- src/commands/finish.ts
-- src/commands/update.ts
-- src/core/map-patch.ts
-- tests/integration/m7-update-agent.test.ts
-- vitest.config.ts
+- src/commands/evidence.ts
+- src/commands/inbox.ts
+- src/commands/verify.ts
+- tests/integration/m8-evidence-stale-inbox.test.ts
 
 ## Verified
-pnpm test; pnpm typecheck; pnpm build; pnpm dev verify; pnpm smoke; pnpm dev route "AI 自动维护 MapPatch rollback inbox"; git diff --check
+`pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --stale`; `pnpm smoke`; `git diff --check`.
 
 ## Failed / Pending
-Initial full `pnpm test` run failed because Vitest discovered copied tests under `.context/out/`; fixed by scoping Vitest include to `tests/**/*.test.ts`, then full tests passed.
+`pnpm dev verify --stale` returns exit 0 with one warning: `.context/modules/adoption.md` appears older than `src/commands/adopt.ts`. This is a pre-existing stale signal to review later, not a structural failure.
 
 ## Next Step
-Commit and push the implementation, then dogfood `finish --agent` with a real MapPatch on the next task.
+Commit and push this slice. Next implementation slice should connect hooks to evidence collection, then add graph/test ownership signals to route.
 
 ## Do Not Redo
-Do not broaden auto-apply to module semantics, decisions, or verification policy without a new explicit policy table and tests.
+Do not let generated evidence become canonical module responsibility or decision text without review.

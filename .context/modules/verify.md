@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:35:00+08:00
+updated_at: 2026-05-12T17:42:00+08:00
 confidence: ai-drafted
 module: verify
 paths:
@@ -12,9 +12,14 @@ aliases:
   - verify
   - check
   - drift
+  - stale
   - 校验
   - 检查
   - placeholder
+relations:
+  observes:
+    - evidence
+    - update-agent
 ---
 # Module: verify
 
@@ -38,15 +43,19 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Warn about AI-fill placeholders inside module docs.
 - Warn when `.context/VERIFY.md` omits common package verification scripts.
 - Warn when pending updates exceed the v0.1 review threshold.
+- Warn when `.context/inbox/` contains candidate updates under `--stale`.
+- Warn when a module doc appears older than one of its owned source paths under `--stale`.
 - Return exit code 1 only for errors.
 
 ## Depends On
 - `gray-matter`
 - `context/scanner.ts` for file existence.
 - `core/module-index.ts` for module relation and changed-file coverage.
+- `evidence` module conventions for generated evidence and inbox visibility.
 
 ## Used By
 - `cmap verify`
+- `cmap verify --stale`
 - Future `finish` and hook reminders.
 
 ## Data Flow
@@ -66,7 +75,9 @@ Read-only.
 - `pnpm test tests/integration/m1.test.ts`
 - `pnpm test tests/integration/verify-l0.test.ts`
 - `pnpm dev verify`
+- `pnpm dev verify --stale`
 - `pnpm dev verify --coverage --changed-files src/commands/verify.ts`
+- `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 
 ## When to Update This Doc
-When adding new L0/L1 checks or changing error/warning semantics.
+When adding new L0/L1 checks, stale checks, inbox checks, or changing error/warning semantics.

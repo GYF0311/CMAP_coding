@@ -55,6 +55,9 @@ cmap brief "多人对话页面消息发不出去" --out .context/out/brief.md
 cmap finish
 cmap finish --agent --task "多人对话页面消息发不出去"
 cmap update --agent --from .context/out/update-request-xxxx.md --apply-routine
+cmap evidence append --module route --file src/commands/route.ts --summary "Route behavior verified"
+cmap inbox status
+cmap verify --stale
 cmap verify --coverage --changed
 cmap obsidian export
 cmap benchmark route --file bench/tasks.jsonl
@@ -83,6 +86,9 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap update --agent --from <json>` | Classify an AI-authored MapPatch without changing canonical facts. |
 | `cmap update --agent --from <json> --apply-routine` | Apply only routine checkpoint updates; route semantic candidates to `.context/inbox/`. |
 | `cmap update rollback <backupId>` | Restore files from a backup printed by `update --apply-routine`. |
+| `cmap evidence append --module <id> --file <path> --summary ...` | Append bounded generated evidence to a module doc. |
+| `cmap inbox status` | Count candidate context updates and high-risk backlog under `.context/inbox/`. |
+| `cmap verify --stale` | Warn when module docs are older than owned files or inbox candidates need review. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
@@ -101,6 +107,8 @@ cmap CLI does not generate trusted project semantics.
 - CLI creates skeletons, scans deterministic signals, routes by aliases, and checks structure.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
 - `update --agent` can process AI-authored MapPatch JSON, but P0 only auto-applies low-risk checkpoint state with backup/audit; module semantics and decisions go to `.context/inbox/`.
+- `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
+- `inbox status` and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
 - Hooks only remind. They do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, or module docs.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
 

@@ -3,22 +3,22 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-12T13:36:08+08:00'
+updated_at: '2026-05-12T17:42:00+08:00'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Land the P0 AI-maintained map workflow without letting the CLI invent trusted project semantics.
+Land the first v0.2 evidence-driven maintenance slice without letting generated evidence become trusted project semantics.
 
 ## Done Recently
-Added `cmap update --agent` as a MapPatch policy gate. It parses AI-authored JSON, classifies operations into routine apply / inbox / reject, applies only low-risk `CHECKPOINT.md` updates with backup/audit, routes semantic proposals to `.context/inbox/`, and supports `cmap update rollback <backupId>`. Added `finish --agent` to generate a local MapPatch request artifact under `.context/out/`.
+Collected the ChatGPT Pro cmap product-completion research report locally. Added `cmap evidence append`, `cmap inbox status`, and `cmap verify --stale` as the first concrete response to the report's recommendation for generated evidence, inbox governance, and stale-map visibility.
 
 ## Left Off
-Implementation and verification passed locally. Full test discovery was tightened to `tests/**/*.test.ts` after Vitest picked up historical test copies under `.context/out/`.
+M8 focused tests pass. Documentation and module map now describe generated evidence as support data only, not canonical semantic truth.
 
 ## Next Steps
-Commit and push the MapPatch/update-agent implementation. Then dogfood `finish --agent` -> filled MapPatch -> `update --agent --apply-routine` on a real follow-up task before expanding auto-apply beyond checkpoint state.
+Run full verification, commit, and push. Then connect lifecycle hooks to evidence collection so read/change/verify events can maintain routine evidence automatically.
 
 ## Changed Files
 - README.md
@@ -26,19 +26,17 @@ Commit and push the MapPatch/update-agent implementation. Then dogfood `finish -
 - .context/CHECKPOINT.md
 - .context/STATUS.md
 - .context/VERIFY.md
-- .context/modules/cli.md
-- .context/modules/finish.md
-- .context/modules/handoff.md
+- .context/modules/evidence.md
 - .context/modules/update-agent.md
+- .context/modules/verify.md
 - src/cli.ts
-- src/commands/finish.ts
-- src/commands/update.ts
-- src/core/map-patch.ts
-- tests/integration/m7-update-agent.test.ts
-- vitest.config.ts
+- src/commands/evidence.ts
+- src/commands/inbox.ts
+- src/commands/verify.ts
+- tests/integration/m8-evidence-stale-inbox.test.ts
 
 ## Risks
-P0 intentionally does not auto-write module responsibilities, module relationships, `MAP.md`, `DECISIONS.md`, `VERIFY.md`, or code files. The main product risk is inbox candidates being ignored; future finish/verify work should keep pending candidates visible.
+Generated evidence can become noisy if hooks append too often. Keep bounded sections, stale warnings, and inbox status visible; do not promote evidence into module responsibilities without review.
 
 ## Last Verified
-2026-05-12: `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm smoke`, `pnpm dev route "AI 自动维护 MapPatch rollback inbox"`, and `git diff --check` passed.
+2026-05-12: `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --stale`, `pnpm smoke`, and `git diff --check` passed. `verify --stale` reported one non-blocking adoption-doc stale warning for later review.

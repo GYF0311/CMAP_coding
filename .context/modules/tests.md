@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:35:00+08:00
+updated_at: 2026-05-12T17:42:00+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -29,6 +29,8 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m3.test.ts`
 - `tests/integration/m4m5.test.ts`
 - `tests/integration/m6-brief-obsidian.test.ts`
+- `tests/integration/m7-update-agent.test.ts`
+- `tests/integration/m8-evidence-stale-inbox.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `scripts/smoke-test.mjs`
@@ -40,6 +42,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert `CHECKPOINT.md` write/read/close behavior and legacy `STATUS.md` checkpoint compatibility.
 - Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
 - Assert coverage, pull dry-run, and benchmark commands surface candidate issues without canonical writes.
+- Assert MapPatch routine apply, generated evidence, inbox status, and stale verify behavior.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On
@@ -67,6 +70,7 @@ Temporary directories under the system temp path.
 
 ## Tests / Verification
 - `pnpm test`
+- `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 - `pnpm smoke`
 
 ## When to Update This Doc
