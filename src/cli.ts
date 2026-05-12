@@ -332,8 +332,10 @@ obsidian
   .command("export")
   .description("Export .context modules to Obsidian-friendly markdown")
   .option("--out <dir>", "Project-relative export directory; defaults to _cmap/<project>")
-  .action(async (options: { out?: string }) => {
-    await runObsidianExport(process.cwd(), options);
+  .option("--check", "Check whether the Obsidian export is up to date without writing files")
+  .action(async (options: { out?: string; check?: boolean }) => {
+    const code = await runObsidianExport(process.cwd(), options);
+    process.exitCode = code;
   });
 obsidian
   .command("open")

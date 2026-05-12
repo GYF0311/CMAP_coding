@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T22:09:22+08:00
+updated_at: 2026-05-12T22:17:54+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -17,6 +17,7 @@ confidence: ai-drafted
 | cmap self-verify | `pnpm dev verify` | exit 0 or warnings understood | after `.context` edits |
 | cmap CI report | `pnpm dev verify --ci --format markdown` | exit 0 and stable Markdown report | in CI or before push |
 | cmap stale verify | `pnpm dev verify --stale` | exit 0 or warnings understood | after generated evidence, inbox, or module-path changes |
+| Obsidian view check | `pnpm dev obsidian export --check` | exit 0 when local `_cmap` view is up to date | after `.context` module or core context edits |
 | route benchmark thresholds | `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0` | exit 0 when quality gates pass | in CI or before route changes ship |
 | smoke | `pnpm smoke` | exit 0 | before release or handoff |
 
@@ -40,6 +41,7 @@ confidence: ai-drafted
 | update-agent | `pnpm test tests/integration/m7-update-agent.test.ts` | MapPatch dry-run is read-only; `--apply-routine` writes only routine checkpoint state, backup, audit, and inbox candidates. |
 | evidence | `pnpm test tests/integration/m13-policy-stats.test.ts` | Generated evidence writes bounded module docs and policy-backed module activity stats; inbox thresholds remain deterministic. |
 | obsidian-adapter | `pnpm dev obsidian export --out _cmap/CMAP_coding` | Writes Obsidian-friendly notes with Properties and relation wikilinks; generated files remain view-layer artifacts. |
+| obsidian export check | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | `obsidian export --check` detects stale or missing view-layer files without writing. |
 | obsidian pull | `pnpm dev obsidian pull --from _cmap/CMAP_coding` | Reports candidate note edits only; no canonical `.context` writes unless `--write-inbox`. |
 | memory-lite | `pnpm test tests/integration/m3.test.ts` | `log add` and `idea add` append only to logs/ideas. |
 | benchmark | `pnpm dev benchmark route --file bench/tasks.jsonl` | Reports route top-1/top-3, bad-module, and context-pack hit rates for explicit fixtures. |

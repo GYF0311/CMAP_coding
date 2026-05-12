@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T11:35:00+08:00
+updated_at: 2026-05-12T22:17:54+08:00
 confidence: ai-drafted
 module: showcase
 paths:
@@ -26,9 +26,9 @@ Explain cmap's current product shape as a user-facing, interactive overview that
 
 ## Responsibilities
 - Present cmap as `.context` canonical facts plus experience layers such as Obsidian and HTML.
-- Explain the AI coding workflow from route/checkpoint/brief through finish/verify/reconcile.
+- Explain the AI coding workflow from route/checkpoint/brief/pack/hooks through finish/verify/Obsidian/reconcile.
 - Provide a searchable module directory and an interactive module map for product understanding.
-- Show current dogfood evidence and verification status without becoming a canonical fact source.
+- Show current dogfood evidence, shipped command families, verification status, and remaining product risks without becoming a canonical fact source.
 
 ## Depends On
 - `.context/MAP.md`

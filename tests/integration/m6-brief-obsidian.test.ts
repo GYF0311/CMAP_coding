@@ -107,6 +107,45 @@ describe("M6 brief and Obsidian export", () => {
     expect(routeNote).toContain("## Source Module Doc");
   });
 
+  test("obsidian export --check detects stale view-layer mirrors", async () => {
+    const cwd = await createWorkflowProject();
+    await runCmap(["obsidian", "export", "--out", "_cmap/TestProject"], cwd);
+
+    const clean = await runCmap(["obsidian", "export", "--out", "_cmap/TestProject", "--check"], cwd);
+
+    expect(clean).toMatchObject({ code: 0 });
+    expect(clean.stdout).toContain("Obsidian export is up to date");
+
+    await writeFile(
+      path.join(cwd, ".context/modules/route.md"),
+      `---
+context_type: module
+module: route
+paths:
+  - src/commands/route.ts
+aliases:
+  - route
+  - 路由
+relations:
+  depends_on:
+    - verify
+confidence: ai-drafted
+---
+# Module: route
+
+## Purpose
+Recommend updated module docs for a task.
+`,
+      "utf8"
+    );
+
+    const stale = await runCmap(["obsidian", "export", "--out", "_cmap/TestProject", "--check"], cwd);
+
+    expect(stale.code).toBe(1);
+    expect(stale.stdout).toContain("# Obsidian Export Check");
+    expect(stale.stdout).toContain("would update _cmap/TestProject/modules/Route.md");
+  });
+
   test("obsidian open prints a module URI without launching external apps", async () => {
     const cwd = await createWorkflowProject();
 

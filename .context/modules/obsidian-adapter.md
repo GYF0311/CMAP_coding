@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:10:00+08:00
+updated_at: 2026-05-12T22:17:54+08:00
 confidence: ai-drafted
 module: obsidian-adapter
 paths:
@@ -36,6 +36,7 @@ Export `.context` into Obsidian-friendly Markdown notes so humans can read modul
 ## Responsibilities
 - Generate `_cmap/<project>/00_INDEX.md`.
 - Generate `_cmap/<project>/modules/*.md` from `.context/modules/*.md`.
+- Check whether `_cmap/<project>/` is up to date with `obsidian export --check` without writing files.
 - Preserve `.context` as the canonical fact source.
 - Render module frontmatter as Obsidian Properties.
 - Render typed `relations` as body wikilinks so Obsidian Graph can draw edges.
@@ -50,12 +51,14 @@ Export `.context` into Obsidian-friendly Markdown notes so humans can read modul
 
 ## Used By
 - `cmap obsidian export`
+- `cmap obsidian export --check`
 - `cmap obsidian open <module>`
 - `cmap obsidian pull --dry-run`
 - `cmap brief --obsidian`
 
 ## Data Flow
 Export: `.context/modules/*.md` -> module index -> Obsidian note renderer -> `_cmap/<project>/`.
+Check: generated expected files -> compare with current `_cmap/<project>/` -> report stale/missing/extra view files without writing.
 Pull dry-run: `_cmap/<project>/modules/*.md` -> source hash/body comparison -> candidate report or `.context/inbox/`.
 
 ## State / Storage
@@ -73,6 +76,7 @@ Writes view files under `_cmap/<project>/`. These files are generated reading/vi
 ## Tests / Verification
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm dev obsidian export --out _cmap/CMAP_coding`
+- `pnpm dev obsidian export --check`
 - `pnpm dev obsidian pull --from _cmap/CMAP_coding`
 
 ## When to Update This Doc

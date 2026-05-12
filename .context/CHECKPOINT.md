@@ -1,16 +1,16 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-12T22:14:18+08:00'
+updated_at: '2026-05-12T22:30:52+08:00'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Land the seventh ChatGPT Pro deep-research completion slice: hook assist session brief and route usage stats.
+Land the final ChatGPT Pro deep-research completion slice: Obsidian view drift check and product docs refresh.
 
 ## Current Hypothesis
-Hook assist should generate a concrete startup artifact from prompt events, and route/hook usage should be visible as generated stats without becoming canonical semantics.
+The ignored Obsidian view layer should be checkable for drift, and the product showcase should reflect the actual shipped pack/hooks/stats/CI capabilities.
 
 ## Changed Files
 - .context/CHECKPOINT.md
@@ -38,13 +38,13 @@ Hook assist should generate a concrete startup artifact from prompt events, and 
 - tests/integration/m16-context-pack.test.ts
 
 ## Verified
-`pnpm test tests/integration/m9-hooks-assist.test.ts tests/integration/m13-policy-stats.test.ts`; `pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --ci --format markdown`; `pnpm dev verify --stale`; `pnpm smoke`; `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`; `git diff --check`.
+`pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --ci --format markdown`; `pnpm dev verify --stale`; `pnpm dev obsidian export && pnpm dev obsidian export --check`; `pnpm smoke`; `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`; `git diff --check`.
 
 ## Failed / Pending
-Git commit and push are pending.
+Final commit and push are pending.
 
 ## Next Step
-Commit and push this slice. Next slice should add view-layer drift checks.
+Commit and push this slice, then summarize remaining post-v0.2 work.
 
 ## Do Not Redo
-Do not treat route usage stats as module truth; they are generated activity counters.
+Do not commit `_cmap`; it is an ignored generated view layer. Use `obsidian export --check` locally to detect drift.

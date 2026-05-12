@@ -119,18 +119,19 @@
 - [ ] Reorganize commands into Start, Navigate, Maintain, Verify, View/Adapters.
 - [ ] Document canonical/generated/candidate boundaries.
 - [ ] Document hooks safety policy.
-- [ ] Document graph and pack workflow.
-- [ ] Update HTML/product showcase if present.
+- [x] Document graph and pack workflow.
+- [x] Update HTML/product showcase if present.
 - [ ] Run full verification and push final state.
 
 ## Final Verification
 
-- [ ] `pnpm test`
-- [ ] `pnpm typecheck`
-- [ ] `pnpm build`
-- [ ] `pnpm dev verify`
-- [ ] `pnpm dev verify --stale`
-- [ ] `pnpm smoke`
-- [ ] `pnpm dev benchmark route --file bench/tasks.jsonl`
-- [ ] `git diff --check`
+- [x] `pnpm test`
+- [x] `pnpm typecheck`
+- [x] `pnpm build`
+- [x] `pnpm dev verify`
+- [x] `pnpm dev verify --stale`
+- [x] `pnpm dev obsidian export --check`
+- [x] `pnpm smoke`
+- [x] `pnpm dev benchmark route --file bench/tasks.jsonl`
+- [x] `git diff --check`
 - [ ] GitHub push verified on `origin/main`

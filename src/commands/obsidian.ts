@@ -14,6 +14,7 @@ import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 
 type ObsidianExportOptions = {
   out?: string;
+  check?: boolean;
 };
 
 type ObsidianOpenOptions = {
@@ -32,34 +33,28 @@ type ObsidianCandidate = {
   reason: string;
 };
 
-export async function runObsidianExport(cwd: string, options: ObsidianExportOptions): Promise<void> {
+type ExportEntry = {
+  target: string;
+  content: string;
+};
+
+export async function runObsidianExport(cwd: string, options: ObsidianExportOptions): Promise<number> {
   const [project, modules] = await Promise.all([loadProjectInfo(cwd), loadModuleIndex(cwd)]);
   const exportRoot = await resolveInsideRoot(cwd, options.out || path.join("_cmap", project.projectId));
-  const modulesRoot = path.join(exportRoot, "modules");
-  await mkdir(modulesRoot, { recursive: true });
-
-  const lookup = moduleById(modules);
-  const writes: string[] = [];
-  for (const module of modules) {
-    const target = path.join(modulesRoot, `${moduleNoteTitle(module)}.md`);
-    await writeFile(target, renderModuleNote(project.projectId, module, lookup), "utf8");
-    writes.push(projectRelative(cwd, target));
+  const entries = await buildExportEntries(cwd, project.projectId, exportRoot, modules);
+  if (options.check) {
+    return checkObsidianExport(cwd, exportRoot, entries);
   }
 
-  await writeFile(path.join(exportRoot, "00_INDEX.md"), renderIndex(project.projectId, modules), "utf8");
-  writes.push(projectRelative(cwd, path.join(exportRoot, "00_INDEX.md")));
-
-  for (const source of ["MAP.md", "STATUS.md", "DECISIONS.md", "VERIFY.md"]) {
-    const sourcePath = path.join(cwd, ".context", source);
-    if (!(await fileExists(sourcePath))) {
-      continue;
-    }
-    const target = path.join(exportRoot, source);
-    await writeFile(target, renderContextMirror(source, await readFile(sourcePath, "utf8")), "utf8");
-    writes.push(projectRelative(cwd, target));
+  const writes: string[] = [];
+  for (const entry of entries) {
+    await mkdir(path.dirname(entry.target), { recursive: true });
+    await writeFile(entry.target, entry.content, "utf8");
+    writes.push(projectRelative(cwd, entry.target));
   }
 
   process.stdout.write(`Exported Obsidian view to ${projectRelative(cwd, exportRoot)} (${writes.length} files)\n`);
+  return 0;
 }
 
 export async function runObsidianOpen(cwd: string, moduleId: string, options: ObsidianOpenOptions): Promise<void> {
@@ -94,6 +89,75 @@ export async function runObsidianPull(cwd: string, options: ObsidianPullOptions)
   }
 
   process.stdout.write(report);
+}
+
+async function buildExportEntries(
+  cwd: string,
+  projectId: string,
+  exportRoot: string,
+  modules: ContextModule[]
+): Promise<ExportEntry[]> {
+  const modulesRoot = path.join(exportRoot, "modules");
+  const lookup = moduleById(modules);
+  const entries: ExportEntry[] = [];
+  for (const module of modules) {
+    entries.push({
+      target: path.join(modulesRoot, `${moduleNoteTitle(module)}.md`),
+      content: renderModuleNote(projectId, module, lookup)
+    });
+  }
+
+  entries.push({
+    target: path.join(exportRoot, "00_INDEX.md"),
+    content: renderIndex(projectId, modules)
+  });
+
+  for (const source of ["MAP.md", "STATUS.md", "DECISIONS.md", "VERIFY.md"]) {
+    const sourcePath = path.join(cwd, ".context", source);
+    if (!(await fileExists(sourcePath))) {
+      continue;
+    }
+    entries.push({
+      target: path.join(exportRoot, source),
+      content: renderContextMirror(source, await readFile(sourcePath, "utf8"))
+    });
+  }
+
+  return entries;
+}
+
+async function checkObsidianExport(cwd: string, exportRoot: string, entries: ExportEntry[]): Promise<number> {
+  const expected = new Map(entries.map((entry) => [entry.target, entry.content]));
+  const issues: string[] = [];
+  for (const entry of entries) {
+    if (!(await fileExists(entry.target))) {
+      issues.push(`would create ${projectRelative(cwd, entry.target)}`);
+      continue;
+    }
+    const current = await readFile(entry.target, "utf8");
+    if (current !== entry.content) {
+      issues.push(`would update ${projectRelative(cwd, entry.target)}`);
+    }
+  }
+
+  const modulesRoot = path.join(exportRoot, "modules");
+  if (await fileExists(modulesRoot)) {
+    const existingModuleNotes = await readdir(modulesRoot);
+    for (const note of existingModuleNotes.filter((entry) => entry.endsWith(".md")).sort()) {
+      const target = path.join(modulesRoot, note);
+      if (!expected.has(target)) {
+        issues.push(`would remove stale view ${projectRelative(cwd, target)}`);
+      }
+    }
+  }
+
+  if (issues.length === 0) {
+    process.stdout.write(`Obsidian export is up to date: ${projectRelative(cwd, exportRoot)}\n`);
+    return 0;
+  }
+
+  process.stdout.write(["# Obsidian Export Check", "", `Out of date: ${issues.length}`, "", ...issues.map((issue) => `- ${issue}`), ""].join("\n"));
+  return 1;
 }
 
 function renderModuleNote(projectId: string, module: ContextModule, lookup: Map<string, ContextModule>): string {

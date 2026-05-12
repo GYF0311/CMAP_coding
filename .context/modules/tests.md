@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T22:09:22+08:00
+updated_at: 2026-05-12T22:17:54+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -49,6 +49,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert generated files contain expected content and do not invent project semantics.
 - Assert `CHECKPOINT.md` write/read/close behavior and legacy `STATUS.md` checkpoint compatibility.
 - Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
+- Assert Obsidian export check detects stale view-layer mirrors without writing.
 - Assert coverage, pull dry-run, and benchmark commands surface candidate issues without canonical writes.
 - Assert MapPatch routine apply, generated evidence, inbox status/triage/promote/archive, and stale verify behavior.
 - Assert observe/assist/strict hook profiles write only non-canonical hook logs/session events, bounded generated evidence, or guard decisions.

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T22:09:22+08:00
+updated_at: 2026-05-12T22:17:54+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -47,7 +47,7 @@ confidence: ai-drafted
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
 | update-agent | MapPatch intake, routine apply policy, backup/audit, and candidate inbox routing | `src/commands/update.ts`, `src/core/map-patch.ts`, `src/fs/backup.ts` | `.context/modules/update-agent.md` | update, MapPatch, agent update, 自主维护, 自动维护, inbox, rollback |
 | evidence | generated module evidence, module/route usage stats, inbox triage/archive/promote dry-run, and stale maintenance checks | `src/commands/evidence.ts`, `src/commands/inbox.ts`, `src/core/generated-stats.ts` | `.context/modules/evidence.md` | evidence, generated evidence, inbox status, stats, stale, 证据, 候选池 |
-| obsidian-adapter | Obsidian-friendly markdown export and module note links | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
+| obsidian-adapter | Obsidian-friendly markdown export, open/pull, and view drift check | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
 | reconcile-adapter | dry-run candidate facts from external workflow artifacts | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
 | showcase | interactive product overview and external-review handoff artifact | `docs/cmap-product-overview.html` | `.context/modules/showcase.md` | showcase, product overview, HTML, 介绍页, 产品介绍, 思维导图 |
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
@@ -97,7 +97,7 @@ confidence: ai-drafted
 - `finish` reads changed file hints through the shared module index and produces a closeout report; with `--agent` it writes a MapPatch request artifact under `.context/out/` but does not apply it.
 - `update-agent` parses AI-authored MapPatch JSON, classifies operations by policy, applies only routine checkpoint updates with backup/audit, routes semantic updates to `.context/inbox/`, and supports rollback.
 - `evidence` appends bounded generated support evidence to module docs, records generated module activity and route usage stats, prints inbox backlog status, groups candidates for triage, previews promotion guidance, archives reviewed candidates, and gives `verify --stale` something deterministic to check before semantic facts are promoted.
-- `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph.
+- `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph, and can check whether the ignored view layer is stale.
 - `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
 - `showcase` turns current product facts and workflow framing into a static interactive overview for human and external-model review.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
@@ -107,7 +107,7 @@ confidence: ai-drafted
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
-User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `route` first scores direct matches, then builds a `--max-context` bounded context pack from module relations and documented verification commands. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `pack` uses the routed graph neighborhood to build a redacted budgeted context pack without reading the whole repository. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
+User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `route` first scores direct matches, then builds a `--max-context` bounded context pack from module relations and documented verification commands. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `pack` uses the routed graph neighborhood to build a redacted budgeted context pack without reading the whole repository. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`; `obsidian export --check` compares expected view files without writing.
 Generated evidence and stats are support layers: `evidence append` and `hooks stop --profile assist` update marked generated sections inside module docs and `.context/stats/module-activity.json`; `route` and assist prompt hooks update `.context/stats/route-usage.json`; `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox archive`, and `verify --stale` keep review backlog and source/doc drift visible without promoting semantic facts.
 
 ## State / Storage
@@ -135,7 +135,7 @@ Generated evidence and stats are support layers: `evidence append` and `hooks st
 - Dependency lock: `pnpm-lock.yaml`
 
 ## External Integrations
-Obsidian integration is file-based only: `cmap obsidian export` writes Markdown view files and `cmap obsidian open` prints an `obsidian://` URI. The CLI remains local-only and has no telemetry, no cloud account, no model API, and no daemon.
+Obsidian integration is file-based only: `cmap obsidian export` writes Markdown view files, `cmap obsidian export --check` detects stale view mirrors, and `cmap obsidian open` prints an `obsidian://` URI. The CLI remains local-only and has no telemetry, no cloud account, no model API, and no daemon.
 
 ## Risk Areas
 - Accidentally letting CLI generate trusted project semantics.
@@ -156,4 +156,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`; context pack budget/redaction behavior is covered by `tests/integration/m16-context-pack.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, budgeted/redacted `pack`, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats / route usage stats, observe/assist hook evidence collection, assist hook session brief generation, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, and a GitHub Actions quality gate. Next work should add view-layer drift checks and final product docs.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, budgeted/redacted `pack`, Obsidian view-layer export/check/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats / route usage stats, observe/assist hook evidence collection, assist hook session brief generation, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, GitHub Actions quality gate, and refreshed product showcase. Next work should focus on stronger import/test ownership signals and controlled candidate promotion.

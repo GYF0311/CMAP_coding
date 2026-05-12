@@ -737,8 +737,8 @@
             <h2>把项目从“会话记忆”变成可验证的工作地图。</h2>
             <p>cmap 是一个本地 CLI，它把项目目标、模块边界、当前 handoff、验证方式和外部 workflow 候选事实收束到 <code>.context/</code>。这个仓库正在用 cmap 构建 cmap 本身，因此它既是产品，也是 dogfood 现场。</p>
             <div class="hero-grid">
-              <div class="metric"><b>16</b><span>已登记模块，覆盖 CLI、上下文、验证、Obsidian、GSD adapter 等工作面。</span></div>
-              <div class="metric"><b>7</b><span>主要命令流：route、checkpoint、brief、finish、verify、obsidian、reconcile。</span></div>
+              <div class="metric"><b>22</b><span>已登记模块，覆盖 CLI、上下文、验证、hooks、pack、graph、Obsidian、GSD adapter 等工作面。</span></div>
+              <div class="metric"><b>12</b><span>主要命令流：route、checkpoint、brief、pack、finish、verify、hooks、graph、obsidian、benchmark、inbox、reconcile。</span></div>
               <div class="metric"><b>0</b><span>最新 `cmap verify` 错误与警告，模块关系检查通过。</span></div>
             </div>
           </div>
@@ -812,16 +812,16 @@
         <section id="workflow">
           <div class="section-head">
             <h2>工作流闭环</h2>
-            <p>从自然语言任务开始，到模块路由、handoff、AI brief、实现、收工、验证、Obsidian 视图更新，形成一个可重复的 AI coding 操作链。</p>
+            <p>从自然语言任务开始，到模块路由、handoff、AI brief / pack、hook assist、实现、收工、验证、Obsidian 视图检查，形成一个可重复的 AI coding 操作链。</p>
           </div>
           <div class="workflow">
             <article class="step" style="--accent:#0c7b75"><small>01 / route</small><h3>任务定位</h3><p>根据 alias、模块名、路径关键词和模块索引推荐 top modules。</p></article>
             <article class="step" style="--accent:#c27b22"><small>02 / checkpoint</small><h3>保存 handoff</h3><p>记录当前任务、假设、已改文件、验证结果、下一步和不要重复做的事。</p></article>
-            <article class="step" style="--accent:#315f8f"><small>03 / brief</small><h3>打包开工上下文</h3><p>把 route、checkpoint、module docs 和验证规则打成 AI 可读的开工包。</p></article>
-            <article class="step" style="--accent:#426f45"><small>04 / implement</small><h3>小范围修改</h3><p>AI 只读相关模块，按证据扩展影响范围，避免盲改全仓。</p></article>
+            <article class="step" style="--accent:#315f8f"><small>03 / brief + pack</small><h3>打包开工上下文</h3><p>brief 负责开工摘要，pack 负责带 token budget 的 redacted 阅读包。</p></article>
+            <article class="step" style="--accent:#426f45"><small>04 / hooks</small><h3>捕获会话事件</h3><p>assist 模式可生成 session brief、记录 route usage，并把 changed files 写成 generated evidence。</p></article>
             <article class="step" style="--accent:#b44535"><small>05 / finish</small><h3>收工 gate</h3><p>列 changed files、affected modules、context 更新建议和 checkpoint close/write 提醒。</p></article>
-            <article class="step" style="--accent:#161b1d"><small>06 / verify</small><h3>漂移校验</h3><p>检查必需文件、frontmatter、关系、路径、changed-file coverage。</p></article>
-            <article class="step" style="--accent:#1fa39b"><small>07 / view</small><h3>导出图谱视图</h3><p>把 `.context` 渲染为 Obsidian-friendly Markdown，供阅读和 Graph 使用。</p></article>
+            <article class="step" style="--accent:#161b1d"><small>06 / verify + CI</small><h3>漂移校验</h3><p>检查结构、关系、路径、changed-file coverage、stale、CI report 和 benchmark 阈值。</p></article>
+            <article class="step" style="--accent:#1fa39b"><small>07 / view</small><h3>导出图谱视图</h3><p>把 `.context` 渲染为 Obsidian-friendly Markdown，并用 export --check 检查镜像漂移。</p></article>
           </div>
         </section>
 
@@ -875,8 +875,8 @@ Handoff Actions:
               <h3>可行性判断</h3>
               <ul class="evidence-list">
                 <li><b>可续接</b><span>`CHECKPOINT.md` 已经成为 brief 和收工流程的一等输入。</span></li>
-                <li><b>可验证</b><span>`verify --coverage` 能检查 changed files 是否映射到模块。</span></li>
-                <li><b>可阅读</b><span>Obsidian export 把模块导成带 Properties 和 wikilinks 的 notes。</span></li>
+                <li><b>可验证</b><span>`verify --coverage`、CI Markdown 和 benchmark gates 能检查地图结构、覆盖率与路由质量。</span></li>
+                <li><b>可阅读</b><span>Obsidian export 把模块导成带 Properties 和 wikilinks 的 notes，并可用 export --check 防止视图层过期。</span></li>
                 <li><b>可扩展</b><span>`reconcile` 只写 inbox 候选，给 GSD/gstack/superpowers 留了安全入口。</span></li>
                 <li><b>可控边界</b><span>CLI 做确定性动作，AI/人负责语义判断和长期事实确认。</span></li>
               </ul>
@@ -890,7 +890,7 @@ Handoff Actions:
             <p>`.context` 继续做事实源，`_cmap/CMAP_coding` 只是阅读和关系图谱层。这样既能看图谱，又不会形成双事实源。</p>
           </div>
           <div class="timeline">
-            <article class="phase"><h3>Export</h3><p>`cmap obsidian export` 生成 `00_INDEX.md` 和 `modules/*.md`，正文 wikilinks 让 Graph 形成边。</p></article>
+            <article class="phase"><h3>Export / Check</h3><p>`cmap obsidian export` 生成 `00_INDEX.md` 和 `modules/*.md`，`--check` 检测镜像是否落后于 canonical `.context`。</p></article>
             <article class="phase"><h3>Open</h3><p>`cmap obsidian open <module>` 打印 `obsidian://open` URI，用终端跳转模块说明。</p></article>
             <article class="phase"><h3>Pull dry-run</h3><p>Obsidian 人工补充内容后，只生成候选 diff 或 inbox，不直接改 `.context`。</p></article>
             <article class="phase"><h3>Graph</h3><p>在 Obsidian 中用 `path:_cmap/CMAP_coding` 过滤，查看孤立模块、高风险模块和依赖聚类。</p></article>
@@ -917,8 +917,8 @@ Handoff Actions:
             <div class="panel">
               <h3>下一批优化</h3>
               <ul class="evidence-list">
-                <li><b>benchmark</b><span>补 30 条历史任务 fixture，验证 route top-3 命中率。</span></li>
-                <li><b>finish</b><span>给 finish 增加更细的验证命令建议和 context update 分类。</span></li>
+                <li><b>promote</b><span>把 inbox 候选事实提升为 canonical 的半自动低风险 patch。</span></li>
+                <li><b>index</b><span>继续补 import/test ownership 等代码信号，提升 route 与 graph 精度。</span></li>
                 <li><b>Obsidian</b><span>在真实 vault 中审查 `_cmap/CMAP_coding` 的 Graph 连接质量。</span></li>
                 <li><b>GSD</b><span>拿真实 `.planning` / `.gsd` 产物测试 reconcile 降噪能力。</span></li>
               </ul>
@@ -955,6 +955,11 @@ Handoff Actions:
         copy: "把 route、CHECKPOINT、模块文档、验证规则和 Obsidian 链接打包成一份 AI 可读上下文。",
         command: "cmap brief \"任务\""
       },
+      pack: {
+        title: "pack / 预算上下文包",
+        copy: "从 route 的图谱邻域生成带 token budget 的 redacted 阅读包，避免把全仓塞给 AI。",
+        command: "cmap pack \"任务\" --budget 1200"
+      },
       finish: {
         title: "finish / 收工 gate",
         copy: "任务结束前列出 changed files、受影响模块、context 更新建议、验证提醒和 checkpoint close/write 建议。",
@@ -967,8 +972,8 @@ Handoff Actions:
       },
       obsidian: {
         title: "Obsidian / 阅读与图谱层",
-        copy: "把 canonical .context 导出为 _cmap notes，通过 Properties 和 wikilinks 形成可浏览的知识图谱。",
-        command: "cmap obsidian export"
+        copy: "把 canonical .context 导出为 _cmap notes，通过 Properties 和 wikilinks 形成可浏览的知识图谱，并用 --check 发现镜像漂移。",
+        command: "cmap obsidian export --check"
       },
       reconcile: {
         title: "reconcile / 外部候选事实",
@@ -983,12 +988,13 @@ Handoff Actions:
       { id: "route", group: "workflow", purpose: "任务到模块的 deterministic router，输出推荐模块、证据和 read-first 文件。", paths: ["src/commands/route.ts", "src/core/module-index.ts"], tags: ["routing", "aliases"] },
       { id: "handoff", group: "workflow", purpose: "维护 `STATUS.md` 和 `CHECKPOINT.md`，让任务可以跨会话续接。", paths: ["src/commands/status.ts", "src/commands/checkpoint.ts"], tags: ["checkpoint", "status"] },
       { id: "brief", group: "workflow", purpose: "生成 AI coding 开工包，优先读取 `CHECKPOINT.md`，再带上 route 和 module docs。", paths: ["src/commands/brief.ts"], tags: ["AI brief", "startup"] },
+      { id: "pack", group: "workflow", purpose: "生成带预算和 redaction 的 routed context pack，减少 AI 盲读全仓。", paths: ["src/commands/pack.ts"], tags: ["budget", "context pack"] },
       { id: "finish", group: "workflow", purpose: "收工前的 read-only gate，提示 context 更新、验证和 checkpoint 生命周期。", paths: ["src/commands/finish.ts"], tags: ["closeout", "handoff"] },
       { id: "verify", group: "safety", purpose: "检查 `.context` 文件、模块关系、路径存在性、入口漂移和 changed-file coverage。", paths: ["src/commands/verify.ts"], tags: ["drift", "coverage"] },
       { id: "cp", group: "safety", purpose: "安全搬运行块，支持 copy/move/delete/restore，并为破坏性动作创建备份。", paths: ["src/commands/cp.ts", "src/fs"], tags: ["line block", "backup"] },
       { id: "host", group: "integration", purpose: "生成简短 AGENTS.md / CLAUDE.md，让宿主 AI 先读地图再工作。", paths: ["src/host", "src/commands/install.ts"], tags: ["AGENTS", "CLAUDE"] },
-      { id: "hooks-doctor", group: "integration", purpose: "提供 hook reminder/maintain 模板和 doctor 诊断，不自动写 canonical memory。", paths: ["src/commands/hooks.ts", "src/commands/doctor.ts"], tags: ["hooks", "doctor"] },
-      { id: "obsidian-adapter", group: "integration", purpose: "把 `.context` 导成 Obsidian-friendly notes，并支持 open / pull dry-run。", paths: ["src/commands/obsidian.ts", "_cmap"], tags: ["graph", "view"] },
+      { id: "hooks-doctor", group: "integration", purpose: "提供 hook lifecycle render/test、assist session brief、generated evidence 和 doctor 诊断，不自动写 canonical memory。", paths: ["src/commands/hooks.ts", "src/commands/doctor.ts"], tags: ["hooks", "doctor"] },
+      { id: "obsidian-adapter", group: "integration", purpose: "把 `.context` 导成 Obsidian-friendly notes，并支持 open / pull dry-run / export check。", paths: ["src/commands/obsidian.ts", "_cmap"], tags: ["graph", "view"] },
       { id: "reconcile-adapter", group: "integration", purpose: "从 GSD 等外部 workflow 产物提取候选事实、冲突和验证证据。", paths: ["src/commands/reconcile.ts"], tags: ["GSD", "inbox"] },
       { id: "benchmark", group: "safety", purpose: "用 JSONL fixture 评估 route top-k 命中率，为产品效果建立量化反馈。", paths: ["src/commands/benchmark.ts", "bench"], tags: ["route eval", "top-k"] },
       { id: "adoption", group: "workflow", purpose: "接管已有项目时生成候选模块和 ADOPTION 工作台，不直接提升为事实。", paths: ["src/commands/adopt.ts"], tags: ["existing project", "candidate"] },

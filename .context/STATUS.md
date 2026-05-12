@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-12T22:14:18+08:00'
+updated_at: '2026-05-12T22:30:52+08:00'
 confidence: ai-drafted
 ---
 # Status
@@ -12,13 +12,13 @@ confidence: ai-drafted
 Land all ChatGPT Pro deep-research recommendations as safe, testable cmap product slices.
 
 ## Done Recently
-Collected the ChatGPT Pro cmap product-completion research report locally. Added evidence/stale/inbox maintenance, observe/assist hooks, route context packing, `--max-context`, context-aware route benchmark metrics, inbox governance, policy-backed generated stats foundations, Claude hook lifecycle render/test, graph v0 projections, CI Markdown verify output, benchmark threshold flags, a GitHub Actions cmap workflow, `cmap pack`, assist prompt session briefs, and route usage stats.
+Collected the ChatGPT Pro cmap product-completion research report locally. Added evidence/stale/inbox maintenance, observe/assist hooks, route context packing, `--max-context`, context-aware route benchmark metrics, inbox governance, policy-backed generated stats foundations, Claude hook lifecycle render/test, graph v0 projections, CI Markdown verify output, benchmark threshold flags, a GitHub Actions cmap workflow, `cmap pack`, assist prompt session briefs, route usage stats, Obsidian export drift check, and refreshed product showcase.
 
 ## Left Off
-Hook assist/session stats slice is implemented and verified locally. Assist `UserPromptSubmit` writes `.context/out/session-brief.md`, and both route commands plus assist prompt hooks update generated `.context/stats/route-usage.json` when policy allows.
+Final docs/view-drift slice is implemented and verified locally. `obsidian export --check` detects stale `_cmap` mirrors, local `_cmap/CMAP_coding` has been regenerated, and the product overview HTML reflects pack/hooks/stats/CI/Obsidian check capabilities.
 
 ## Next Steps
-Commit and push the hook assist/session stats slice. Next slice should add view-layer drift checks.
+Commit and push the final docs/view-drift slice.
 
 ## Changed Files
 - README.md
@@ -46,7 +46,7 @@ Commit and push the hook assist/session stats slice. Next slice should add view-
 - tests/integration/m16-context-pack.test.ts
 
 ## Risks
-Route usage stats are generated counters, not semantic ownership. Assist session briefs are generated task output, not canonical memory.
+`_cmap/` remains an ignored generated view layer; the repository stores the check command and updated product docs, while the local view can be regenerated any time.
 
 ## Last Verified
-2026-05-12: `pnpm test tests/integration/m9-hooks-assist.test.ts tests/integration/m13-policy-stats.test.ts`, `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --ci --format markdown`, `pnpm dev verify --stale`, `pnpm smoke`, `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`, and `git diff --check` passed.
+2026-05-12: `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --ci --format markdown`, `pnpm dev verify --stale`, `pnpm dev obsidian export && pnpm dev obsidian export --check`, `pnpm smoke`, `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`, and `git diff --check` passed.

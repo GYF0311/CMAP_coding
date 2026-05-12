@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:59:49+08:00
+updated_at: 2026-05-12T22:17:54+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -45,6 +45,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Keep command handlers small and delegate domain work to modules.
 - Register `brief` and `obsidian` command groups without embedding domain logic in `cli.ts`.
 - Register `pack` without embedding context selection or budget logic in `cli.ts`.
+- Register `obsidian export --check` while keeping view drift comparison in `obsidian-adapter`.
 - Register route/brief `--max-context` options while keeping context-pack policy in `route`.
 - Register `route --graph` and `graph build/explain` while keeping graph projection logic outside `cli.ts`.
 - Register `verify --ci --format markdown` while keeping report formatting in `verify`.

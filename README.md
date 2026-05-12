@@ -71,6 +71,7 @@ cmap verify --stale
 cmap verify --coverage --changed
 cmap verify --ci --format markdown
 cmap obsidian export
+cmap obsidian export --check
 cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
 cmap reconcile --adapter gsd-v1 --from .planning
 ```
@@ -111,6 +112,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap inbox archive <id>` | Move reviewed candidates to `.context/inbox/archive/` without deleting them. |
 | `cmap verify --stale` | Warn when module docs are older than owned files or inbox candidates need review. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
+| `cmap obsidian export --check` | Fail when the generated Obsidian view layer is missing or stale. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
 | `cmap graph build` | Write deterministic `.context/graph/*.json` projections from reviewed module docs. |
@@ -165,6 +167,7 @@ pnpm typecheck
 pnpm build
 pnpm dev verify --ci --format markdown
 pnpm dev verify --stale
+pnpm dev obsidian export --check
 pnpm smoke
 pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
 ```
