@@ -62,8 +62,9 @@ program
   .option("--changed-files <csv>", "Changed files to check, comma-separated")
   .option("--coverage", "Check map coverage signals")
   .option("--stale", "Warn when module docs appear older than owned files or inbox has pending candidates")
-  .option("--format <format>", "Output format: text or json", "text")
-  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; format?: string }) => {
+  .option("--ci", "Render CI-friendly report")
+  .option("--format <format>", "Output format: text, json, or markdown", "text")
+  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; ci?: boolean; format?: string }) => {
     const code = await runVerify(process.cwd(), options);
     process.exitCode = code;
   });
@@ -344,7 +345,11 @@ benchmark
   .command("route")
   .description("Measure route top-k accuracy from a JSONL task file")
   .option("--file <path>", "Project-relative JSONL file", "bench/tasks.jsonl")
-  .action(async (options: { file?: string }) => {
+  .option("--min-top1 <percent>", "Fail when Top-1 hit rate is below this percent")
+  .option("--min-top3 <percent>", "Fail when Top-3 hit rate is below this percent")
+  .option("--min-context <percent>", "Fail when context hit rate is below this percent")
+  .option("--max-bad <percent>", "Fail when bad-module hit rate is above this percent")
+  .action(async (options: { file?: string; minTop1?: string; minTop3?: string; minContext?: string; maxBad?: string }) => {
     const code = await runBenchmarkRoute(process.cwd(), options);
     process.exitCode = code;
   });

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:36:07+08:00
+updated_at: 2026-05-12T21:52:25+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -45,8 +45,10 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `brief` and `obsidian` command groups without embedding domain logic in `cli.ts`.
 - Register route/brief `--max-context` options while keeping context-pack policy in `route`.
 - Register `route --graph` and `graph build/explain` while keeping graph projection logic outside `cli.ts`.
+- Register `verify --ci --format markdown` while keeping report formatting in `verify`.
 - Register `checkpoint` actions while keeping the legacy option-only STATUS update path compatible.
 - Register `benchmark route` as a public evaluation command.
+- Register `benchmark route` quality threshold flags while keeping metric evaluation in `benchmark`.
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Register `update --agent` and `update rollback` while keeping MapPatch policy out of `cli.ts`.
 - Register `evidence append` and `inbox status/triage/promote/archive` while keeping generated evidence and inbox governance policy in command modules.
@@ -90,6 +92,7 @@ No persistent state except files written by command modules.
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
+- `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 - `pnpm dev version`
 
 ## When to Update This Doc

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-12T21:40:22+08:00'
+updated_at: '2026-05-12T21:56:02+08:00'
 confidence: ai-drafted
 ---
 # Status
@@ -12,33 +12,33 @@ confidence: ai-drafted
 Land all ChatGPT Pro deep-research recommendations as safe, testable cmap product slices.
 
 ## Done Recently
-Collected the ChatGPT Pro cmap product-completion research report locally. Added evidence/stale/inbox maintenance, observe/assist hooks, route context packing, `--max-context`, context-aware route benchmark metrics, inbox governance, policy-backed generated stats foundations, Claude hook lifecycle render/test, and graph v0 projections.
+Collected the ChatGPT Pro cmap product-completion research report locally. Added evidence/stale/inbox maintenance, observe/assist hooks, route context packing, `--max-context`, context-aware route benchmark metrics, inbox governance, policy-backed generated stats foundations, Claude hook lifecycle render/test, graph v0 projections, CI Markdown verify output, benchmark threshold flags, and a GitHub Actions cmap workflow.
 
 ## Left Off
-Graph v0 slice is implemented and verified. `cmap graph build` writes `.context/graph/modules.json`, `files.json`, `edges.json`, and `graph.meta.json`; `cmap graph explain <module>` explains module files and typed relations; `route --graph` exposes graph mode in route output.
+CI/benchmark slice is implemented and verified locally. `verify --ci --format markdown` prints a stable CI report, benchmark route supports explicit top-1/top-3/context/bad-module thresholds, and `.github/workflows/cmap.yml` runs test/typecheck/build/verify/stale/benchmark gates.
 
 ## Next Steps
-Commit and push the graph v0 slice. Next slice should add CI/benchmark thresholds or selected context pack.
+Commit and push the CI/benchmark slice. Next slice should add selected context pack, hook assist session brief, and view-layer drift checks.
 
 ## Changed Files
 - README.md
+- .github/workflows/cmap.yml
 - .context/MAP.md
 - .context/CHECKPOINT.md
 - .context/STATUS.md
 - .context/VERIFY.md
+- .context/modules/benchmark.md
 - .context/modules/cli.md
-- .context/modules/graph.md
-- .context/modules/route.md
 - .context/modules/tests.md
+- .context/modules/verify.md
 - docs/superpowers/plans/2026-05-12-cmap-pro-deep-research-completion.md
 - src/cli.ts
-- src/commands/graph.ts
-- src/commands/route.ts
-- src/core/context-graph.ts
-- tests/integration/m14-graph-route.test.ts
+- src/commands/benchmark.ts
+- src/commands/verify.ts
+- tests/integration/m15-ci-benchmark.test.ts
 
 ## Risks
-Graph v0 is based on reviewed module docs only. It does not yet infer imports, tests, symbols, or runtime coupling.
+CI gates are local workflow definitions until GitHub runs them after push. Benchmark thresholds are only as meaningful as the small explicit fixture set.
 
 ## Last Verified
-2026-05-12: `pnpm test tests/integration/m14-graph-route.test.ts`, `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --stale`, `pnpm smoke`, `pnpm dev benchmark route --file bench/tasks.jsonl`, and `git diff --check` passed. `verify --stale` reports 0 warnings.
+2026-05-12: `pnpm test tests/integration/m15-ci-benchmark.test.ts`, `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --ci --format markdown`, `pnpm dev verify --stale`, `pnpm smoke`, `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`, and `git diff --check` passed.

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T19:08:00+08:00
+updated_at: 2026-05-12T21:48:27+08:00
 confidence: ai-drafted
 module: benchmark
 paths:
@@ -35,7 +35,9 @@ Measure whether deterministic cmap routing matches expected direct modules and g
 - Run `routeTask()` for each case.
 - Report top-1, top-3, and bad-module hit rates.
 - Report context-pack hit rates when cases include `expected_context_modules`.
+- Enforce optional `--min-top1`, `--min-top3`, `--min-context`, and `--max-bad` thresholds for CI.
 - Return non-zero when a bad module appears in top-3.
+- Return non-zero when any requested threshold fails.
 
 ## Depends On
 - `route`
@@ -43,6 +45,7 @@ Measure whether deterministic cmap routing matches expected direct modules and g
 
 ## Used By
 - `cmap benchmark route --file bench/tasks.jsonl`
+- `cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`
 - Dogfood evaluation before changing route scoring or aliases.
 
 ## Data Flow
@@ -55,6 +58,7 @@ Read-only. Benchmark fixtures live under `bench/`.
 - Benchmark cases are evidence, not product truth.
 - Keep fixtures small and explicit; do not hide expected modules behind natural-language labels.
 - `expected_context_modules` checks selected context pack modules, not direct route rank.
+- Thresholds are integer percentages from 0 to 100.
 
 ## Traps
 - A passing benchmark can still miss real tasks if aliases are too narrow.
@@ -64,7 +68,9 @@ Read-only. Benchmark fixtures live under `bench/`.
 ## Tests / Verification
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm test tests/integration/m12-route-benchmark-context.test.ts`
+- `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 - `pnpm dev benchmark route --file bench/tasks.jsonl`
+- `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`
 
 ## When to Update This Doc
 When benchmark file format, metrics, exit-code behavior, or route evaluation policy changes.

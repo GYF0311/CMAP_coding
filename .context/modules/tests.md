@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:36:07+08:00
+updated_at: 2026-05-12T21:52:25+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -37,6 +37,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m12-route-benchmark-context.test.ts`
 - `tests/integration/m13-policy-stats.test.ts`
 - `tests/integration/m14-graph-route.test.ts`
+- `tests/integration/m15-ci-benchmark.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `scripts/smoke-test.mjs`
@@ -55,6 +56,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert route benchmark fixtures can measure context-pack hits separately from direct module hits.
 - Assert policy defaults, generated module activity stats, and policy-backed inbox thresholds.
 - Assert graph projections, graph explanation, and graph-mode route output.
+- Assert CI Markdown verify output and benchmark threshold failure behavior.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On
@@ -89,6 +91,7 @@ Temporary directories under the system temp path.
 - `pnpm test tests/integration/m12-route-benchmark-context.test.ts`
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m14-graph-route.test.ts`
+- `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 - `pnpm smoke`
 
 ## When to Update This Doc

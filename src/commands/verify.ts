@@ -14,6 +14,7 @@ type VerifyOptions = {
   changedFiles?: string;
   coverage?: boolean;
   stale?: boolean;
+  ci?: boolean;
   format?: string;
 };
 
@@ -50,7 +51,9 @@ const requiredHeadings: Record<string, string[]> = {
 export async function runVerify(cwd: string, options: VerifyOptions): Promise<number> {
   const report = await verifyContext(cwd, options);
 
-  if (options.format === "json") {
+  if (options.ci && options.format === "markdown") {
+    process.stdout.write(formatVerifyCiMarkdown(report));
+  } else if (options.format === "json") {
     process.stdout.write(`${JSON.stringify(report, null, 2)}\n`);
   } else {
     process.stdout.write(formatVerifyReport(report));
@@ -475,4 +478,29 @@ export function formatVerifyReport(report: VerifyReport): string {
   lines.push("");
   lines.push(`Errors: ${errors}, Warnings: ${warnings}`);
   return `${lines.join("\n")}\n`;
+}
+
+export function formatVerifyCiMarkdown(report: VerifyReport): string {
+  const errors = report.issues.filter((issue) => issue.level === "error");
+  const warnings = report.issues.filter((issue) => issue.level === "warning");
+  const lines = [
+    "# cmap CI Report",
+    "",
+    `Errors: ${errors.length}`,
+    `Warnings: ${warnings.length}`,
+    "",
+    "## Passing Checks",
+    "",
+    ...markdownList(report.ok),
+    "",
+    "## Issues",
+    "",
+    ...markdownList(report.issues.map((issue) => `${issue.level}: ${issue.message}`)),
+    ""
+  ];
+  return `${lines.join("\n")}\n`;
+}
+
+function markdownList(items: string[]): string[] {
+  return items.length > 0 ? items.map((item) => `- ${item}`) : ["- None"];
 }

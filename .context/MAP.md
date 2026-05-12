@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:36:07+08:00
+updated_at: 2026-05-12T21:48:27+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -35,12 +35,12 @@ confidence: ai-drafted
 |---|---|---|---|---|
 | cli | command registration, option parsing, exit-code boundary | `src/cli.ts`, `src/commands` | `.context/modules/cli.md` | cli, command, 命令, version, init, install |
 | context | `.context` templates, deterministic policy loading, and project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
-| verify | deterministic L0 structure checks and report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
+| verify | deterministic L0 structure checks, stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
 | route | direct module routing plus bounded graph/test context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
 | graph | deterministic context graph projection and typed relation explanation | `src/commands/graph.ts`, `src/core/context-graph.ts` | `.context/modules/graph.md` | graph, context graph, graph build, graph explain, 关系图, 图谱 |
 | brief | AI coding startup brief from route/checkpoint/bounded context pack/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
-| benchmark | route benchmark over direct and context-pack JSONL task fixtures | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
+| benchmark | route benchmark over direct/context-pack JSONL fixtures with optional CI thresholds | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
 | handoff | current status printing and explicit checkpoint handoff updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
 | cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
@@ -83,12 +83,12 @@ confidence: ai-drafted
 ## Module Relationships
 - `cli` dispatches to command modules and owns process exit behavior.
 - `context` provides templates, deterministic policy defaults/loading, and project signal scanning used by `init`.
-- `verify` reads `.context` files created by `context` and validates deterministic structure.
+- `verify` reads `.context` files created by `context`, validates deterministic structure, and can render stable CI Markdown reports.
 - `host` generates entrypoint text used by `install`.
 - `route` reads the shared module index, recommends direct modules, expands bounded graph-related context, and surfaces module-owned verification commands; it must not propose nonexistent modules or treat related context as direct matches.
 - `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs.
 - `brief` packages route result, bounded route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
-- `benchmark` runs JSONL task fixtures through route scoring and reports top-k direct hit rates plus optional context-pack hit rates.
+- `benchmark` runs JSONL task fixtures through route scoring, reports top-k direct/context-pack hit rates, and can fail CI on explicit threshold regressions.
 - `handoff` reads `STATUS.md`, writes task-local `CHECKPOINT.md`, and keeps the legacy explicit `STATUS.md` update path compatible.
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
 - `finish` reads changed file hints through the shared module index and produces a closeout report; with `--agent` it writes a MapPatch request artifact under `.context/out/` but does not apply it.
@@ -124,6 +124,7 @@ Generated evidence is a support layer: `evidence append` and `hooks stop --profi
 - Obsidian view export: `_cmap/<project>/`
 - Product overview artifact: `docs/cmap-product-overview.html`
 - Route benchmark fixtures: `bench/tasks.jsonl`
+- GitHub Actions quality gate: `.github/workflows/cmap.yml`
 - External workflow candidates: `.context/inbox/`
 - Host entrypoints: `AGENTS.md`, `CLAUDE.md`
 - Build output: `dist/`
@@ -151,4 +152,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, and `--max-context` size controls. Next work should add CI quality thresholds and context pack.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, and a GitHub Actions quality gate. Next work should add selected context pack and remaining lifecycle assist output.

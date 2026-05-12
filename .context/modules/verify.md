@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:18:31+08:00
+updated_at: 2026-05-12T21:48:27+08:00
 confidence: ai-drafted
 module: verify
 paths:
@@ -46,6 +46,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Warn when `.context/inbox/` contains candidate updates under `--stale`.
 - Respect `.context/policy.yml` inbox thresholds under `--stale`.
 - Warn when a module doc appears older than one of its owned source paths under `--stale`.
+- Render stable CI-friendly Markdown output with `--ci --format markdown`.
 - Return exit code 1 only for errors.
 
 ## Depends On
@@ -61,7 +62,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Future `finish` and hook reminders.
 
 ## Data Flow
-Read `.context` files -> collect ok lines and issues -> print text or JSON -> return exit code.
+Read `.context` files -> collect ok lines and issues -> print text, JSON, or CI Markdown -> return exit code.
 
 ## State / Storage
 Read-only.
@@ -81,6 +82,7 @@ Read-only.
 - `pnpm dev verify --coverage --changed-files src/commands/verify.ts`
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
+- `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 
 ## When to Update This Doc
 When adding new L0/L1 checks, stale checks, inbox checks, or changing error/warning semantics.

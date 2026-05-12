@@ -87,11 +87,11 @@
 - Create `.github/workflows/cmap.yml` if absent
 - Add tests under `tests/integration/`
 
-- [ ] Add `verify --ci --format markdown|json` that writes stable CI-friendly output.
-- [ ] Add pending inbox threshold and stale threshold behavior.
-- [ ] Add route benchmark threshold options for top-1, top-3, context, and bad-module hits.
-- [ ] Add GitHub Actions workflow for test/typecheck/build/verify/benchmark.
-- [ ] Run tests and commit.
+- [x] Add `verify --ci --format markdown|json` that writes stable CI-friendly output.
+- [x] Add pending inbox threshold and stale threshold behavior.
+- [x] Add route benchmark threshold options for top-1, top-3, context, and bad-module hits.
+- [x] Add GitHub Actions workflow for test/typecheck/build/verify/benchmark.
+- [x] Run tests and commit.
 
 ## Slice 6: Context Pack
 

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:36:07+08:00
+updated_at: 2026-05-12T21:48:27+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -15,7 +15,9 @@ confidence: ai-drafted
 | typecheck | `pnpm typecheck` | exit 0 | before claiming done |
 | build | `pnpm build` | exit 0 | before release or handoff |
 | cmap self-verify | `pnpm dev verify` | exit 0 or warnings understood | after `.context` edits |
+| cmap CI report | `pnpm dev verify --ci --format markdown` | exit 0 and stable Markdown report | in CI or before push |
 | cmap stale verify | `pnpm dev verify --stale` | exit 0 or warnings understood | after generated evidence, inbox, or module-path changes |
+| route benchmark thresholds | `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0` | exit 0 when quality gates pass | in CI or before route changes ship |
 | smoke | `pnpm smoke` | exit 0 | before release or handoff |
 
 ## Module-specific Checks
@@ -25,6 +27,7 @@ confidence: ai-drafted
 | context | `pnpm dev init --auto` in a temp project | Generated files stay skeletal and do not invent module semantics. |
 | verify | `pnpm dev verify` | Errors are real structural problems; warnings are actionable. |
 | verify coverage | `pnpm dev verify --coverage --changed-files src/commands/verify.ts` | Reports changed-file module coverage and relation validity. |
+| verify CI report | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | `verify --ci --format markdown` emits a stable CI report. |
 | host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
 | route | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Direct matches stay separate from graph-related context; `--max-context` bounds selected context and derived verify commands. |
 | graph | `pnpm test tests/integration/m14-graph-route.test.ts` | `graph build`, `graph explain`, and `route --graph` are covered. |
@@ -38,6 +41,7 @@ confidence: ai-drafted
 | obsidian pull | `pnpm dev obsidian pull --from _cmap/CMAP_coding` | Reports candidate note edits only; no canonical `.context` writes unless `--write-inbox`. |
 | memory-lite | `pnpm test tests/integration/m3.test.ts` | `log add` and `idea add` append only to logs/ideas. |
 | benchmark | `pnpm dev benchmark route --file bench/tasks.jsonl` | Reports route top-1/top-3, bad-module, and context-pack hit rates for explicit fixtures. |
+| benchmark thresholds | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | Route benchmark threshold flags fail when requested quality gates are missed. |
 | reconcile-adapter | `pnpm dev reconcile --adapter gsd-v1 --from .planning` when fixture/source exists | Produces dry-run candidate reports only; canonical `.context` files are not changed. |
 | adoption | `pnpm test tests/integration/m4m5.test.ts` | Adopt writes ADOPTION candidate signals without promoting them into MAP. |
 | module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
@@ -54,6 +58,7 @@ confidence: ai-drafted
 | route benchmark context | `pnpm test tests/integration/m12-route-benchmark-context.test.ts` | `expected_context_modules` metrics and legacy fixture compatibility are covered. |
 | policy and stats | `pnpm test tests/integration/m13-policy-stats.test.ts` | `policy.yml`, generated module activity stats, and policy-backed inbox thresholds are covered. |
 | graph build and route graph mode | `pnpm test tests/integration/m14-graph-route.test.ts` | Generated graph projections, graph explanation, and graph-mode route JSON are covered. |
+| CI report and benchmark thresholds | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | CI Markdown verify output and route threshold failures are covered. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.

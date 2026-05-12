@@ -67,8 +67,9 @@ cmap inbox promote update-xxxx --dry-run
 cmap inbox archive update-xxxx
 cmap verify --stale
 cmap verify --coverage --changed
+cmap verify --ci --format markdown
 cmap obsidian export
-cmap benchmark route --file bench/tasks.jsonl
+cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
 cmap reconcile --adapter gsd-v1 --from .planning
 ```
 
@@ -93,6 +94,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap checkpoint close\|clear` | Close or clear the current `.context/CHECKPOINT.md`. |
 | `cmap checkpoint --goal ... --next ...` | Legacy-compatible update of `.context/STATUS.md`. |
 | `cmap verify [--changed]` | Check context structure. |
+| `cmap verify --ci --format markdown` | Print a stable CI-friendly Markdown report for GitHub Actions or PR logs. |
 | `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
 | `cmap finish --agent --task ...` | Write a local MapPatch request artifact under `.context/out/`. |
 | `cmap update --agent --from <json>` | Classify an AI-authored MapPatch without changing canonical facts. |
@@ -111,6 +113,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap graph build` | Write deterministic `.context/graph/*.json` projections from reviewed module docs. |
 | `cmap graph explain <module>` | Explain one module's files and typed graph relations. |
 | `cmap benchmark route --file bench/tasks.jsonl` | Measure route top-k and context-pack accuracy against JSONL task fixtures. |
+| `cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0` | Fail CI when route quality falls below explicit thresholds. |
 | `cmap reconcile --adapter gsd-v1\|gsd-v2 --from <dir>` | Dry-run candidate facts from external workflow artifacts. |
 | `cmap add-module <name>` | Create a candidate module doc. |
 | `cmap cp copy/move/delete/restore` | Move existing line blocks with backups for destructive edits. |
@@ -141,12 +144,20 @@ cmap CLI does not generate trusted project semantics.
 - `bad_modules`: direct route modules that should not appear in top results.
 - `expected_context_modules`: context-pack modules that should be selected through direct matches or graph relations.
 
+CI can enforce benchmark thresholds with:
+
+```bash
+cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
+```
+
 ## Verify
 
 ```bash
 pnpm test
 pnpm typecheck
 pnpm build
-pnpm dev verify
+pnpm dev verify --ci --format markdown
+pnpm dev verify --stale
 pnpm smoke
+pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
 ```
