@@ -75,8 +75,8 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
 | `cmap install --host both --hooks assist` | Write hook templates that can record generated evidence from changed files. |
-| `cmap route "<task>"` | Recommend context files to read. |
-| `cmap brief "<task>"` | Render an AI coding brief from route, checkpoint/status, and module docs. |
+| `cmap route "<task>"` | Recommend direct modules, related context files, and suggested verification commands. |
+| `cmap brief "<task>"` | Render an AI coding brief from route, checkpoint/status, context pack, and module docs. |
 | `cmap status` | Print `.context/STATUS.md`. |
 | `cmap checkpoint read` | Print `.context/CHECKPOINT.md`, falling back to `.context/STATUS.md`. |
 | `cmap checkpoint write --task ... --next ...` | Update `.context/CHECKPOINT.md` from explicit handoff fields. |
@@ -108,6 +108,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 cmap CLI does not generate trusted project semantics.
 
 - CLI creates skeletons, scans deterministic signals, routes by aliases, and checks structure.
+- Route graph expansion is a context-pack hint only. Related modules are not treated as direct task matches.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
 - `update --agent` can process AI-authored MapPatch JSON, but P0 only auto-applies low-risk checkpoint state with backup/audit; module semantics and decisions go to `.context/inbox/`.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.

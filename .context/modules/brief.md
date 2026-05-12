@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:35:00+08:00
+updated_at: 2026-05-12T18:28:00+08:00
 confidence: ai-drafted
 module: brief
 paths:
@@ -24,7 +24,7 @@ relations:
 # Module: brief
 
 ## Purpose
-Render an AI coding brief from route results, current checkpoint/status, selected module docs, and verification reminders.
+Render an AI coding brief from route results, route context pack, current checkpoint/status, selected module docs, and verification reminders.
 
 ## Code Paths
 - `src/commands/brief.ts`
@@ -34,8 +34,9 @@ Render an AI coding brief from route results, current checkpoint/status, selecte
 ## Responsibilities
 - Run the same deterministic routing used by `cmap route`.
 - Read `.context/CHECKPOINT.md` as the preferred current handoff source, falling back to `.context/STATUS.md`.
-- Include the top routed module docs in a single AI-readable brief.
-- Optionally include `obsidian://` links for routed modules.
+- Include direct routed module docs and graph-related context module docs in a single AI-readable brief.
+- Include suggested verification commands extracted from selected module docs.
+- Optionally include `obsidian://` links for selected context modules.
 - Write to `.context/out/brief.md` or another explicit project-relative output path.
 
 ## Depends On
@@ -49,7 +50,7 @@ Render an AI coding brief from route results, current checkpoint/status, selecte
 - AI coding session startup prompts.
 
 ## Data Flow
-Task text -> route result -> checkpoint/status excerpt -> module docs -> Markdown brief -> stdout or `.context/out/*`.
+Task text -> route result and context pack -> checkpoint/status excerpt -> selected module docs -> Markdown brief -> stdout or `.context/out/*`.
 
 ## State / Storage
 Writes only explicit output files, usually under `.context/out/`. It does not modify canonical facts.
@@ -58,6 +59,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 - A brief is a task-local artifact, not a project fact source.
 - Route output is a reading plan, not an implementation plan.
 - Do not let `brief` summarize hidden transcript state or invent module responsibilities.
+- Related context modules in a brief are for inspection; they are not automatically edit targets.
 
 ## Traps
 - If module aliases are weak, `brief` will package the wrong docs; fix aliases or module docs instead of adding semantic guessing.
@@ -65,6 +67,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 
 ## Tests / Verification
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
+- `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md`
 
 ## When to Update This Doc

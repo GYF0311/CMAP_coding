@@ -18,8 +18,8 @@ export async function runBrief(cwd: string, task: string, options: BriefOptions)
     loadProjectInfo(cwd)
   ]);
   const moduleLookup = moduleById(modules);
-  const selectedModules = route.modules
-    .slice(0, 3)
+  const selectedModules = route.contextModules
+    .slice(0, 6)
     .map((candidate) => moduleLookup.get(candidate.id))
     .filter((module): module is NonNullable<typeof module> => Boolean(module));
   const checkpoint = await readCurrentCheckpoint(cwd);
@@ -113,6 +113,7 @@ function renderBrief(input: {
     "",
     "- Read `.context/VERIFY.md` before claiming completion.",
     "- Run the relevant project commands listed there.",
+    ...input.route.verifyCommands.map((command) => `- Suggested by routed modules: \`${command}\``),
     "",
     "## Finish Requirement",
     "",

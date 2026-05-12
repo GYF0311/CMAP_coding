@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:12:00+08:00
+updated_at: 2026-05-12T18:28:00+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -26,8 +26,8 @@ confidence: ai-drafted
 | verify | `pnpm dev verify` | Errors are real structural problems; warnings are actionable. |
 | verify coverage | `pnpm dev verify --coverage --changed-files src/commands/verify.ts` | Reports changed-file module coverage and relation validity. |
 | host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
-| route | `pnpm dev route "checkpoint 更新当前主线"` | Should recommend handoff, not verify through `check` substring. |
-| brief | `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md` | Writes a task-local AI brief with route result, checkpoint/status, module docs, verify reminder, and finish requirement. |
+| route | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Direct matches stay separate from graph-related context; suggested verify commands are extracted from module docs. |
+| brief | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Writes a task-local AI brief with direct and related context module docs plus suggested verification commands. |
 | handoff | `pnpm dev checkpoint read` | Prints current `CHECKPOINT.md`, falling back to `STATUS.md`; checkpoint writes only explicit fields. |
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report with context update and checkpoint close/write reminders; does not modify trusted memory. |
@@ -48,6 +48,7 @@ confidence: ai-drafted
 | agent MapPatch gate | `pnpm test tests/integration/m7-update-agent.test.ts` | Dry-run, routine apply, high-risk inbox routing, rollback, and `finish --agent` request generation are covered. |
 | generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append`, `inbox status`, and `verify --stale` are covered. |
 | hooks observe / assist | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, and unmapped file reporting are covered. |
+| route context pack | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Route JSON/text context pack and brief consumption are covered. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:00:00+08:00
+updated_at: 2026-05-12T18:28:00+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -37,8 +37,8 @@ confidence: ai-drafted
 | context | `.context` templates and deterministic project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, 模板, 骨架 |
 | verify | deterministic L0 structure checks and report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
-| route | keyword and alias based module routing | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
-| brief | AI coding startup brief from route/checkpoint/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
+| route | direct module routing plus graph/test context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
+| brief | AI coding startup brief from route/checkpoint/context pack/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
 | benchmark | route benchmark over JSONL task fixtures | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
 | handoff | current status printing and explicit checkpoint handoff updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
 | cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
@@ -83,8 +83,8 @@ confidence: ai-drafted
 - `context` provides templates and project signal scanning used by `init`.
 - `verify` reads `.context` files created by `context` and validates deterministic structure.
 - `host` generates entrypoint text used by `install`.
-- `route` reads the shared module index and recommends context files; it must not propose nonexistent modules.
-- `brief` packages route result, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
+- `route` reads the shared module index, recommends direct modules, expands graph-related context, and surfaces module-owned verification commands; it must not propose nonexistent modules or treat related context as direct matches.
+- `brief` packages route result, route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
 - `benchmark` runs JSONL task fixtures through route scoring and reports top-k hit rates.
 - `handoff` reads `STATUS.md`, writes task-local `CHECKPOINT.md`, and keeps the legacy explicit `STATUS.md` update path compatible.
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
@@ -101,7 +101,7 @@ confidence: ai-drafted
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
-User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
+User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `route` first scores direct matches, then builds a bounded context pack from module relations and documented verification commands. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
 Generated evidence is a support layer: `evidence append` and `hooks stop --profile assist` update marked generated sections inside module docs, while `inbox status` and `verify --stale` keep review backlog and source/doc drift visible without promoting semantic facts.
 
 ## State / Storage
@@ -131,13 +131,14 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 - Future `cp`/delete behavior must preserve data and avoid irreversible deletion.
 - Host hooks must remind only; they must not write canonical memory.
 - Assist hooks may write generated evidence blocks only; they must not write canonical semantic sections.
+- Route graph-related context must remain a reading hint; it must not be counted as the task's direct module match.
 - Obsidian `_cmap` output is a view layer; do not treat it as the canonical fact source.
 - `update --agent` is a policy gate for external AI proposals, not a model call or autonomous daemon.
 - `update-agent` must not auto-write `MAP.md`, `DECISIONS.md`, module responsibilities, module relationships, or code files.
 - Generated evidence must stay clearly marked and must not be treated as a replacement for reviewed module purpose, boundaries, or decisions.
 
 ## Verification Summary
-Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`.
+Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox visibility / stale verify, and observe/assist hook evidence collection. Next work should expand route scoring with graph/test ownership signals and selected context packing.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox visibility / stale verify, observe/assist hook evidence collection, and route context packing from module graph plus module-owned verification commands. Next work should add selected context size controls and richer route benchmark fixtures.

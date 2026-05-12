@@ -11,18 +11,30 @@ export type ModuleCandidate = {
   docPath: string;
   aliases: string[];
   paths: string[];
+  relations: Record<string, string[]>;
+  verifyCommands: string[];
   score: number;
   matchedAliases: string[];
   matchedModuleName: boolean;
   matchedPathKeywords: string[];
 };
 
+export type ContextModuleCandidate = ModuleCandidate & {
+  source: "direct" | "related";
+  relation?: {
+    type: string;
+    from: string;
+  };
+};
+
 export type RouteReport = {
   task: string;
   modules: ModuleCandidate[];
+  contextModules: ContextModuleCandidate[];
   ranked: ModuleCandidate[];
   lowConfidence: boolean;
   readFirst: string[];
+  verifyCommands: string[];
 };
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
@@ -33,7 +45,7 @@ export async function runRoute(cwd: string, task: string, options: RouteOptions)
     return;
   }
 
-  process.stdout.write(formatRouteReport(task, report.modules, report.ranked));
+  process.stdout.write(formatRouteReport(report));
 }
 
 export async function routeTask(cwd: string, task: string): Promise<RouteReport> {
@@ -43,12 +55,16 @@ export async function routeTask(cwd: string, task: string): Promise<RouteReport>
     .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
 
   const strong = ranked.filter((candidate) => candidate.score > 0 && hasHighConfidenceSignal(candidate));
+  const contextModules = buildContextModules(strong, candidates);
+  const verifyCommands = unique(contextModules.flatMap((module) => module.verifyCommands));
   return {
     task,
     modules: strong,
+    contextModules,
     ranked,
     lowConfidence: strong.length === 0,
-    readFirst: buildReadFirst(strong)
+    readFirst: buildReadFirst(contextModules),
+    verifyCommands
   };
 }
 
@@ -59,6 +75,8 @@ function toRouteCandidate(module: ContextModule): ModuleCandidate {
     docPath: module.docPath,
     aliases: module.aliases,
     paths: module.pathsInclude,
+    relations: module.relations,
+    verifyCommands: extractVerificationCommands(module.body),
     score: 0,
     matchedAliases: [],
     matchedModuleName: false,
@@ -106,32 +124,54 @@ function hasHighConfidenceSignal(candidate: ModuleCandidate): boolean {
   return candidate.matchedAliases.length > 0 || candidate.matchedModuleName;
 }
 
-function buildReadFirst(modules: ModuleCandidate[]): string[] {
-  return [
+function buildReadFirst(modules: Array<{ docPath: string }>): string[] {
+  return unique([
     ".context/MAP.md",
+    ".context/CHECKPOINT.md",
     ".context/STATUS.md",
-    ...modules.slice(0, 3).map((module) => module.docPath),
+    ...modules.slice(0, 6).map((module) => module.docPath),
     ".context/VERIFY.md"
-  ];
+  ]);
 }
 
-function formatRouteReport(task: string, modules: ModuleCandidate[], ranked: ModuleCandidate[]): string {
-  const lines = ["## Route Result", "", `Task: ${task}`, "", "Likely modules:"];
+function formatRouteReport(report: RouteReport): string {
+  const lines = ["## Route Result", "", `Task: ${report.task}`, "", "Likely modules:"];
 
-  if (modules.length === 0) {
+  if (report.modules.length === 0) {
     lines.push("No high-confidence module match.");
   } else {
-    modules.slice(0, 3).forEach((module, index) => {
+    report.modules.slice(0, 3).forEach((module, index) => {
       lines.push(`${index + 1}. ${module.name} — ${formatMatchReason(module)}`);
     });
   }
 
+  const related = report.contextModules.filter((module) => module.source === "related");
+  if (related.length > 0) {
+    lines.push("", "Related context:");
+    for (const module of related.slice(0, 5)) {
+      const relation = module.relation
+        ? `related via ${module.relation.type} from ${module.relation.from}`
+        : "related context";
+      lines.push(`- ${module.name} — ${relation} (${module.docPath})`);
+    }
+  }
+
   lines.push("", "Read first:");
-  for (const file of buildReadFirst(modules)) {
+  for (const file of report.readFirst) {
     lines.push(`- ${file}`);
   }
 
-  const doNotTouch = ranked.filter((module) => module.score === 0).map((module) => module.name);
+  if (report.verifyCommands.length > 0) {
+    lines.push("", "Suggested verify:");
+    for (const command of report.verifyCommands.slice(0, 8)) {
+      lines.push(`- ${command}`);
+    }
+  }
+
+  const contextIds = new Set(report.contextModules.map((module) => module.id));
+  const doNotTouch = report.ranked
+    .filter((module) => module.score === 0 && !contextIds.has(module.id))
+    .map((module) => module.name);
   if (doNotTouch.length > 0) {
     lines.push("", "Do not touch first:");
     for (const module of doNotTouch.slice(0, 5)) {
@@ -140,10 +180,11 @@ function formatRouteReport(task: string, modules: ModuleCandidate[], ranked: Mod
   }
 
   lines.push("", "Notes:");
-  if (modules.length === 0) {
+  if (report.modules.length === 0) {
     lines.push("- No alias or module name matched; inspect source code and update MAP.md aliases after confirmation.");
   } else {
     lines.push("- Read the suggested context first, then decide the real impact range.");
+    lines.push("- Related context comes from typed module relations; it is not a direct route match.");
     lines.push("- If route confidence is low, inspect source code and update MAP.md aliases.");
   }
 
@@ -172,6 +213,68 @@ function pathKeywords(paths: string[]): string[] {
   return [...keywords];
 }
 
+function buildContextModules(strong: ModuleCandidate[], candidates: ModuleCandidate[]): ContextModuleCandidate[] {
+  const lookup = new Map(candidates.map((candidate) => [candidate.id, candidate]));
+  const result: ContextModuleCandidate[] = [];
+  const seen = new Set<string>();
+
+  for (const module of strong.slice(0, 3)) {
+    result.push({ ...module, source: "direct" });
+    seen.add(module.id);
+  }
+
+  for (const module of strong.slice(0, 3)) {
+    for (const [relationType, targets] of Object.entries(module.relations)) {
+      for (const target of targets) {
+        if (seen.has(target) || result.length >= 6) {
+          continue;
+        }
+        const candidate = lookup.get(target);
+        if (!candidate) {
+          continue;
+        }
+        result.push({
+          ...candidate,
+          source: "related",
+          relation: {
+            type: relationType,
+            from: module.id
+          }
+        });
+        seen.add(candidate.id);
+      }
+    }
+  }
+
+  return result;
+}
+
+function extractVerificationCommands(body: string): string[] {
+  const commands: string[] = [];
+  let inTestsSection = false;
+  for (const line of body.split(/\r?\n/)) {
+    if (/^##\s+Tests\s*\/\s*Verification\s*$/i.test(line.trim())) {
+      inTestsSection = true;
+      continue;
+    }
+    if (inTestsSection && /^##\s+/.test(line.trim())) {
+      break;
+    }
+    if (!inTestsSection) {
+      continue;
+    }
+    const match = line.match(/^-\s+`([^`]+)`/);
+    if (match) {
+      commands.push(match[1]);
+    }
+  }
+  return unique(commands);
+}
+
+function unique<T>(values: T[]): T[] {
+  return [...new Set(values)];
+}
+
 function toJsonReport(report: RouteReport): object {
   return {
     task: report.task,
@@ -182,12 +285,22 @@ function toJsonReport(report: RouteReport): object {
       score: module.score,
       evidence: evidence(module)
     })),
+    contextModules: report.contextModules.map((module) => ({
+      id: module.id,
+      name: module.name,
+      docPath: module.docPath,
+      source: module.source,
+      relation: module.relation,
+      verifyCommands: module.verifyCommands,
+      evidence: evidence(module)
+    })),
     lowConfidence: report.lowConfidence,
-    readFirst: report.readFirst
+    readFirst: report.readFirst,
+    verifyCommands: report.verifyCommands
   };
 }
 
-function evidence(module: ModuleCandidate): string[] {
+function evidence(module: ModuleCandidate | ContextModuleCandidate): string[] {
   const values: string[] = [];
   for (const alias of module.matchedAliases) {
     values.push(`alias matched: ${alias}`);
@@ -197,6 +310,9 @@ function evidence(module: ModuleCandidate): string[] {
   }
   for (const keyword of module.matchedPathKeywords) {
     values.push(`path keyword matched: ${keyword}`);
+  }
+  if ("relation" in module && module.relation) {
+    values.push(`related via ${module.relation.type} from ${module.relation.from}`);
   }
   return values;
 }
