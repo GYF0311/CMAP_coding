@@ -1,33 +1,32 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-11T17:39:30.043Z'
+updated_at: '2026-05-12T03:32:35Z'
 ---
 # Current Checkpoint
 
 ## Current Task
-Close finish/checkpoint handoff loop
+Build CMAP product overview HTML and send to DeepSeek Chat
 
 ## Current Hypothesis
-finish now reminds users to update or close CHECKPOINT.md without writing canonical facts automatically
+A single-file interactive product atlas can explain cmap modules, workflow, dogfood feasibility, Obsidian graph, and verification evidence clearly enough for external model review
 
 ## Changed Files
-- src/commands/finish.ts
-- tests/integration/m3.test.ts
-- .context/modules/finish.md
-- .context/VERIFY.md
+- docs/cmap-product-overview.html
+- .gitignore
 - .context/MAP.md
 - .context/CHECKPOINT.md
 - .context/STATUS.md
+- .context/modules/showcase.md
 
 ## Verified
-pnpm test; pnpm typecheck; pnpm dev verify; pnpm dev verify --coverage --changed-files src/commands/finish.ts,tests/integration/m3.test.ts; pnpm build; pnpm dev finish --changed src/commands/finish.ts,tests/integration/m3.test.ts; pnpm smoke
+node html content check; Playwright preview desktop/mobile; console errors checked after favicon fix; DeepSeek Chat attachment upload/send succeeded; pnpm test; pnpm typecheck; pnpm dev verify; pnpm dev route "产品介绍 HTML 思维导图 DeepSeek handoff"; pnpm dev finish; pnpm smoke; git diff --check
 
 ## Failed / Pending
 None
 
 ## Next Step
-Commit finish/checkpoint handoff loop and push origin/main
+Review DeepSeek feedback from https://chat.deepseek.com/a/chat/s/1b212acc-4ea6-4d3c-b827-7b397aec03a8 when ready, then decide whether product overview needs another iteration
 
 ## Do Not Redo
-Do not commit research/ unless explicitly requested
+Do not commit Playwright screenshots or .playwright-mcp artifacts

@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CMAP_coding | AI Coding Project Map</title>
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23f6f1e7"/><path d="M14 18h36v28H14z" fill="none" stroke="%23161b1d" stroke-width="4"/><path d="M22 32h20M32 22v20" stroke="%230c7b75" stroke-width="4"/></svg>'>
+  <style>
+    :root {
+      --paper: #f6f1e7;
+      --paper-2: #ebe2d1;
+      --ink: #161b1d;
+      --muted: #64706c;
+      --line: rgba(22, 27, 29, 0.14);
+      --panel: rgba(255, 252, 244, 0.76);
+      --teal: #0c7b75;
+      --teal-2: #1fa39b;
+      --amber: #c27b22;
+      --red: #b44535;
+      --blue: #315f8f;
+      --green: #426f45;
+      --shadow: 0 24px 70px rgba(22, 27, 29, 0.14);
+      --radius: 8px;
+      --mono: "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
+      --sans: "Avenir Next", "Segoe UI", "Noto Sans SC", sans-serif;
+      --serif: "Iowan Old Style", "Songti SC", Georgia, serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(90deg, rgba(22, 27, 29, 0.045) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(22, 27, 29, 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 82% 12%, rgba(31, 163, 155, 0.14), transparent 28%),
+        radial-gradient(circle at 15% 76%, rgba(194, 123, 34, 0.12), transparent 28%),
+        var(--paper);
+      background-size: 28px 28px, 28px 28px, auto, auto, auto;
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 22px 18px;
+      border-right: 1px solid var(--line);
+      background: rgba(246, 241, 231, 0.88);
+      backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 8px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border: 2px solid var(--ink);
+      display: grid;
+      place-items: center;
+      font-family: var(--mono);
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--paper), #ffffff);
+      box-shadow: 6px 6px 0 var(--teal);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 26px;
+      font-weight: 700;
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 6px;
+      padding-top: 4px;
+    }
+
+    .nav a {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      color: #303735;
+      font-size: 14px;
+    }
+
+    .nav a:hover,
+    .nav a.active {
+      background: #fff8e9;
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+
+    .nav svg {
+      flex: 0 0 16px;
+    }
+
+    .side-note {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .main {
+      min-width: 0;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      padding: 16px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(246, 241, 231, 0.78);
+      backdrop-filter: blur(16px);
+    }
+
+    .topbar strong {
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+
+    .topbar-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill {
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 252, 244, 0.8);
+      font-size: 12px;
+      color: #303735;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 4px rgba(12, 123, 117, 0.12);
+    }
+
+    .content {
+      padding: 32px 36px 72px;
+      display: grid;
+      gap: 28px;
+    }
+
+    section {
+      scroll-margin-top: 86px;
+    }
+
+    .hero {
+      min-height: calc(100vh - 116px);
+      display: grid;
+      grid-template-columns: minmax(0, 0.86fr) minmax(360px, 1.14fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      align-self: center;
+      display: grid;
+      gap: 22px;
+      padding: 10px 0;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      color: var(--teal);
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .hero h2 {
+      margin: 0;
+      max-width: 780px;
+      font-family: var(--serif);
+      font-size: clamp(48px, 6.2vw, 96px);
+      line-height: 0.95;
+      font-weight: 760;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      max-width: 720px;
+      color: #39403d;
+      font-size: 18px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      max-width: 720px;
+    }
+
+    .metric {
+      min-height: 96px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+    }
+
+    .metric b {
+      display: block;
+      font-family: var(--serif);
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .metric span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .map-stage {
+      position: relative;
+      min-height: 650px;
+      border: 1px solid rgba(22, 27, 29, 0.18);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(145deg, rgba(255, 252, 244, 0.86), rgba(235, 226, 209, 0.72)),
+        repeating-linear-gradient(90deg, transparent 0 31px, rgba(22, 27, 29, 0.035) 31px 32px);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .map-stage::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(22, 27, 29, 0.12);
+      pointer-events: none;
+    }
+
+    .atlas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .node {
+      cursor: pointer;
+      transition: transform 180ms ease, filter 180ms ease, opacity 180ms ease;
+    }
+
+    .node:hover {
+      filter: drop-shadow(0 12px 18px rgba(22, 27, 29, 0.22));
+    }
+
+    .node circle,
+    .node rect {
+      transition: fill 180ms ease, stroke 180ms ease;
+    }
+
+    .node.active circle,
+    .node.active rect {
+      stroke: var(--red);
+      stroke-width: 4;
+    }
+
+    .edge {
+      stroke: rgba(22, 27, 29, 0.24);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .edge.strong {
+      stroke: rgba(12, 123, 117, 0.56);
+      stroke-width: 3;
+    }
+
+    .stage-label {
+      position: absolute;
+      left: 26px;
+      top: 22px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.8);
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stage-panel {
+      position: absolute;
+      left: 26px;
+      right: 26px;
+      bottom: 26px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.88);
+      backdrop-filter: blur(12px);
+    }
+
+    .stage-panel h3 {
+      margin: 0;
+      font-size: 22px;
+      font-family: var(--serif);
+    }
+
+    .stage-panel p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stage-panel code {
+      font-family: var(--mono);
+      font-size: 12px;
+      background: #efe4ce;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 5px 7px;
+      white-space: nowrap;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(30px, 4vw, 58px);
+      line-height: 1;
+    }
+
+    .section-head p {
+      margin: 0;
+      max-width: 640px;
+      color: var(--muted);
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(118px, 1fr));
+      gap: 8px;
+    }
+
+    .step {
+      position: relative;
+      min-height: 186px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: rgba(255, 252, 244, 0.76);
+      overflow: hidden;
+    }
+
+    .step::after {
+      content: "";
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 12px;
+      height: 3px;
+      border-radius: 4px;
+      background: var(--accent, var(--teal));
+    }
+
+    .step small {
+      font-family: var(--mono);
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .step h3 {
+      margin: 10px 0 8px;
+      font-size: 17px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .module-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .search {
+      min-width: min(360px, 100%);
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.86);
+      padding: 8px 12px;
+      font: 14px var(--sans);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .filter-button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.78);
+      color: #29312f;
+      padding: 7px 11px;
+      font: 13px var(--sans);
+      cursor: pointer;
+    }
+
+    .filter-button.active {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .module-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .module-card {
+      min-height: 226px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.8);
+      padding: 15px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .module-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(12, 123, 117, 0.45);
+      box-shadow: 0 16px 34px rgba(22, 27, 29, 0.12);
+    }
+
+    .module-card h3 {
+      margin: 0;
+      font-size: 19px;
+      font-family: var(--serif);
+    }
+
+    .module-card p {
+      margin: 0;
+      color: #46514d;
+      font-size: 13px;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      display: inline-flex;
+      min-height: 24px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      color: #35403c;
+      background: rgba(255, 255, 255, 0.44);
+    }
+
+    .path-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 1.04fr) minmax(340px, 0.96fr);
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.78);
+      padding: 18px;
+    }
+
+    .panel h3 {
+      margin: 0 0 10px;
+      font-family: var(--serif);
+      font-size: 24px;
+    }
+
+    .terminal {
+      margin: 0;
+      min-height: 360px;
+      border: 1px solid rgba(22, 27, 29, 0.22);
+      border-radius: var(--radius);
+      background: #121717;
+      color: #e8f4ee;
+      padding: 18px;
+      font-family: var(--mono);
+      font-size: 12px;
+      overflow: auto;
+      white-space: pre-wrap;
+    }
+
+    .terminal .prompt {
+      color: #66d1c9;
+    }
+
+    .terminal .warn {
+      color: #e6ad5c;
+    }
+
+    .terminal .ok {
+      color: #9dde8d;
+    }
+
+    .evidence-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .evidence-list li {
+      display: grid;
+      grid-template-columns: 82px 1fr;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    .evidence-list b {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--teal);
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .phase {
+      min-height: 168px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 252, 244, 0.76);
+      padding: 14px;
+    }
+
+    .phase h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .phase p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footer {
+      border-top: 1px solid var(--line);
+      padding-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
+        grid-template-columns: 1fr;
+      }
+      .sidebar {
+        position: static;
+        height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .nav {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+      .hero,
+      .split {
+        grid-template-columns: 1fr;
+      }
+      .module-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .workflow {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .content {
+        padding: 24px 16px 56px;
+      }
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .nav {
+        grid-template-columns: 1fr 1fr;
+      }
+      .hero h2 {
+        font-size: 44px;
+      }
+      .hero-grid,
+      .module-grid,
+      .timeline,
+      .workflow {
+        grid-template-columns: 1fr;
+      }
+      .map-stage {
+        min-height: 560px;
+      }
+      .stage-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">cm</div>
+        <h1>cmap</h1>
+        <p>repo-local project memory map for AI coding continuity</p>
+      </div>
+      <nav class="nav" aria-label="页面目录">
+        <a class="active" href="#overview"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 5h16M4 12h10M4 19h16" fill="none" stroke="currentColor" stroke-width="2"/></svg>总览</a>
+        <a href="#workflow"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 7h6v6H5zM13 11h6v6h-6z" fill="none" stroke="currentColor" stroke-width="2"/></svg>工作流</a>
+        <a href="#modules"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>模块</a>
+        <a href="#dogfood"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 18c5-12 11-12 16 0M7 18h10M12 4v14" fill="none" stroke="currentColor" stroke-width="2"/></svg>实践</a>
+        <a href="#obsidian"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3l8 5v8l-8 5-8-5V8zM12 3v18M4 8l16 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>图谱</a>
+        <a href="#verification"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>验证</a>
+      </nav>
+      <div class="side-note">
+        <strong>当前快照</strong><br>
+        commit: <code>0129477</code><br>
+        source: <code>.context/MAP.md</code><br>
+        artifact: <code>docs/cmap-product-overview.html</code>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <strong>CMAP_coding / product atlas</strong>
+        <div class="topbar-actions">
+          <span class="pill"><span class="dot"></span> main 与 origin/main 已同步</span>
+          <span class="pill">36 tests / smoke / verify passed</span>
+          <span class="pill">canonical: .context</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="hero" id="overview">
+          <div class="hero-copy">
+            <div class="eyebrow">AI coding project map</div>
+            <h2>把项目从“会话记忆”变成可验证的工作地图。</h2>
+            <p>cmap 是一个本地 CLI，它把项目目标、模块边界、当前 handoff、验证方式和外部 workflow 候选事实收束到 <code>.context/</code>。这个仓库正在用 cmap 构建 cmap 本身，因此它既是产品，也是 dogfood 现场。</p>
+            <div class="hero-grid">
+              <div class="metric"><b>16</b><span>已登记模块，覆盖 CLI、上下文、验证、Obsidian、GSD adapter 等工作面。</span></div>
+              <div class="metric"><b>7</b><span>主要命令流：route、checkpoint、brief、finish、verify、obsidian、reconcile。</span></div>
+              <div class="metric"><b>0</b><span>最新 `cmap verify` 错误与警告，模块关系检查通过。</span></div>
+            </div>
+          </div>
+
+          <div class="map-stage" aria-label="cmap 模块知识图">
+            <div class="stage-label">interactive module mind map</div>
+            <svg class="atlas" viewBox="0 0 920 700" role="img" aria-label="cmap module atlas">
+              <path class="edge strong" d="M460 324 C360 262 312 216 228 176"/>
+              <path class="edge strong" d="M460 324 C528 242 596 192 696 160"/>
+              <path class="edge strong" d="M460 324 C594 315 676 328 790 388"/>
+              <path class="edge strong" d="M460 324 C398 410 346 468 240 522"/>
+              <path class="edge" d="M460 324 C480 438 542 512 650 548"/>
+              <path class="edge" d="M228 176 C286 120 366 92 460 92"/>
+              <path class="edge" d="M696 160 C658 94 572 72 460 92"/>
+              <path class="edge" d="M790 388 C754 480 716 520 650 548"/>
+              <path class="edge" d="M240 522 C348 594 498 618 650 548"/>
+              <path class="edge" d="M228 176 C160 256 138 350 164 430"/>
+              <path class="edge" d="M164 430 C186 474 204 500 240 522"/>
+
+              <g class="node active" data-node="core" transform="translate(460 324)">
+                <circle r="82" fill="#fff8e9" stroke="#161b1d" stroke-width="2"/>
+                <text text-anchor="middle" y="-8" font-family="Iowan Old Style, Georgia, serif" font-size="30" font-weight="700">.context</text>
+                <text text-anchor="middle" y="22" font-family="SFMono-Regular, monospace" font-size="13" fill="#64706c">canonical map</text>
+              </g>
+              <g class="node" data-node="route" transform="translate(228 176)">
+                <rect x="-82" y="-42" width="164" height="84" rx="8" fill="#e8f5f2" stroke="#0c7b75" stroke-width="2"/>
+                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">route</text>
+                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">task -> modules</text>
+              </g>
+              <g class="node" data-node="brief" transform="translate(696 160)">
+                <rect x="-88" y="-42" width="176" height="84" rx="8" fill="#fff2dc" stroke="#c27b22" stroke-width="2"/>
+                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">brief</text>
+                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">AI start pack</text>
+              </g>
+              <g class="node" data-node="finish" transform="translate(790 388)">
+                <rect x="-92" y="-44" width="184" height="88" rx="8" fill="#f6e7e1" stroke="#b44535" stroke-width="2"/>
+                <text text-anchor="middle" y="-6" font-family="Iowan Old Style, Georgia, serif" font-size="25">finish</text>
+                <text text-anchor="middle" y="21" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">closeout gate</text>
+              </g>
+              <g class="node" data-node="obsidian" transform="translate(240 522)">
+                <rect x="-112" y="-42" width="224" height="84" rx="8" fill="#e9eff7" stroke="#315f8f" stroke-width="2"/>
+                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">Obsidian</text>
+                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">view / graph layer</text>
+              </g>
+              <g class="node" data-node="verify" transform="translate(650 548)">
+                <rect x="-92" y="-42" width="184" height="84" rx="8" fill="#edf2e5" stroke="#426f45" stroke-width="2"/>
+                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">verify</text>
+                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">drift check</text>
+              </g>
+              <g class="node" data-node="checkpoint" transform="translate(164 430)">
+                <rect x="-104" y="-42" width="208" height="84" rx="8" fill="#fff8e9" stroke="#161b1d" stroke-width="2"/>
+                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">checkpoint</text>
+                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">current handoff</text>
+              </g>
+              <g class="node" data-node="reconcile" transform="translate(460 92)">
+                <rect x="-104" y="-42" width="208" height="84" rx="8" fill="#f4efe3" stroke="#64706c" stroke-width="2"/>
+                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">reconcile</text>
+                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">external candidates</text>
+              </g>
+            </svg>
+            <div class="stage-panel">
+              <div>
+                <h3 id="node-title">.context canonical map</h3>
+                <p id="node-copy">长期项目事实源。AI 和人都从这里读取模块边界、当前状态、验证规则和设计决策；外部系统只能作为候选输入。</p>
+              </div>
+              <code id="node-command">cmap verify</code>
+            </div>
+          </div>
+        </section>
+
+        <section id="workflow">
+          <div class="section-head">
+            <h2>工作流闭环</h2>
+            <p>从自然语言任务开始，到模块路由、handoff、AI brief、实现、收工、验证、Obsidian 视图更新，形成一个可重复的 AI coding 操作链。</p>
+          </div>
+          <div class="workflow">
+            <article class="step" style="--accent:#0c7b75"><small>01 / route</small><h3>任务定位</h3><p>根据 alias、模块名、路径关键词和模块索引推荐 top modules。</p></article>
+            <article class="step" style="--accent:#c27b22"><small>02 / checkpoint</small><h3>保存 handoff</h3><p>记录当前任务、假设、已改文件、验证结果、下一步和不要重复做的事。</p></article>
+            <article class="step" style="--accent:#315f8f"><small>03 / brief</small><h3>打包开工上下文</h3><p>把 route、checkpoint、module docs 和验证规则打成 AI 可读的开工包。</p></article>
+            <article class="step" style="--accent:#426f45"><small>04 / implement</small><h3>小范围修改</h3><p>AI 只读相关模块，按证据扩展影响范围，避免盲改全仓。</p></article>
+            <article class="step" style="--accent:#b44535"><small>05 / finish</small><h3>收工 gate</h3><p>列 changed files、affected modules、context 更新建议和 checkpoint close/write 提醒。</p></article>
+            <article class="step" style="--accent:#161b1d"><small>06 / verify</small><h3>漂移校验</h3><p>检查必需文件、frontmatter、关系、路径、changed-file coverage。</p></article>
+            <article class="step" style="--accent:#1fa39b"><small>07 / view</small><h3>导出图谱视图</h3><p>把 `.context` 渲染为 Obsidian-friendly Markdown，供阅读和 Graph 使用。</p></article>
+          </div>
+        </section>
+
+        <section id="modules">
+          <div class="section-head">
+            <h2>模块目录</h2>
+            <p>这些模块不是文件清单，而是 AI 开工前应该理解的职责边界。点击上方 mind map 节点或搜索模块名，可快速定位。</p>
+          </div>
+          <div class="module-toolbar">
+            <input class="search" id="moduleSearch" type="search" placeholder="搜索模块、路径或关键词">
+            <button class="filter-button active" data-filter="all">全部</button>
+            <button class="filter-button" data-filter="core">核心</button>
+            <button class="filter-button" data-filter="workflow">工作流</button>
+            <button class="filter-button" data-filter="integration">集成</button>
+            <button class="filter-button" data-filter="safety">安全</button>
+          </div>
+          <div class="module-grid" id="moduleGrid"></div>
+        </section>
+
+        <section id="dogfood">
+          <div class="section-head">
+            <h2>当前 dogfood 状态</h2>
+            <p>这个仓库正在用自己维护自己。最近一轮更新把 `finish` 和 `CHECKPOINT.md` 连接起来，避免“做完了代码，但 handoff 状态没有收口”。</p>
+          </div>
+          <div class="split">
+            <div class="panel">
+              <h3>实践链路</h3>
+              <pre class="terminal"><span class="prompt">$</span> cmap route "补齐收工 checkpoint 闭环"
+Likely modules:
+1. finish
+2. handoff
+3. tests
+
+<span class="prompt">$</span> cmap checkpoint write --task "Close finish/checkpoint handoff loop" --next "Run full verification"
+<span class="ok">Updated .context/CHECKPOINT.md</span>
+
+<span class="prompt">$</span> cmap finish --changed src/commands/finish.ts,tests/integration/m3.test.ts
+Context Updates Needed:
+- STATUS.md
+- CHECKPOINT.md
+- .context/modules/finish.md
+
+Handoff Actions:
+- cmap checkpoint write --task "current task" --next "next step"
+- cmap checkpoint close
+
+<span class="prompt">$</span> pnpm test && pnpm smoke
+<span class="ok">36 tests passed / smoke passed</span></pre>
+            </div>
+            <div class="panel">
+              <h3>可行性判断</h3>
+              <ul class="evidence-list">
+                <li><b>可续接</b><span>`CHECKPOINT.md` 已经成为 brief 和收工流程的一等输入。</span></li>
+                <li><b>可验证</b><span>`verify --coverage` 能检查 changed files 是否映射到模块。</span></li>
+                <li><b>可阅读</b><span>Obsidian export 把模块导成带 Properties 和 wikilinks 的 notes。</span></li>
+                <li><b>可扩展</b><span>`reconcile` 只写 inbox 候选，给 GSD/gstack/superpowers 留了安全入口。</span></li>
+                <li><b>可控边界</b><span>CLI 做确定性动作，AI/人负责语义判断和长期事实确认。</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="obsidian">
+          <div class="section-head">
+            <h2>Obsidian 视图层</h2>
+            <p>`.context` 继续做事实源，`_cmap/CMAP_coding` 只是阅读和关系图谱层。这样既能看图谱，又不会形成双事实源。</p>
+          </div>
+          <div class="timeline">
+            <article class="phase"><h3>Export</h3><p>`cmap obsidian export` 生成 `00_INDEX.md` 和 `modules/*.md`，正文 wikilinks 让 Graph 形成边。</p></article>
+            <article class="phase"><h3>Open</h3><p>`cmap obsidian open <module>` 打印 `obsidian://open` URI，用终端跳转模块说明。</p></article>
+            <article class="phase"><h3>Pull dry-run</h3><p>Obsidian 人工补充内容后，只生成候选 diff 或 inbox，不直接改 `.context`。</p></article>
+            <article class="phase"><h3>Graph</h3><p>在 Obsidian 中用 `path:_cmap/CMAP_coding` 过滤，查看孤立模块、高风险模块和依赖聚类。</p></article>
+          </div>
+        </section>
+
+        <section id="verification">
+          <div class="section-head">
+            <h2>验证证据</h2>
+            <p>当前项目不是只写了文档，核心 CLI 和交互链路有集成测试、类型检查、自校验、构建和 smoke test 覆盖。</p>
+          </div>
+          <div class="split">
+            <div class="panel">
+              <h3>最新通过命令</h3>
+              <ul class="evidence-list">
+                <li><b>test</b><span>`pnpm test`：7 个测试文件，36 个测试通过。</span></li>
+                <li><b>type</b><span>`pnpm typecheck`：TypeScript 编译检查通过。</span></li>
+                <li><b>verify</b><span>`pnpm dev verify`：Errors 0，Warnings 0。</span></li>
+                <li><b>coverage</b><span>`verify --coverage --changed-files src/commands/finish.ts,tests/integration/m3.test.ts`：2/2 映射。</span></li>
+                <li><b>build</b><span>`pnpm build`：生成 `dist/cli.js` 和类型声明。</span></li>
+                <li><b>smoke</b><span>`pnpm smoke`：built CLI 在临时项目完整跑通。</span></li>
+              </ul>
+            </div>
+            <div class="panel">
+              <h3>下一批优化</h3>
+              <ul class="evidence-list">
+                <li><b>benchmark</b><span>补 30 条历史任务 fixture，验证 route top-3 命中率。</span></li>
+                <li><b>finish</b><span>给 finish 增加更细的验证命令建议和 context update 分类。</span></li>
+                <li><b>Obsidian</b><span>在真实 vault 中审查 `_cmap/CMAP_coding` 的 Graph 连接质量。</span></li>
+                <li><b>GSD</b><span>拿真实 `.planning` / `.gsd` 产物测试 reconcile 降噪能力。</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <footer class="footer">
+          <strong>Boundary:</strong> cmap 不做 AI coding 全家桶，不自动生成可信项目语义，不替代 git/CI/测试框架。它只让项目在 AI 与人之间持续可理解、可续接、可验证。
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const nodeInfo = {
+      core: {
+        title: ".context canonical map",
+        copy: "长期项目事实源。AI 和人都从这里读取模块边界、当前状态、验证规则和设计决策；外部系统只能作为候选输入。",
+        command: "cmap verify"
+      },
+      route: {
+        title: "route / 任务定位",
+        copy: "根据模块 aliases、路径关键词和模块索引，把自然语言任务转成优先阅读的模块列表。",
+        command: "cmap route \"任务描述\""
+      },
+      checkpoint: {
+        title: "checkpoint / 当前 handoff",
+        copy: "保存短期工作状态：当前任务、假设、改动文件、验证结果、下一步和不要重复做的事情。",
+        command: "cmap checkpoint write --task"
+      },
+      brief: {
+        title: "brief / AI 开工包",
+        copy: "把 route、CHECKPOINT、模块文档、验证规则和 Obsidian 链接打包成一份 AI 可读上下文。",
+        command: "cmap brief \"任务\""
+      },
+      finish: {
+        title: "finish / 收工 gate",
+        copy: "任务结束前列出 changed files、受影响模块、context 更新建议、验证提醒和 checkpoint close/write 建议。",
+        command: "cmap finish --changed"
+      },
+      verify: {
+        title: "verify / 漂移检查",
+        copy: "检查 .context 结构、frontmatter、模块关系、路径存在性、changed-file coverage 和入口一致性。",
+        command: "cmap verify --coverage"
+      },
+      obsidian: {
+        title: "Obsidian / 阅读与图谱层",
+        copy: "把 canonical .context 导出为 _cmap notes，通过 Properties 和 wikilinks 形成可浏览的知识图谱。",
+        command: "cmap obsidian export"
+      },
+      reconcile: {
+        title: "reconcile / 外部候选事实",
+        copy: "从 GSD v1/v2 等 workflow 产物里提取候选事实、验证证据和冲突，只写 dry-run 或 inbox。",
+        command: "cmap reconcile --adapter gsd-v1"
+      }
+    };
+
+    const modules = [
+      { id: "cli", group: "core", purpose: "公共命令面：注册 commander 命令、处理参数、退出码和 stdout/stderr 边界。", paths: ["src/cli.ts", "src/commands"], tags: ["command", "entrypoint"] },
+      { id: "context", group: "core", purpose: "生成 `.context` 骨架和模板，把确定性项目扫描信号写成可审查文本。", paths: ["src/context/templates.ts", "src/context/scanner.ts"], tags: ["template", "skeleton"] },
+      { id: "route", group: "workflow", purpose: "任务到模块的 deterministic router，输出推荐模块、证据和 read-first 文件。", paths: ["src/commands/route.ts", "src/core/module-index.ts"], tags: ["routing", "aliases"] },
+      { id: "handoff", group: "workflow", purpose: "维护 `STATUS.md` 和 `CHECKPOINT.md`，让任务可以跨会话续接。", paths: ["src/commands/status.ts", "src/commands/checkpoint.ts"], tags: ["checkpoint", "status"] },
+      { id: "brief", group: "workflow", purpose: "生成 AI coding 开工包，优先读取 `CHECKPOINT.md`，再带上 route 和 module docs。", paths: ["src/commands/brief.ts"], tags: ["AI brief", "startup"] },
+      { id: "finish", group: "workflow", purpose: "收工前的 read-only gate，提示 context 更新、验证和 checkpoint 生命周期。", paths: ["src/commands/finish.ts"], tags: ["closeout", "handoff"] },
+      { id: "verify", group: "safety", purpose: "检查 `.context` 文件、模块关系、路径存在性、入口漂移和 changed-file coverage。", paths: ["src/commands/verify.ts"], tags: ["drift", "coverage"] },
+      { id: "cp", group: "safety", purpose: "安全搬运行块，支持 copy/move/delete/restore，并为破坏性动作创建备份。", paths: ["src/commands/cp.ts", "src/fs"], tags: ["line block", "backup"] },
+      { id: "host", group: "integration", purpose: "生成简短 AGENTS.md / CLAUDE.md，让宿主 AI 先读地图再工作。", paths: ["src/host", "src/commands/install.ts"], tags: ["AGENTS", "CLAUDE"] },
+      { id: "hooks-doctor", group: "integration", purpose: "提供 hook reminder/maintain 模板和 doctor 诊断，不自动写 canonical memory。", paths: ["src/commands/hooks.ts", "src/commands/doctor.ts"], tags: ["hooks", "doctor"] },
+      { id: "obsidian-adapter", group: "integration", purpose: "把 `.context` 导成 Obsidian-friendly notes，并支持 open / pull dry-run。", paths: ["src/commands/obsidian.ts", "_cmap"], tags: ["graph", "view"] },
+      { id: "reconcile-adapter", group: "integration", purpose: "从 GSD 等外部 workflow 产物提取候选事实、冲突和验证证据。", paths: ["src/commands/reconcile.ts"], tags: ["GSD", "inbox"] },
+      { id: "benchmark", group: "safety", purpose: "用 JSONL fixture 评估 route top-k 命中率，为产品效果建立量化反馈。", paths: ["src/commands/benchmark.ts", "bench"], tags: ["route eval", "top-k"] },
+      { id: "adoption", group: "workflow", purpose: "接管已有项目时生成候选模块和 ADOPTION 工作台，不直接提升为事实。", paths: ["src/commands/adopt.ts"], tags: ["existing project", "candidate"] },
+      { id: "module-docs", group: "core", purpose: "创建候选 module doc，承载模块职责、路径、关系、验证方式和常见坑。", paths: ["src/commands/add-module.ts"], tags: ["module doc", "contract"] },
+      { id: "tests", group: "safety", purpose: "用 Vitest 集成测试和 built CLI smoke 证明真实用户命令行为。", paths: ["tests", "scripts/smoke-test.mjs"], tags: ["vitest", "smoke"] }
+    ];
+
+    const moduleGrid = document.querySelector("#moduleGrid");
+    const search = document.querySelector("#moduleSearch");
+    const filters = [...document.querySelectorAll(".filter-button")];
+    let activeFilter = "all";
+
+    function renderModules() {
+      const query = search.value.trim().toLowerCase();
+      moduleGrid.innerHTML = "";
+      modules
+        .filter((item) => activeFilter === "all" || item.group === activeFilter)
+        .filter((item) => {
+          const haystack = `${item.id} ${item.group} ${item.purpose} ${item.paths.join(" ")} ${item.tags.join(" ")}`.toLowerCase();
+          return !query || haystack.includes(query);
+        })
+        .forEach((item) => {
+          const article = document.createElement("article");
+          article.className = "module-card";
+          article.innerHTML = `
+            <div class="tag-row">
+              <span class="tag">${item.group}</span>
+              ${item.tags.slice(0, 2).map((tag) => `<span class="tag">${tag}</span>`).join("")}
+            </div>
+            <h3>${item.id}</h3>
+            <p>${item.purpose}</p>
+            <ul class="path-list">${item.paths.map((path) => `<li>${path}</li>`).join("")}</ul>
+          `;
+          moduleGrid.append(article);
+        });
+    }
+
+    filters.forEach((button) => {
+      button.addEventListener("click", () => {
+        filters.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
+        activeFilter = button.dataset.filter;
+        renderModules();
+      });
+    });
+    search.addEventListener("input", renderModules);
+    renderModules();
+
+    document.querySelectorAll(".node").forEach((node) => {
+      node.addEventListener("click", () => {
+        document.querySelectorAll(".node").forEach((item) => item.classList.remove("active"));
+        node.classList.add("active");
+        const info = nodeInfo[node.dataset.node];
+        document.querySelector("#node-title").textContent = info.title;
+        document.querySelector("#node-copy").textContent = info.copy;
+        document.querySelector("#node-command").textContent = info.command;
+        search.value = node.dataset.node === "core" ? "" : node.dataset.node;
+        activeFilter = "all";
+        filters.forEach((item) => item.classList.toggle("active", item.dataset.filter === "all"));
+        renderModules();
+      });
+    });
+
+    const sections = [...document.querySelectorAll("section[id]")];
+    const navLinks = [...document.querySelectorAll(".nav a")];
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      navLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
+    }, { threshold: [0.16, 0.36, 0.62] });
+    sections.forEach((section) => observer.observe(section));
+  </script>
+</body>
+</html>

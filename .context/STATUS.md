@@ -3,34 +3,33 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-11T17:39:39.773Z'
+updated_at: '2026-05-12T03:32:35Z'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Complete cmap core + Obsidian view + AI brief + explicit finish/checkpoint loop
+Show current cmap product/workflow capabilities as an interactive HTML overview and hand it to DeepSeek for external review
 
 ## Done Recently
-Added finish report reminders for CHECKPOINT.md lifecycle; finish now tells users to checkpoint write when work continues or checkpoint close when complete, while remaining read-only. Updated focused integration coverage and .context docs.
+Added `docs/cmap-product-overview.html`, a single-file interactive product atlas for cmap. It explains the canonical `.context` layer, AI coding workflow, module directory, dogfood feasibility, Obsidian graph/view layer, and verification evidence. Added a `showcase` module owner and uploaded the HTML attachment to DeepSeek Chat with a structured review prompt.
 
 ## Left Off
-Full verification passed. research/ remains pre-existing untracked content and was not committed.
+DeepSeek handoff succeeded at https://chat.deepseek.com/a/chat/s/1b212acc-4ea6-4d3c-b827-7b397aec03a8. Full local verification passed. `research/` remains pre-existing untracked content and was not committed.
 
 ## Next Steps
-Commit this finish/checkpoint loop update and push origin/main. Next product dogfood should run a real task from route -> checkpoint -> brief -> finish -> checkpoint close.
+Review DeepSeek feedback when it finishes, then decide whether to iterate the HTML overview or turn it into a reusable `cmap showcase`/docs export workflow.
 
 ## Changed Files
-- src/commands/finish.ts
-- tests/integration/m3.test.ts
-- .context/modules/finish.md
-- .context/VERIFY.md
+- docs/cmap-product-overview.html
+- .gitignore
 - .context/MAP.md
 - .context/CHECKPOINT.md
 - .context/STATUS.md
+- .context/modules/showcase.md
 
 ## Risks
-finish reminders are deterministic prompts only; they do not prove semantic facts and do not close checkpoints automatically.
+The HTML overview is a static presentation artifact. It now has a `showcase` module owner, but it is not yet generated automatically from `.context`.
 
 ## Last Verified
-2026-05-12: pnpm test, pnpm typecheck, pnpm dev verify, pnpm dev verify --coverage --changed-files src/commands/finish.ts,tests/integration/m3.test.ts, pnpm build, pnpm dev finish --changed src/commands/finish.ts,tests/integration/m3.test.ts, and pnpm smoke passed.
+2026-05-12: node HTML content check, Playwright desktop/mobile preview, console check after favicon fix, DeepSeek attachment upload/send, pnpm test, pnpm typecheck, pnpm dev verify, pnpm dev route "产品介绍 HTML 思维导图 DeepSeek handoff", pnpm dev finish, pnpm smoke, and git diff --check passed. Coverage maps `docs/cmap-product-overview.html` to `showcase`; `.gitignore` and canonical `.context` status/map files still report expected unmapped warnings.

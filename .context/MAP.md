@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:55:00+08:00
+updated_at: 2026-05-12T11:35:00+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -27,6 +27,7 @@ confidence: ai-drafted
 - Tests: `tests/integration/*.test.ts`
 - Product spec: `cmap_v0.1_PRD_and_execution_manual.md`
 - User-facing README: `README.md`
+- Interactive product overview: `docs/cmap-product-overview.html`
 - Built CLI smoke test: `scripts/smoke-test.mjs`
 
 ## Module Map
@@ -44,6 +45,7 @@ confidence: ai-drafted
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
 | obsidian-adapter | Obsidian-friendly markdown export and module note links | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
 | reconcile-adapter | dry-run candidate facts from external workflow artifacts | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
+| showcase | interactive product overview and external-review handoff artifact | `docs/cmap-product-overview.html` | `.context/modules/showcase.md` | showcase, product overview, HTML, 介绍页, 产品介绍, 思维导图 |
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
 | adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
 | module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
@@ -65,6 +67,7 @@ confidence: ai-drafted
 | finish、收尾、closeout、context review | finish | `.context/modules/finish.md`, `src/commands/finish.ts` |
 | obsidian、图谱、关系图谱、可视化、export、vault | obsidian-adapter | `.context/modules/obsidian-adapter.md`, `src/commands/obsidian.ts` |
 | reconcile、GSD adapter、gsd-v1、gsd-v2、外部产物、候选事实 | reconcile-adapter | `.context/modules/reconcile-adapter.md`, `src/commands/reconcile.ts` |
+| 产品介绍、展示页、HTML、思维导图、DeepSeek handoff | showcase | `.context/modules/showcase.md`, `docs/cmap-product-overview.html` |
 | log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
 | adopt、接管已有项目、候选模块、ADOPTION | adoption | `.context/modules/adoption.md`, `src/commands/adopt.ts` |
 | add-module、新模块文档、module template | module-docs | `.context/modules/module-docs.md`, `src/commands/add-module.ts` |
@@ -84,6 +87,7 @@ confidence: ai-drafted
 - `finish` reads changed file hints through the shared module index and produces a read-only closeout report, including checkpoint write/close reminders.
 - `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph.
 - `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
+- `showcase` turns current product facts and workflow framing into a static interactive overview for human and external-model review.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
 - `module-docs` creates candidate module docs without editing MAP.
@@ -99,6 +103,7 @@ User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under
 - Task-local generated outputs: `.context/out/`
 - Candidate fact inbox for future adapters: `.context/inbox/`
 - Obsidian view export: `_cmap/<project>/`
+- Product overview artifact: `docs/cmap-product-overview.html`
 - Route benchmark fixtures: `bench/tasks.jsonl`
 - External workflow candidates: `.context/inbox/`
 - Host entrypoints: `AGENTS.md`, `CLAUDE.md`

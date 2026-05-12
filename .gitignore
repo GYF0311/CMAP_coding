@@ -5,3 +5,5 @@ coverage/
 .obsidian/
 .context/out/
 _cmap/
+.playwright-mcp/
+cmap-product-overview-*.png
