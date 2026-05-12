@@ -1,0 +1,15 @@
+# cmap deterministic maintenance policy
+# AI can propose semantics; cmap only auto-applies bounded routine/generated updates.
+auto_apply:
+  checkpoint.write: true
+  checkpoint.close: true
+  verification.record: true
+  evidence.append: true
+  stats.update: true
+  semantic.update: false
+  decision.append: false
+inbox:
+  max_pending: 0
+  max_high_risk: 0
+generated_evidence:
+  max_entries: 10

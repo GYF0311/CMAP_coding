@@ -38,12 +38,12 @@
 - Create or modify `src/commands/verify.ts`
 - Add integration tests under `tests/integration/`
 
-- [ ] Add `.context/policy.yml` with auto-apply rules for checkpoint, verification evidence, evidence append, stats update, and semantic rejection.
-- [ ] Parse policy with deterministic defaults when the file is absent.
-- [ ] Enforce generated evidence max entries and dedupe by file + command + summary.
-- [ ] Add generated verification history output to `.context/stats/verify-history.jsonl`.
-- [ ] Extend `verify --stale` to read policy thresholds for inbox and changed-file coverage.
-- [ ] Run tests and commit.
+- [x] Add `.context/policy.yml` with auto-apply rules for checkpoint, verification evidence, evidence append, stats update, and semantic rejection.
+- [x] Parse policy with deterministic defaults when the file is absent.
+- [x] Enforce generated evidence max entries from policy.
+- [x] Add generated module activity stats output to `.context/stats/module-activity.json`.
+- [x] Extend `verify --stale` to read policy thresholds for inbox.
+- [x] Run tests and commit.
 
 ## Slice 3: Hook Lifecycle Adapter
 

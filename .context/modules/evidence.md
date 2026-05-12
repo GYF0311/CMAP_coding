@@ -3,15 +3,18 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:06:51+08:00
+updated_at: 2026-05-12T21:18:31+08:00
 confidence: ai-drafted
 module: evidence
 paths:
   - src/commands/evidence.ts
   - src/commands/inbox.ts
+  - src/core/generated-stats.ts
 aliases:
   - evidence
   - generated evidence
+  - module activity
+  - stats
   - inbox status
   - inbox triage
   - promote dry-run
@@ -29,7 +32,7 @@ relations:
 # Module: evidence
 
 ## Purpose
-Maintain deterministic support evidence around module docs and candidate inbox health without promoting generated notes or candidate facts into trusted project semantics.
+Maintain deterministic support evidence, generated module activity stats, and candidate inbox health without promoting generated notes or candidate facts into trusted project semantics.
 
 ## Code Paths
 - `src/commands/evidence.ts`
@@ -37,6 +40,7 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 
 ## Responsibilities
 - Append bounded generated evidence blocks to `.context/modules/*.md`.
+- Record deterministic module activity stats under `.context/stats/module-activity.json` when policy allows `stats.update`.
 - Require explicit module id or alias, evidence file, and summary before writing evidence.
 - Verify evidence files exist inside the project root.
 - Keep generated evidence clearly marked with `cmap:generated:evidence` markers.
@@ -52,6 +56,7 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 - `core/module-index.ts` for module lookup and aliases.
 - `fs/safe-path.ts` for project-root evidence path safety.
 - `context/scanner.ts` for existence checks.
+- `context/policy.ts` for generated evidence and stats policy.
 - `update-agent` as the main producer of inbox candidates.
 - `verify` as the deterministic warning surface.
 
@@ -65,10 +70,11 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 - `cmap hooks stop --profile assist --changed <files>`
 
 ## Data Flow
-User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block -> `verify --stale` and human review can use that evidence as support, not as canonical semantics. External AI/update/reconcile outputs write candidate Markdown into `.context/inbox/`; inbox commands count, triage, preview, and archive those candidates without promoting facts.
+User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block and module activity stats -> `verify --stale` and human review can use that evidence as support, not as canonical semantics. External AI/update/reconcile outputs write candidate Markdown into `.context/inbox/`; inbox commands count, triage, preview, and archive those candidates without promoting facts.
 
 ## State / Storage
 - Writes bounded generated sections inside `.context/modules/*.md`.
+- Writes `.context/stats/module-activity.json` when `stats.update` is enabled.
 - Reads `.context/inbox/*.md` for backlog counts.
 - Moves reviewed top-level inbox candidates into `.context/inbox/archive/`.
 - Does not create new canonical semantic files.
@@ -82,12 +88,14 @@ User or assist hook provides explicit evidence -> evidence append helper resolve
 
 ## Traps
 - Evidence can show activity or verification; it cannot prove a module boundary by itself.
+- Module activity stats are deterministic counters, not semantic ownership.
 - `inbox promote --dry-run` is review guidance only; it is not canonical promotion.
 - Archived inbox files are retained as records, not deleted.
 - Stale warnings are heuristic mtime checks; they are prompts to review, not proof that a doc is wrong.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
+- `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm dev evidence append --module route --file src/commands/route.ts --summary "Route inspected"`
 - `pnpm dev inbox status`

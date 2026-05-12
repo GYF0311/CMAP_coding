@@ -1,41 +1,43 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-12T21:11:12+08:00'
+updated_at: '2026-05-12T21:22:18+08:00'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Land the first ChatGPT Pro deep-research completion slice: inbox governance plus adoption stale cleanup.
+Land the second ChatGPT Pro deep-research completion slice: policy and generated stats foundations.
 
 ## Current Hypothesis
-Before stronger hooks and autonomous maintenance, candidate facts need a small governance loop: triage, dry-run promote guidance, and archive without deletion.
+Before stronger hooks and graph-aware routing, cmap needs a deterministic policy file and machine-readable generated stats so routine automation has explicit rules and evidence.
 
 ## Changed Files
 - .context/CHECKPOINT.md
 - .context/MAP.md
+- .context/policy.yml
 - .context/STATUS.md
 - .context/VERIFY.md
-- .context/modules/adoption.md
-- .context/modules/cli.md
+- .context/modules/context.md
 - .context/modules/evidence.md
 - .context/modules/tests.md
-- .context/modules/update-agent.md
+- .context/modules/verify.md
 - README.md
-- docs/superpowers/plans/2026-05-12-cmap-pro-deep-research-completion.md
-- src/cli.ts
-- src/commands/inbox.ts
-- tests/integration/m8-evidence-stale-inbox.test.ts
+- src/commands/evidence.ts
+- src/commands/verify.ts
+- src/context/policy.ts
+- src/context/templates.ts
+- src/core/generated-stats.ts
+- tests/integration/m13-policy-stats.test.ts
 
 ## Verified
-`pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`; `pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --stale`; `pnpm smoke`; `pnpm dev benchmark route --file bench/tasks.jsonl`; `git diff --check`.
+`pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`; `pnpm test tests/integration/m13-policy-stats.test.ts`; `pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --stale`; `pnpm smoke`; `pnpm dev benchmark route --file bench/tasks.jsonl`; `git diff --check`.
 
 ## Failed / Pending
 None for this slice. The previous adoption stale warning is cleared.
 
 ## Next Step
-Next slice should add policy/stats foundations.
+Commit and push this slice. Next slice should add hook lifecycle render/test.
 
 ## Do Not Redo
-Do not make `inbox promote` edit canonical semantics yet; it is dry-run review guidance only.
+Do not make policy enable semantic or decision auto-writes; generated stats are counters, not canonical facts.

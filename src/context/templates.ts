@@ -1,4 +1,5 @@
 import path from "node:path";
+import { renderDefaultPolicy } from "./policy.js";
 
 export type TemplateInput = {
   projectName: string;
@@ -35,6 +36,10 @@ export function contextTemplates(input: TemplateInput): Map<string, string> {
     : "| TODO(ai-fill) | TODO(ai-fill) | TODO(ai-fill) | before claiming done |";
 
   return new Map([
+    [
+      "policy.yml",
+      renderDefaultPolicy()
+    ],
     [
       "BRIEF.md",
       `${frontmatter(input, "brief")}
@@ -271,4 +276,4 @@ Recent work lives in \`.context/logs/current.md\`.
   ]);
 }
 
-export const contextDirectories = ["modules", "logs", "ideas", "pending", "traps", "refs", "inbox", "out"];
+export const contextDirectories = ["modules", "logs", "ideas", "pending", "traps", "refs", "inbox", "out", "index", "graph", "stats"];

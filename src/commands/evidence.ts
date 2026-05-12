@@ -1,6 +1,8 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { CmapCommandError } from "../errors.js";
 import { fileExists } from "../context/scanner.js";
+import { loadContextPolicy } from "../context/policy.js";
+import { recordModuleActivity } from "../core/generated-stats.js";
 import { loadModuleIndex, type ContextModule } from "../core/module-index.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 
@@ -13,8 +15,6 @@ type EvidenceAppendOptions = {
 
 const startMarker = "<!-- cmap:generated:evidence:start -->";
 const endMarker = "<!-- cmap:generated:evidence:end -->";
-const maxEvidenceItems = 10;
-
 export async function runEvidenceAppend(cwd: string, options: EvidenceAppendOptions): Promise<void> {
   const moduleId = requiredText(options.module, "--module");
   const evidenceFile = requiredText(options.file, "--file");
@@ -42,21 +42,33 @@ export async function runEvidenceAppend(cwd: string, options: EvidenceAppendOpti
 }
 
 export async function appendEvidenceToModule(
-  _cwd: string,
+  cwd: string,
   targetModule: ContextModule,
   evidence: { file: string; summary: string; command?: string }
 ): Promise<void> {
+  const policy = await loadContextPolicy(cwd);
+  const createdAt = new Date().toISOString();
   const current = await readFile(targetModule.absolutePath, "utf8");
   const next = upsertGeneratedEvidence(current, {
     ...evidence,
-    createdAt: new Date().toISOString()
-  });
+    createdAt
+  }, policy.generatedEvidence.maxEntries);
   await writeFile(targetModule.absolutePath, next, "utf8");
+  if (policy.autoApply.statsUpdate) {
+    await recordModuleActivity(cwd, {
+      moduleId: targetModule.id,
+      file: evidence.file,
+      summary: evidence.summary,
+      command: evidence.command,
+      at: createdAt
+    });
+  }
 }
 
 function upsertGeneratedEvidence(
   raw: string,
-  evidence: { file: string; summary: string; command?: string; createdAt: string }
+  evidence: { file: string; summary: string; command?: string; createdAt: string },
+  maxEvidenceItems: number
 ): string {
   const entry = renderEntry(evidence);
   const existingBlock = extractBlock(raw);

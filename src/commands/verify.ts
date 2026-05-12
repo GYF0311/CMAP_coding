@@ -4,6 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
+import { loadContextPolicy } from "../context/policy.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
 
 const execFileAsync = promisify(execFile);
@@ -87,7 +88,7 @@ export async function verifyContext(cwd: string, options: VerifyOptions = {}): P
   await checkPendingThreshold(contextRoot, report);
   if (options.stale) {
     await checkStaleModuleDocs(cwd, modules, report);
-    await checkInboxBacklog(contextRoot, report);
+    await checkInboxBacklog(cwd, contextRoot, report);
   }
   if (options.changed || options.coverage) {
     await checkChangedCoverage(cwd, modules, options, report);
@@ -371,7 +372,7 @@ async function checkStaleModuleDocs(
   }
 }
 
-async function checkInboxBacklog(contextRoot: string, report: VerifyReport): Promise<void> {
+async function checkInboxBacklog(cwd: string, contextRoot: string, report: VerifyReport): Promise<void> {
   const inboxRoot = path.join(contextRoot, "inbox");
   if (!(await fileExists(inboxRoot))) {
     report.ok.push("Inbox: no candidate inbox directory");
@@ -391,6 +392,12 @@ async function checkInboxBacklog(contextRoot: string, report: VerifyReport): Pro
     if (/risk:\s*high/i.test(raw) || /high-risk/i.test(raw) || /operation is marked high risk/i.test(raw)) {
       highRisk += 1;
     }
+  }
+
+  const policy = await loadContextPolicy(cwd);
+  if (inboxFiles.length <= policy.inbox.maxPending && highRisk <= policy.inbox.maxHighRisk) {
+    report.ok.push(`Inbox: ${inboxFiles.length} pending candidates within policy`);
+    return;
   }
 
   report.issues.push({

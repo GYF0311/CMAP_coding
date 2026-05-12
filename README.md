@@ -119,6 +119,7 @@ cmap CLI does not generate trusted project semantics.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
 - `update --agent` can process AI-authored MapPatch JSON, but P0 only auto-applies low-risk checkpoint state with backup/audit; module semantics and decisions go to `.context/inbox/`.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
+- `.context/policy.yml` controls bounded routine/generated maintenance defaults such as stats updates and inbox thresholds; semantic and decision auto-writes remain disabled.
 - `inbox status`, `inbox triage`, `inbox promote --dry-run`, and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
 - Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs. Assist hooks may write generated evidence blocks, but they do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
