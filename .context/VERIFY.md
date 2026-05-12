@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:59:49+08:00
+updated_at: 2026-05-12T22:09:22+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -30,6 +30,7 @@ confidence: ai-drafted
 | verify CI report | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | `verify --ci --format markdown` emits a stable CI report. |
 | host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
 | route | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Direct matches stay separate from graph-related context; `--max-context` bounds selected context and derived verify commands. |
+| route usage stats | `pnpm test tests/integration/m13-policy-stats.test.ts` | Route commands write generated route usage stats when policy allows `stats.update`. |
 | graph | `pnpm test tests/integration/m14-graph-route.test.ts` | `graph build`, `graph explain`, and `route --graph` are covered. |
 | brief | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Writes a task-local AI brief from the bounded route context pack. |
 | pack | `pnpm test tests/integration/m16-context-pack.test.ts` | Writes a redacted, budgeted context pack from routed graph-neighborhood context only. |
@@ -47,6 +48,7 @@ confidence: ai-drafted
 | adoption | `pnpm test tests/integration/m4m5.test.ts` | Adopt writes ADOPTION candidate signals without promoting them into MAP. |
 | module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
 | hooks-doctor | `pnpm test tests/integration/m9-hooks-assist.test.ts` | observe writes hook logs/session events only; assist writes bounded generated evidence for mapped changed files; render/test covers Claude lifecycle settings and strict guard decisions. |
+| hooks assist session brief | `pnpm test tests/integration/m9-hooks-assist.test.ts` | Assist `UserPromptSubmit` writes `.context/out/session-brief.md` and generated route usage stats. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
 | verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
 | verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |

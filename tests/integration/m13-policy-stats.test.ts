@@ -71,6 +71,25 @@ describe("M13 policy and generated stats foundations", () => {
     expect(stats.modules.route.commands["pnpm test tests/integration/m13-policy-stats.test.ts"]).toBe(1);
   });
 
+  test("route records generated route usage stats when policy allows stats updates", async () => {
+    const cwd = await createPolicyProject("m13-route-stats");
+
+    const result = await runCmap(["route", "route 模块定位"], cwd);
+
+    expect(result.code).toBe(0);
+    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/stats/route-usage.json"))) as {
+      total: number;
+      by_source: Record<string, number>;
+      modules: Record<string, number>;
+      recent: Array<{ task: string; modules: string[] }>;
+    };
+    expect(stats.total).toBe(1);
+    expect(stats.by_source.route).toBe(1);
+    expect(stats.modules.route).toBe(1);
+    expect(stats.recent[0].task).toBe("route 模块定位");
+    expect(stats.recent[0].modules).toEqual(["route"]);
+  });
+
   test("verify stale uses policy inbox thresholds", async () => {
     const cwd = await createPolicyProject("m13-inbox-policy");
     await writeFile(

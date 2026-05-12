@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:36:07+08:00
+updated_at: 2026-05-12T22:09:22+08:00
 confidence: ai-drafted
 module: route
 paths:
@@ -40,6 +40,7 @@ Recommend which `.context` files an AI should read first for a natural-language 
 - Support `--graph` as an explicit graph-aware route output flag without changing direct route labels.
 - Respect `--max-context` so route output can stay compact for small handoffs.
 - Extract suggested verification commands from each selected module's `## Tests / Verification` section.
+- Record generated route usage stats under `.context/stats/route-usage.json` when policy allows `stats.update`.
 - Output a route card with likely modules, related context, read-first files, suggested verify commands, and low-confidence notes.
 - Avoid inventing modules when no high-confidence match exists.
 
@@ -51,12 +52,13 @@ Recommend which `.context` files an AI should read first for a natural-language 
 - `cmap route "<task>"`
 - `cmap brief "<task>"`
 - Future `finish` and hooks as a hint source.
+- `cmap hooks test --event UserPromptSubmit --mode assist`
 
 ## Data Flow
-Task text -> shared module index -> deterministic direct scoring -> bounded relation expansion -> verification command extraction from selected context modules -> text/JSON route report.
+Task text -> shared module index -> deterministic direct scoring -> bounded relation expansion -> verification command extraction from selected context modules -> optional generated route usage stats -> text/JSON route report.
 
 ## State / Storage
-Read-only.
+Writes generated `.context/stats/route-usage.json` when policy allows stats updates; it does not write canonical context facts.
 
 ## Constraints
 - No embeddings, no model calls, no semantic guessing.
@@ -76,6 +78,7 @@ Read-only.
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
 - `pnpm test tests/integration/m14-graph-route.test.ts`
+- `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm dev route "checkpoint 更新当前主线"`
 
 ## When to Update This Doc

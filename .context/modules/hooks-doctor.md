@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:27:45+08:00
+updated_at: 2026-05-12T22:09:22+08:00
 confidence: ai-drafted
 module: hooks-doctor
 paths:
@@ -28,7 +28,7 @@ relations:
 # Module: hooks-doctor
 
 ## Purpose
-Provide optional hook templates, lifecycle render/test utilities, reminders, observe logs, assist-mode generated evidence, strict guard simulation, and diagnostics without writing trusted project semantics.
+Provide optional hook templates, lifecycle render/test utilities, reminders, observe logs, assist-mode session briefs/generated evidence, strict guard simulation, and diagnostics without writing trusted project semantics.
 
 ## Code Paths
 - `src/hooks/templates.ts`
@@ -45,6 +45,7 @@ Provide optional hook templates, lifecycle render/test utilities, reminders, obs
 - `hooks stop --profile observe` writes a non-canonical `.context/logs/hooks.jsonl` event.
 - `hooks stop --profile assist` maps changed files to modules and appends bounded generated evidence for mapped files.
 - `hooks test --event PostToolUse` writes `.context/logs/session-events.jsonl`.
+- `hooks test --event UserPromptSubmit --mode assist --prompt ...` writes `.context/out/session-brief.md` and generated route usage stats.
 - `hooks test --event PreToolUse --mode strict` blocks direct writes to semantic canonical context files.
 - `doctor` checks `.context`, entrypoint parity, and hook template presence.
 
@@ -52,6 +53,7 @@ Provide optional hook templates, lifecycle render/test utilities, reminders, obs
 - Host entrypoint install flow.
 - `.context/hooks/` storage.
 - `evidence` for generated support evidence.
+- `route` for prompt-to-module startup briefs.
 - `core/module-index.ts` for changed-file to module mapping.
 
 ## Used By
@@ -59,24 +61,28 @@ Provide optional hook templates, lifecycle render/test utilities, reminders, obs
 - `cmap install --host both --hooks assist`
 - `cmap hooks render --host claude --mode assist`
 - `cmap hooks test --event PostToolUse --mode observe`
+- `cmap hooks test --event UserPromptSubmit --mode assist --prompt "..."`
 - `cmap hooks session-start`
 - `cmap hooks stop`
 - `cmap hooks stop --profile assist --changed src/commands/route.ts`
 - `cmap doctor`
 
 ## Data Flow
-Install options -> hook JSON templates. Render options -> project-local lifecycle settings. Hook invocation or test event -> stdout reminder, non-canonical hook/session log, strict guard decision, or generated evidence append depending on mode/profile.
+Install options -> hook JSON templates. Render options -> project-local lifecycle settings. Hook invocation or test event -> stdout reminder, non-canonical hook/session log, generated session brief, strict guard decision, or generated evidence append depending on mode/profile.
 
 ## State / Storage
 - Writes `.context/hooks/*.json` only when install is called with hooks.
 - Writes rendered Claude lifecycle settings to the requested project-local output path.
 - Writes `.context/logs/hooks.jsonl` for observe/assist stop events.
 - Writes `.context/logs/session-events.jsonl` for simulated lifecycle events.
+- Writes `.context/out/session-brief.md` for assist prompt events.
+- Writes `.context/stats/route-usage.json` for assist prompt events when policy allows stats updates.
 - Assist mode may write generated evidence blocks inside `.context/modules/*.md`.
 
 ## Constraints
 - Hooks do not modify `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, module relationships, or code files.
 - Assist mode only writes marked generated evidence blocks.
+- Assist startup briefs are generated task outputs, not canonical memory.
 - No automatic host-global config edits.
 - Strict guard currently protects direct semantic canonical writes; it should not block generated evidence or inbox review paths.
 

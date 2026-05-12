@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:59:49+08:00
+updated_at: 2026-05-12T22:09:22+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -37,7 +37,7 @@ confidence: ai-drafted
 | context | `.context` templates, deterministic policy loading, and project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
 | verify | deterministic L0 structure checks, stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
-| route | direct module routing plus bounded graph/test context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
+| route | direct module routing, generated route usage stats, and bounded graph/test context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
 | graph | deterministic context graph projection and typed relation explanation | `src/commands/graph.ts`, `src/core/context-graph.ts` | `.context/modules/graph.md` | graph, context graph, graph build, graph explain, 关系图, 图谱 |
 | brief | AI coding startup brief from route/checkpoint/bounded context pack/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
 | pack | budgeted redacted context pack from routed graph neighborhood | `src/commands/pack.ts` | `.context/modules/pack.md` | pack, context pack, token budget, 上下文包, 阅读包 |
@@ -46,14 +46,14 @@ confidence: ai-drafted
 | cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
 | update-agent | MapPatch intake, routine apply policy, backup/audit, and candidate inbox routing | `src/commands/update.ts`, `src/core/map-patch.ts`, `src/fs/backup.ts` | `.context/modules/update-agent.md` | update, MapPatch, agent update, 自主维护, 自动维护, inbox, rollback |
-| evidence | generated module evidence, module activity stats, inbox triage/archive/promote dry-run, and stale maintenance checks | `src/commands/evidence.ts`, `src/commands/inbox.ts`, `src/core/generated-stats.ts` | `.context/modules/evidence.md` | evidence, generated evidence, inbox status, stats, stale, 证据, 候选池 |
+| evidence | generated module evidence, module/route usage stats, inbox triage/archive/promote dry-run, and stale maintenance checks | `src/commands/evidence.ts`, `src/commands/inbox.ts`, `src/core/generated-stats.ts` | `.context/modules/evidence.md` | evidence, generated evidence, inbox status, stats, stale, 证据, 候选池 |
 | obsidian-adapter | Obsidian-friendly markdown export and module note links | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
 | reconcile-adapter | dry-run candidate facts from external workflow artifacts | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
 | showcase | interactive product overview and external-review handoff artifact | `docs/cmap-product-overview.html` | `.context/modules/showcase.md` | showcase, product overview, HTML, 介绍页, 产品介绍, 思维导图 |
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
 | adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
 | module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
-| hooks-doctor | hook templates, lifecycle render/test, hook reminder/observe/assist/strict output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, strict, 诊断 |
+| hooks-doctor | hook templates, lifecycle render/test, session brief generation, hook reminder/observe/assist/strict output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, strict, 诊断 |
 | tests | integration and built-CLI smoke coverage for CLI milestones | `tests`, `scripts/smoke-test.mjs` | `.context/modules/tests.md` | test, vitest, smoke, 自测, 集成测试, 行为测试 |
 
 ## Natural Language Route
@@ -87,7 +87,7 @@ confidence: ai-drafted
 - `context` provides templates, deterministic policy defaults/loading, and project signal scanning used by `init`.
 - `verify` reads `.context` files created by `context`, validates deterministic structure, and can render stable CI Markdown reports.
 - `host` generates entrypoint text used by `install`.
-- `route` reads the shared module index, recommends direct modules, expands bounded graph-related context, and surfaces module-owned verification commands; it must not propose nonexistent modules or treat related context as direct matches.
+- `route` reads the shared module index, recommends direct modules, expands bounded graph-related context, surfaces module-owned verification commands, and records generated route usage stats when policy allows; it must not propose nonexistent modules or treat related context as direct matches.
 - `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs.
 - `brief` packages route result, bounded route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
 - `pack` renders a redacted, budgeted task context pack from route's graph neighborhood, checkpoint/status, decisions, verify source, module docs, and inbox warnings.
@@ -96,19 +96,19 @@ confidence: ai-drafted
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
 - `finish` reads changed file hints through the shared module index and produces a closeout report; with `--agent` it writes a MapPatch request artifact under `.context/out/` but does not apply it.
 - `update-agent` parses AI-authored MapPatch JSON, classifies operations by policy, applies only routine checkpoint updates with backup/audit, routes semantic updates to `.context/inbox/`, and supports rollback.
-- `evidence` appends bounded generated support evidence to module docs, records module activity stats, prints inbox backlog status, groups candidates for triage, previews promotion guidance, archives reviewed candidates, and gives `verify --stale` something deterministic to check before semantic facts are promoted.
+- `evidence` appends bounded generated support evidence to module docs, records generated module activity and route usage stats, prints inbox backlog status, groups candidates for triage, previews promotion guidance, archives reviewed candidates, and gives `verify --stale` something deterministic to check before semantic facts are promoted.
 - `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph.
 - `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
 - `showcase` turns current product facts and workflow framing into a static interactive overview for human and external-model review.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
 - `module-docs` creates candidate module docs without editing MAP.
-- `hooks-doctor` writes project-local hook templates, renders Claude lifecycle settings, simulates hook events, records observe/session logs, can append generated evidence in assist mode, blocks direct semantic canonical writes in strict PreToolUse tests, and diagnoses install state.
+- `hooks-doctor` writes project-local hook templates, renders Claude lifecycle settings, simulates hook events, records observe/session logs, can generate `.context/out/session-brief.md` from assist prompt events, can append generated evidence in assist stop mode, blocks direct semantic canonical writes in strict PreToolUse tests, and diagnoses install state.
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
 User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `route` first scores direct matches, then builds a `--max-context` bounded context pack from module relations and documented verification commands. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `pack` uses the routed graph neighborhood to build a redacted budgeted context pack without reading the whole repository. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
-Generated evidence is a support layer: `evidence append` and `hooks stop --profile assist` update marked generated sections inside module docs and `.context/stats/module-activity.json`, while `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox archive`, and `verify --stale` keep review backlog and source/doc drift visible without promoting semantic facts.
+Generated evidence and stats are support layers: `evidence append` and `hooks stop --profile assist` update marked generated sections inside module docs and `.context/stats/module-activity.json`; `route` and assist prompt hooks update `.context/stats/route-usage.json`; `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox archive`, and `verify --stale` keep review backlog and source/doc drift visible without promoting semantic facts.
 
 ## State / Storage
 - Project memory: `.context/`
@@ -119,6 +119,7 @@ Generated evidence is a support layer: `evidence append` and `hooks stop --profi
 - Archived reviewed inbox candidates: `.context/inbox/archive/`
 - Generated evidence blocks: bounded sections inside `.context/modules/*.md`
 - Generated stats: `.context/stats/*.json`
+- Generated assist startup brief: `.context/out/session-brief.md`
 - Generated graph projections: `.context/graph/*.json`
 - MapPatch audit trail: `.context/audit/`
 - Hook observation log: `.context/logs/hooks.jsonl`
@@ -155,4 +156,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`; context pack budget/redaction behavior is covered by `tests/integration/m16-context-pack.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, budgeted/redacted `pack`, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, and a GitHub Actions quality gate. Next work should add remaining lifecycle assist output and view-layer drift checks.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, budgeted/redacted `pack`, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats / route usage stats, observe/assist hook evidence collection, assist hook session brief generation, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, and a GitHub Actions quality gate. Next work should add view-layer drift checks and final product docs.

@@ -134,6 +134,30 @@ describe("M9 hooks observe and assist profiles", () => {
     expect(journal).toContain("src/commands/route.ts");
   });
 
+  test("hooks test assist UserPromptSubmit writes a session brief and route usage stats", async () => {
+    const cwd = await createHookProject("m9-user-prompt-assist");
+
+    const result = await runCmap(
+      ["hooks", "test", "--event", "UserPromptSubmit", "--mode", "assist", "--prompt", "route 模块定位"],
+      cwd
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Wrote .context/out/session-brief.md");
+    const brief = await expectFile(path.join(cwd, ".context/out/session-brief.md"));
+    expect(brief).toContain("# cmap Session Brief");
+    expect(brief).toContain("route 模块定位");
+    expect(brief).toContain(".context/modules/route.md");
+    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/stats/route-usage.json"))) as {
+      total: number;
+      by_source: Record<string, number>;
+      modules: Record<string, number>;
+    };
+    expect(stats.total).toBe(1);
+    expect(stats.by_source.hook).toBe(1);
+    expect(stats.modules.route).toBe(1);
+  });
+
   test("hooks test strict PreToolUse blocks direct semantic canonical writes", async () => {
     const cwd = await createHookProject("m9-pre-tool-use-strict");
 

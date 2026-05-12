@@ -4,10 +4,12 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { fileExists } from "../context/scanner.js";
 import { CmapCommandError } from "../errors.js";
+import { recordRouteUsage } from "../core/generated-stats.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
 import { resolveInsideRoot, projectRelative } from "../fs/safe-path.js";
 import { claudeLifecycleSettings, type HookMode } from "../hooks/templates.js";
 import { appendEvidenceToModule } from "./evidence.js";
+import { routeTask, type RouteReport } from "./route.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -163,6 +165,19 @@ export async function runHookTest(cwd: string, options: HookTestOptions): Promis
   }
   if (options.event === "UserPromptSubmit") {
     await writeSessionEvent(cwd, { event: options.event, mode, tool: "prompt", file: undefined, command: undefined, prompt: options.prompt });
+    const prompt = options.prompt?.trim();
+    if (mode === "assist" && prompt) {
+      const route = await routeTask(cwd, prompt, { maxContext: "6", graph: true });
+      await writeSessionBrief(cwd, prompt, route);
+      await recordRouteUsage(cwd, {
+        source: "hook",
+        task: prompt,
+        modules: route.modules.map((module) => module.id),
+        contextModules: route.contextModules.map((module) => module.id)
+      });
+      process.stdout.write("Recorded UserPromptSubmit event\nWrote .context/out/session-brief.md\n");
+      return 0;
+    }
     process.stdout.write("Recorded UserPromptSubmit event\nSuggested command: cmap brief \"<task>\"\n");
     return 0;
   }
@@ -258,6 +273,46 @@ async function writeSessionEvent(
     prompt: input.prompt
   });
   await appendFile(path.join(logsRoot, "session-events.jsonl"), `${line}\n`, "utf8");
+}
+
+async function writeSessionBrief(cwd: string, task: string, route: RouteReport): Promise<void> {
+  const outRoot = path.join(cwd, ".context", "out");
+  await mkdir(outRoot, { recursive: true });
+  const lines = [
+    "# cmap Session Brief",
+    "",
+    "## Task",
+    "",
+    task,
+    "",
+    "## Likely Modules",
+    ""
+  ];
+  if (route.modules.length === 0) {
+    lines.push("- No direct module match. Read `.context/MAP.md` first.");
+  } else {
+    for (const module of route.modules.slice(0, 3)) {
+      lines.push(`- ${module.id}: ${module.docPath}`);
+    }
+  }
+  lines.push("", "## Read First", "");
+  for (const file of route.readFirst) {
+    lines.push(`- \`${file}\``);
+  }
+  if (route.verifyCommands.length > 0) {
+    lines.push("", "## Suggested Verify", "");
+    for (const command of route.verifyCommands.slice(0, 8)) {
+      lines.push(`- \`${command}\``);
+    }
+  }
+  lines.push(
+    "",
+    "## Boundaries",
+    "",
+    "- This file is generated from a hook event and is not canonical project memory.",
+    "- Use `cmap pack \"<task>\"` when the next AI needs a fuller budgeted context package."
+  );
+  await writeFile(path.join(outRoot, "session-brief.md"), `${lines.join("\n")}\n`, "utf8");
 }
 
 function parseHookMode(value: string): HookMode {

@@ -1,5 +1,6 @@
 import type { ContextModule } from "../core/module-index.js";
 import { loadModuleIndex } from "../core/module-index.js";
+import { recordRouteUsage } from "../core/generated-stats.js";
 import { CmapCommandError } from "../errors.js";
 
 type RouteOptions = {
@@ -46,6 +47,12 @@ export type RouteReport = {
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
   const report = await routeTask(cwd, task, options);
+  await recordRouteUsage(cwd, {
+    source: "route",
+    task,
+    modules: report.modules.map((module) => module.id),
+    contextModules: report.contextModules.map((module) => module.id)
+  });
 
   if (options.format === "json") {
     process.stdout.write(`${JSON.stringify(toJsonReport(report), null, 2)}\n`);

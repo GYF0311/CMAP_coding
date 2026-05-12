@@ -58,7 +58,7 @@
 - [x] Add `hooks test --event SessionStart|UserPromptSubmit|PreToolUse|PostToolUse|Stop`.
 - [x] Generate Claude-compatible lifecycle settings as a project-local file.
 - [x] Implement observe mode session event logging to `.context/logs/session-events.jsonl`.
-- [ ] Implement assist mode route/brief output to `.context/out/session-brief.md`.
+- [x] Implement assist mode route/brief output to `.context/out/session-brief.md`.
 - [x] Implement strict dry-run guards for direct semantic canonical writes.
 - [x] Verify hooks never directly mutate high-risk canonical semantic sections in lifecycle tests.
 - [x] Run tests and commit.
@@ -73,7 +73,7 @@
 - Add tests under `tests/integration/`
 
 - [x] Add `cmap graph build` to write `.context/graph/modules.json`, `files.json`, `edges.json`, and `graph.meta.json`.
-- [ ] Add `.context/stats/route-usage.json` and `.context/stats/module-activity.json` updates from route and hooks.
+- [x] Add `.context/stats/route-usage.json` and `.context/stats/module-activity.json` updates from route and hooks.
 - [x] Add `cmap graph explain <module>` for deterministic typed relation explanation.
 - [x] Add `route --graph` to expose graph mode without hiding direct score reasons.
 - [x] Run route benchmark after graph mode.

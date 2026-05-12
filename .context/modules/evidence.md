@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:18:31+08:00
+updated_at: 2026-05-12T22:09:22+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -32,7 +32,7 @@ relations:
 # Module: evidence
 
 ## Purpose
-Maintain deterministic support evidence, generated module activity stats, and candidate inbox health without promoting generated notes or candidate facts into trusted project semantics.
+Maintain deterministic support evidence, generated module/route usage stats, and candidate inbox health without promoting generated notes or candidate facts into trusted project semantics.
 
 ## Code Paths
 - `src/commands/evidence.ts`
@@ -41,6 +41,7 @@ Maintain deterministic support evidence, generated module activity stats, and ca
 ## Responsibilities
 - Append bounded generated evidence blocks to `.context/modules/*.md`.
 - Record deterministic module activity stats under `.context/stats/module-activity.json` when policy allows `stats.update`.
+- Record deterministic route usage stats under `.context/stats/route-usage.json` when policy allows `stats.update`.
 - Require explicit module id or alias, evidence file, and summary before writing evidence.
 - Verify evidence files exist inside the project root.
 - Keep generated evidence clearly marked with `cmap:generated:evidence` markers.
@@ -51,6 +52,7 @@ Maintain deterministic support evidence, generated module activity stats, and ca
 - Count simple high-risk inbox markers so semantic backlog remains visible.
 - Support `verify --stale` by keeping evidence and inbox maintenance as deterministic signals.
 - Expose an internal append helper so assist-mode hooks can record bounded generated evidence without rewriting module semantics.
+- Expose internal stats helpers so route commands and assist prompt hooks can update generated counters without changing canonical facts.
 
 ## Depends On
 - `core/module-index.ts` for module lookup and aliases.
@@ -68,13 +70,16 @@ Maintain deterministic support evidence, generated module activity stats, and ca
 - `cmap inbox archive <id>`
 - `cmap verify --stale`
 - `cmap hooks stop --profile assist --changed <files>`
+- `cmap route "<task>"`
+- `cmap hooks test --event UserPromptSubmit --mode assist --prompt "..."`
 
 ## Data Flow
-User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block and module activity stats -> `verify --stale` and human review can use that evidence as support, not as canonical semantics. External AI/update/reconcile outputs write candidate Markdown into `.context/inbox/`; inbox commands count, triage, preview, and archive those candidates without promoting facts.
+User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block and module activity stats -> `verify --stale` and human review can use that evidence as support, not as canonical semantics. Route commands and assist prompt hooks can update route usage counters as generated telemetry. External AI/update/reconcile outputs write candidate Markdown into `.context/inbox/`; inbox commands count, triage, preview, and archive those candidates without promoting facts.
 
 ## State / Storage
 - Writes bounded generated sections inside `.context/modules/*.md`.
 - Writes `.context/stats/module-activity.json` when `stats.update` is enabled.
+- Writes `.context/stats/route-usage.json` when `stats.update` is enabled.
 - Reads `.context/inbox/*.md` for backlog counts.
 - Moves reviewed top-level inbox candidates into `.context/inbox/archive/`.
 - Does not create new canonical semantic files.
@@ -89,6 +94,7 @@ User or assist hook provides explicit evidence -> evidence append helper resolve
 ## Traps
 - Evidence can show activity or verification; it cannot prove a module boundary by itself.
 - Module activity stats are deterministic counters, not semantic ownership.
+- Route usage stats show working patterns, not module truth.
 - `inbox promote --dry-run` is review guidance only; it is not canonical promotion.
 - Archived inbox files are retained as records, not deleted.
 - Stale warnings are heuristic mtime checks; they are prompts to review, not proof that a doc is wrong.
