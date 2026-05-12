@@ -10,7 +10,7 @@ import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
 import { runEvidenceAppend } from "./commands/evidence.js";
 import { runHookSessionStart, runHookStop } from "./commands/hooks.js";
-import { runInboxStatus } from "./commands/inbox.js";
+import { runInboxArchive, runInboxPromote, runInboxStatus, runInboxTriage } from "./commands/inbox.js";
 import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
@@ -208,6 +208,27 @@ inbox
   .command("status")
   .action(async () => {
     await runInboxStatus(process.cwd());
+  });
+inbox
+  .command("triage")
+  .description("Summarize and prioritize candidate context updates")
+  .action(async () => {
+    await runInboxTriage(process.cwd());
+  });
+inbox
+  .command("archive")
+  .description("Move an inbox candidate into .context/inbox/archive")
+  .argument("<id>", "Candidate id, usually the filename without .md")
+  .action(async (id: string) => {
+    await runInboxArchive(process.cwd(), id);
+  });
+inbox
+  .command("promote")
+  .description("Preview how a candidate could be promoted after review")
+  .argument("<id>", "Candidate id, usually the filename without .md")
+  .option("--dry-run", "Preview only; do not edit canonical context")
+  .action(async (id: string, options: { dryRun?: boolean }) => {
+    await runInboxPromote(process.cwd(), id, options);
   });
 
 program

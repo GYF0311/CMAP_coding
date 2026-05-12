@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T17:42:00+08:00
+updated_at: 2026-05-12T21:06:51+08:00
 confidence: ai-drafted
 module: update-agent
 paths:
@@ -41,7 +41,7 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - Classify operations into routine auto-apply, inbox candidate, or reject.
 - Apply only low-risk checkpoint state with explicit task, next step, confidence, and file evidence.
 - Route module semantics, decisions, verification policy, and unknown operations to `.context/inbox/`.
-- Leave inbox backlog visible through `cmap inbox status` and `cmap verify --stale`.
+- Leave inbox backlog visible and governable through `cmap inbox status`, `cmap inbox triage`, `cmap inbox promote --dry-run`, `cmap inbox archive`, and `cmap verify --stale`.
 - Create `.context/backups/` records before canonical writes.
 - Write `.context/audit/` records for MapPatch apply runs.
 - Run post-verify and roll back when the update introduces new structural errors.
@@ -70,7 +70,7 @@ AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` vali
 - Writes `.context/audit/update-*.md` for apply runs.
 - Writes `.context/backups/*.json` before canonical writes.
 - Writes `.context/inbox/update-*.md` for high-risk candidates.
-- Reads are handled by `cmap inbox status`; promotion remains manual/reviewed.
+- Reads are handled by `cmap inbox status` and `cmap inbox triage`; `cmap inbox promote --dry-run` previews manual promotion, and `cmap inbox archive` retains reviewed candidates under `.context/inbox/archive/`.
 
 ## Constraints
 - Does not call a model API.
@@ -84,7 +84,7 @@ AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` vali
 - `--agent` means “process an external AI proposal”, not “cmap becomes an autonomous coding agent”.
 - Missing file evidence routes a proposal to inbox instead of blocking the whole run.
 - Inbox must remain visible in finish/verify workflows; otherwise semantic candidates can be silently forgotten.
-- `inbox status` is a visibility command, not an approval workflow.
+- `inbox promote --dry-run` is a review workflow, not an approval or write path.
 - `rollback` restores the files captured in one backup id; it is not a git reset.
 
 ## Tests / Verification

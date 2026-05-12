@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:12:00+08:00
+updated_at: 2026-05-12T21:06:51+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -13,6 +13,9 @@ aliases:
   - evidence
   - generated evidence
   - inbox status
+  - inbox triage
+  - promote dry-run
+  - archive
   - stale
   - hooks assist
   - 证据
@@ -26,7 +29,7 @@ relations:
 # Module: evidence
 
 ## Purpose
-Maintain deterministic support evidence around module docs and candidate inbox health without promoting generated notes into trusted project semantics.
+Maintain deterministic support evidence around module docs and candidate inbox health without promoting generated notes or candidate facts into trusted project semantics.
 
 ## Code Paths
 - `src/commands/evidence.ts`
@@ -38,6 +41,9 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 - Verify evidence files exist inside the project root.
 - Keep generated evidence clearly marked with `cmap:generated:evidence` markers.
 - Print `.context/inbox/` candidate counts through `cmap inbox status`.
+- Group inbox candidates by risk and type through `cmap inbox triage`.
+- Preview candidate promotion guidance through `cmap inbox promote <id> --dry-run` without editing canonical context.
+- Move reviewed candidates into `.context/inbox/archive/` through `cmap inbox archive <id>` without deleting data.
 - Count simple high-risk inbox markers so semantic backlog remains visible.
 - Support `verify --stale` by keeping evidence and inbox maintenance as deterministic signals.
 - Expose an internal append helper so assist-mode hooks can record bounded generated evidence without rewriting module semantics.
@@ -52,15 +58,19 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 ## Used By
 - `cmap evidence append --module <id> --file <path> --summary "..."`
 - `cmap inbox status`
+- `cmap inbox triage`
+- `cmap inbox promote <id> --dry-run`
+- `cmap inbox archive <id>`
 - `cmap verify --stale`
 - `cmap hooks stop --profile assist --changed <files>`
 
 ## Data Flow
-User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block -> `verify --stale` and human review can use that evidence as support, not as canonical semantics.
+User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block -> `verify --stale` and human review can use that evidence as support, not as canonical semantics. External AI/update/reconcile outputs write candidate Markdown into `.context/inbox/`; inbox commands count, triage, preview, and archive those candidates without promoting facts.
 
 ## State / Storage
 - Writes bounded generated sections inside `.context/modules/*.md`.
 - Reads `.context/inbox/*.md` for backlog counts.
+- Moves reviewed top-level inbox candidates into `.context/inbox/archive/`.
 - Does not create new canonical semantic files.
 
 ## Constraints
@@ -72,7 +82,8 @@ User or assist hook provides explicit evidence -> evidence append helper resolve
 
 ## Traps
 - Evidence can show activity or verification; it cannot prove a module boundary by itself.
-- Inbox count visibility is not the same as triage or promotion.
+- `inbox promote --dry-run` is review guidance only; it is not canonical promotion.
+- Archived inbox files are retained as records, not deleted.
 - Stale warnings are heuristic mtime checks; they are prompts to review, not proof that a doc is wrong.
 
 ## Tests / Verification
@@ -80,10 +91,13 @@ User or assist hook provides explicit evidence -> evidence append helper resolve
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm dev evidence append --module route --file src/commands/route.ts --summary "Route inspected"`
 - `pnpm dev inbox status`
+- `pnpm dev inbox triage`
+- `pnpm dev inbox promote <id> --dry-run`
+- `pnpm dev inbox archive <id>`
 - `pnpm dev verify --stale`
 
 ## When to Update This Doc
-When generated evidence schema changes, when inbox triage/promotion commands are added, or when hooks change how they write generated evidence.
+When generated evidence schema changes, when inbox governance commands change, or when hooks change how they write generated evidence.
 
 <!-- cmap:generated:evidence:start -->
 ## Generated Evidence

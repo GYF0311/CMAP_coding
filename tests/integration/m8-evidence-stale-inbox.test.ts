@@ -1,4 +1,4 @@
-import { mkdir, utimes, writeFile } from "node:fs/promises";
+import { mkdir, stat, utimes, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { createTempProject, expectFile, runCmap } from "../helpers.js";
@@ -85,6 +85,51 @@ describe("M8 evidence, stale verify, and inbox governance", () => {
     expect(result.stdout).toContain("Total candidates: 2");
     expect(result.stdout).toContain("High-risk candidates: 1");
     expect(result.stdout).toContain("cmap inbox status");
+  });
+
+  test("inbox triage groups candidates by type and recommends the next review action", async () => {
+    const cwd = await createEvidenceProject("m8-inbox-triage");
+    await mkdir(path.join(cwd, ".context/inbox"), { recursive: true });
+    await writeFile(path.join(cwd, ".context/inbox/alias-one.md"), "# Alias Candidate\nrisk: routine\nalias: route-map\n", "utf8");
+    await writeFile(path.join(cwd, ".context/inbox/decision-one.md"), "# Decision Candidate\nrisk: high\ndecision: keep canonical safe\n", "utf8");
+
+    const result = await runCmap(["inbox", "triage"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("# Inbox Triage");
+    expect(result.stdout).toContain("Pending candidates: 2");
+    expect(result.stdout).toContain("High-risk candidates: 1");
+    expect(result.stdout).toContain("- alias: 1");
+    expect(result.stdout).toContain("- decision: 1");
+    expect(result.stdout).toContain("Review high-risk candidates first");
+  });
+
+  test("inbox archive moves a candidate into archive without deleting it", async () => {
+    const cwd = await createEvidenceProject("m8-inbox-archive");
+    await mkdir(path.join(cwd, ".context/inbox"), { recursive: true });
+    await writeFile(path.join(cwd, ".context/inbox/one.md"), "# Candidate\nrisk: routine\n", "utf8");
+
+    const result = await runCmap(["inbox", "archive", "one"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Archived .context/inbox/one.md");
+    await expect(stat(path.join(cwd, ".context/inbox/one.md"))).rejects.toThrow();
+    await expectFile(path.join(cwd, ".context/inbox/archive/one.md"));
+  });
+
+  test("inbox promote is dry-run only and does not edit canonical context", async () => {
+    const cwd = await createEvidenceProject("m8-inbox-promote");
+    await mkdir(path.join(cwd, ".context/inbox"), { recursive: true });
+    await writeFile(path.join(cwd, ".context/inbox/decision-one.md"), "# Decision Candidate\nrisk: high\ndecision: never auto-write decisions\n", "utf8");
+    const before = await expectFile(path.join(cwd, ".context/DECISIONS.md"));
+
+    const result = await runCmap(["inbox", "promote", "decision-one", "--dry-run"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("# Inbox Promote Dry Run");
+    expect(result.stdout).toContain("Candidate type: decision");
+    expect(result.stdout).toContain("No canonical files changed.");
+    await expect(expectFile(path.join(cwd, ".context/DECISIONS.md"))).resolves.toBe(before);
   });
 
   test("verify --stale warns when owned source files are newer than their module doc", async () => {

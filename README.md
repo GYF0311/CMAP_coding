@@ -58,6 +58,9 @@ cmap update --agent --from .context/out/update-request-xxxx.md --apply-routine
 cmap evidence append --module route --file src/commands/route.ts --summary "Route behavior verified"
 cmap hooks stop --profile assist --changed src/commands/route.ts --summary "Observed route work"
 cmap inbox status
+cmap inbox triage
+cmap inbox promote update-xxxx --dry-run
+cmap inbox archive update-xxxx
 cmap verify --stale
 cmap verify --coverage --changed
 cmap obsidian export
@@ -91,6 +94,9 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap evidence append --module <id> --file <path> --summary ...` | Append bounded generated evidence to a module doc. |
 | `cmap hooks stop --profile observe\|assist --changed <files>` | Record hook events; assist can append generated evidence for mapped changed files. |
 | `cmap inbox status` | Count candidate context updates and high-risk backlog under `.context/inbox/`. |
+| `cmap inbox triage` | Group candidate context updates by risk/type and suggest the next review action. |
+| `cmap inbox promote <id> --dry-run` | Preview promotion guidance without editing canonical context. |
+| `cmap inbox archive <id>` | Move reviewed candidates to `.context/inbox/archive/` without deleting them. |
 | `cmap verify --stale` | Warn when module docs are older than owned files or inbox candidates need review. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
@@ -113,7 +119,7 @@ cmap CLI does not generate trusted project semantics.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
 - `update --agent` can process AI-authored MapPatch JSON, but P0 only auto-applies low-risk checkpoint state with backup/audit; module semantics and decisions go to `.context/inbox/`.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
-- `inbox status` and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
+- `inbox status`, `inbox triage`, `inbox promote --dry-run`, and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
 - Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs. Assist hooks may write generated evidence blocks, but they do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
 

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T18:15:00+08:00
+updated_at: 2026-05-12T21:06:00+08:00
 confidence: ai-drafted
 module: adoption
 paths:
@@ -29,6 +29,7 @@ Create an adoption workspace for existing projects without pretending candidate 
 - Reuse `init` to create `.context` skeleton.
 - Scan deterministic signals such as package files, scripts, README, and candidate module directories.
 - Write `.context/ADOPTION.md` with `confidence: candidate`.
+- Include existing entrypoints so the AI/user can review likely starting files before promoting facts.
 - Leave `MAP.md` placeholders untouched until AI/user review.
 
 ## Depends On
@@ -48,9 +49,11 @@ Writes `.context/ADOPTION.md` and any missing `.context` skeleton files.
 ## Constraints
 - No automatic trusted module facts.
 - Candidate directories stay in ADOPTION until reviewed.
+- Existing entrypoints are review hints, not confirmed ownership.
 
 ## Traps
 - A detected directory is not a confirmed module boundary.
+- An existing entrypoint is not proof of module responsibility.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m4m5.test.ts`

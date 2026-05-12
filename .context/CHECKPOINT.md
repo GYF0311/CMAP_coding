@@ -1,38 +1,41 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-12T19:15:38+08:00'
+updated_at: '2026-05-12T21:11:12+08:00'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Land the v0.2 route benchmark context metrics and richer fixture slice.
+Land the first ChatGPT Pro deep-research completion slice: inbox governance plus adoption stale cleanup.
 
 ## Current Hypothesis
-Route quality should be measured on both direct module hits and selected context modules; otherwise context pack regressions can slip past top-k route benchmarks.
+Before stronger hooks and autonomous maintenance, candidate facts need a small governance loop: triage, dry-run promote guidance, and archive without deletion.
 
 ## Changed Files
 - .context/CHECKPOINT.md
 - .context/MAP.md
 - .context/STATUS.md
 - .context/VERIFY.md
-- .context/modules/benchmark.md
+- .context/modules/adoption.md
+- .context/modules/cli.md
+- .context/modules/evidence.md
 - .context/modules/tests.md
+- .context/modules/update-agent.md
 - README.md
-- bench/tasks.jsonl
-- docs/superpowers/plans/2026-05-12-cmap-v0-2-route-benchmark-fixtures.md
-- src/commands/benchmark.ts
-- tests/integration/m12-route-benchmark-context.test.ts
+- docs/superpowers/plans/2026-05-12-cmap-pro-deep-research-completion.md
+- src/cli.ts
+- src/commands/inbox.ts
+- tests/integration/m8-evidence-stale-inbox.test.ts
 
 ## Verified
-`pnpm test tests/integration/m12-route-benchmark-context.test.ts`; `pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --stale`; `pnpm smoke`; `git diff --check`; `pnpm dev benchmark route --file bench/tasks.jsonl`.
+`pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`; `pnpm test`; `pnpm typecheck`; `pnpm build`; `pnpm dev verify`; `pnpm dev verify --stale`; `pnpm smoke`; `pnpm dev benchmark route --file bench/tasks.jsonl`; `git diff --check`.
 
 ## Failed / Pending
-`pnpm dev verify --stale` returns exit 0 with a pre-existing warning: `.context/modules/adoption.md` is older than `src/commands/adopt.ts`.
+None for this slice. The previous adoption stale warning is cleared.
 
 ## Next Step
-Next implementation slice should improve adoption stale docs or add route quality thresholds.
+Next slice should add policy/stats foundations.
 
 ## Do Not Redo
-Do not treat `expected_context_modules` as direct routing labels; they measure selected context pack coverage only.
+Do not make `inbox promote` edit canonical semantics yet; it is dry-run review guidance only.

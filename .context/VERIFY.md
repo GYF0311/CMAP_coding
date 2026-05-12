@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T19:08:00+08:00
+updated_at: 2026-05-12T21:06:51+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -32,7 +32,7 @@ confidence: ai-drafted
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report with context update and checkpoint close/write reminders; does not modify trusted memory. |
 | update-agent | `pnpm test tests/integration/m7-update-agent.test.ts` | MapPatch dry-run is read-only; `--apply-routine` writes only routine checkpoint state, backup, audit, and inbox candidates. |
-| evidence | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | Generated evidence writes are bounded; inbox status counts backlog; stale verify warns without canonical promotion. |
+| evidence | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | Generated evidence writes are bounded; inbox status/triage/promote/archive govern backlog without canonical promotion; stale verify warns without canonical promotion. |
 | obsidian-adapter | `pnpm dev obsidian export --out _cmap/CMAP_coding` | Writes Obsidian-friendly notes with Properties and relation wikilinks; generated files remain view-layer artifacts. |
 | obsidian pull | `pnpm dev obsidian pull --from _cmap/CMAP_coding` | Reports candidate note edits only; no canonical `.context` writes unless `--write-inbox`. |
 | memory-lite | `pnpm test tests/integration/m3.test.ts` | `log add` and `idea add` append only to logs/ideas. |
@@ -46,7 +46,7 @@ confidence: ai-drafted
 | verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |
 | brief and Obsidian export | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | Brief output, Obsidian module notes, relation wikilinks, and URI printing are covered. |
 | agent MapPatch gate | `pnpm test tests/integration/m7-update-agent.test.ts` | Dry-run, routine apply, high-risk inbox routing, rollback, and `finish --agent` request generation are covered. |
-| generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append`, `inbox status`, and `verify --stale` are covered. |
+| generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append`, `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox archive`, and `verify --stale` are covered. |
 | hooks observe / assist | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, and unmapped file reporting are covered. |
 | route context pack | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Route JSON/text context pack and brief consumption are covered. |
 | context size controls | `pnpm test tests/integration/m11-context-size-controls.test.ts` | `route --max-context`, `brief --max-context`, and invalid limit handling are covered. |
