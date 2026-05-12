@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T17:42:00+08:00
+updated_at: 2026-05-12T18:12:00+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -40,13 +40,14 @@ confidence: ai-drafted
 | reconcile-adapter | `pnpm dev reconcile --adapter gsd-v1 --from .planning` when fixture/source exists | Produces dry-run candidate reports only; canonical `.context` files are not changed. |
 | adoption | `pnpm test tests/integration/m4m5.test.ts` | Adopt writes ADOPTION candidate signals without promoting them into MAP. |
 | module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
-| hooks-doctor | `pnpm test tests/integration/m4m5.test.ts` | install writes hook templates; hooks print reminders; doctor sees state. |
+| hooks-doctor | `pnpm test tests/integration/m9-hooks-assist.test.ts` | observe writes hook logs only; assist writes bounded generated evidence for mapped changed files and reports unmapped files. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
 | verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
 | verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |
 | brief and Obsidian export | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | Brief output, Obsidian module notes, relation wikilinks, and URI printing are covered. |
 | agent MapPatch gate | `pnpm test tests/integration/m7-update-agent.test.ts` | Dry-run, routine apply, high-risk inbox routing, rollback, and `finish --agent` request generation are covered. |
 | generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append`, `inbox status`, and `verify --stale` are covered. |
+| hooks observe / assist | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, and unmapped file reporting are covered. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.
@@ -55,9 +56,10 @@ confidence: ai-drafted
 - Inspect generated `.context/MAP.md` from `init` and confirm it contains placeholders, not guessed modules.
 - Inspect generated `AGENTS.md`/`CLAUDE.md` and confirm they are short entrypoints, not full PRD copies.
 - For any command that rewrites files, inspect whether it creates a backup or only appends to non-canonical logs/ideas.
-- Inspect `.context/hooks/*.json` and confirm templates call reminder commands only.
+- Inspect `.context/hooks/*.json` and confirm templates call selected hook profiles without writing canonical semantics.
 - For `cmap update --agent --apply-routine`, inspect `.context/audit/`, `.context/backups/`, and `.context/inbox/` and confirm semantic operations were not written into canonical files.
 - For `cmap evidence append`, inspect the target module doc and confirm the write stayed inside the `cmap:generated:evidence` block.
+- For `cmap hooks stop --profile assist`, inspect `.context/logs/hooks.jsonl` and target module docs; confirm only generated evidence changed.
 
 ## Known Flaky Checks
 None known yet.

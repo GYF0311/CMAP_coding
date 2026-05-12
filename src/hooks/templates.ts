@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-export type HookProfile = "none" | "reminder" | "maintain";
+export type HookProfile = "none" | "reminder" | "maintain" | "observe" | "assist";
 export type HookHost = "claude" | "codex" | "both";
 
 export async function writeHookTemplates(cwd: string, host: HookHost, profile: Exclude<HookProfile, "none">): Promise<string[]> {

@@ -3,22 +3,22 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-12T17:42:00+08:00'
+updated_at: '2026-05-12T18:18:00+08:00'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Land the first v0.2 evidence-driven maintenance slice without letting generated evidence become trusted project semantics.
+Land the v0.2 hook assist slice so lifecycle hooks can record routine evidence without becoming a semantic-writing agent.
 
 ## Done Recently
-Collected the ChatGPT Pro cmap product-completion research report locally. Added `cmap evidence append`, `cmap inbox status`, and `cmap verify --stale` as the first concrete response to the report's recommendation for generated evidence, inbox governance, and stale-map visibility.
+Collected the ChatGPT Pro cmap product-completion research report locally. Added `cmap evidence append`, `cmap inbox status`, and `cmap verify --stale`; then connected optional hook profiles to that evidence layer with `observe` and `assist`.
 
 ## Left Off
-M8 focused tests pass. Documentation and module map now describe generated evidence as support data only, not canonical semantic truth.
+M9 focused tests pass. `observe` writes `.context/logs/hooks.jsonl`; `assist` maps changed files to known modules and appends marked generated evidence only.
 
 ## Next Steps
-Run full verification, commit, and push. Then connect lifecycle hooks to evidence collection so read/change/verify events can maintain routine evidence automatically.
+Commit and push this slice. Next implementation slice should expand route scoring with graph/test ownership signals and selected context packing.
 
 ## Changed Files
 - README.md
@@ -26,17 +26,22 @@ Run full verification, commit, and push. Then connect lifecycle hooks to evidenc
 - .context/CHECKPOINT.md
 - .context/STATUS.md
 - .context/VERIFY.md
+- .context/modules/cli.md
 - .context/modules/evidence.md
-- .context/modules/update-agent.md
-- .context/modules/verify.md
+- .context/modules/hooks-doctor.md
+- .context/modules/host.md
+- .context/modules/tests.md
 - src/cli.ts
+- src/commands/doctor.ts
 - src/commands/evidence.ts
-- src/commands/inbox.ts
-- src/commands/verify.ts
-- tests/integration/m8-evidence-stale-inbox.test.ts
+- src/commands/hooks.ts
+- src/commands/install.ts
+- src/hooks/templates.ts
+- docs/superpowers/plans/2026-05-12-cmap-v0-2-hooks-assist.md
+- tests/integration/m9-hooks-assist.test.ts
 
 ## Risks
-Generated evidence can become noisy if hooks append too often. Keep bounded sections, stale warnings, and inbox status visible; do not promote evidence into module responsibilities without review.
+Assist hooks can become noisy if hosts call them too often or with broad changed-file lists. Keep generated evidence bounded, keep logs non-canonical, and do not promote evidence into module responsibilities without review.
 
 ## Last Verified
-2026-05-12: `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --stale`, `pnpm smoke`, and `git diff --check` passed. `verify --stale` reported one non-blocking adoption-doc stale warning for later review.
+2026-05-12: focused M9 tests, `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --stale`, `pnpm smoke`, and `git diff --check` passed. `verify --stale` reports one non-blocking pre-existing adoption-doc stale warning.

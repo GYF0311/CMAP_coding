@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T17:42:00+08:00
+updated_at: 2026-05-12T18:00:00+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -51,7 +51,7 @@ confidence: ai-drafted
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
 | adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
 | module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
-| hooks-doctor | hook templates, hook reminder output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, 诊断 |
+| hooks-doctor | hook templates, hook reminder/observe/assist output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, 诊断 |
 | tests | integration and built-CLI smoke coverage for CLI milestones | `tests`, `scripts/smoke-test.mjs` | `.context/modules/tests.md` | test, vitest, smoke, 自测, 集成测试, 行为测试 |
 
 ## Natural Language Route
@@ -75,7 +75,7 @@ confidence: ai-drafted
 | log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
 | adopt、接管已有项目、候选模块、ADOPTION | adoption | `.context/modules/adoption.md`, `src/commands/adopt.ts` |
 | add-module、新模块文档、module template | module-docs | `.context/modules/module-docs.md`, `src/commands/add-module.ts` |
-| hooks、doctor、reminder、maintain、诊断 | hooks-doctor | `.context/modules/hooks-doctor.md`, `src/commands/hooks.ts`, `src/commands/doctor.ts` |
+| hooks、doctor、reminder、maintain、observe、assist、诊断 | hooks-doctor | `.context/modules/hooks-doctor.md`, `src/commands/hooks.ts`, `src/commands/doctor.ts` |
 | 测试、红绿、M1 验收、fixture | tests | `.context/modules/tests.md`, `tests/integration/m1.test.ts` |
 
 ## Module Relationships
@@ -97,12 +97,12 @@ confidence: ai-drafted
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
 - `module-docs` creates candidate module docs without editing MAP.
-- `hooks-doctor` writes project-local hook templates, prints reminders, and diagnoses install state.
+- `hooks-doctor` writes project-local hook templates, prints reminders, records observe logs, can append generated evidence in assist mode, and diagnoses install state.
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
 User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
-Generated evidence is a support layer: `evidence append` updates marked generated sections inside module docs, while `inbox status` and `verify --stale` keep review backlog and source/doc drift visible without promoting semantic facts.
+Generated evidence is a support layer: `evidence append` and `hooks stop --profile assist` update marked generated sections inside module docs, while `inbox status` and `verify --stale` keep review backlog and source/doc drift visible without promoting semantic facts.
 
 ## State / Storage
 - Project memory: `.context/`
@@ -111,6 +111,7 @@ Generated evidence is a support layer: `evidence append` updates marked generate
 - Candidate fact inbox for future adapters: `.context/inbox/`
 - Generated evidence blocks: bounded sections inside `.context/modules/*.md`
 - MapPatch audit trail: `.context/audit/`
+- Hook observation log: `.context/logs/hooks.jsonl`
 - Reversible canonical-write backups: `.context/backups/`
 - Obsidian view export: `_cmap/<project>/`
 - Product overview artifact: `docs/cmap-product-overview.html`
@@ -129,6 +130,7 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 - `verify` producing too many warnings and making users ignore it.
 - Future `cp`/delete behavior must preserve data and avoid irreversible deletion.
 - Host hooks must remind only; they must not write canonical memory.
+- Assist hooks may write generated evidence blocks only; they must not write canonical semantic sections.
 - Obsidian `_cmap` output is a view layer; do not treat it as the canonical fact source.
 - `update --agent` is a policy gate for external AI proposals, not a model call or autonomous daemon.
 - `update-agent` must not auto-write `MAP.md`, `DECISIONS.md`, module responsibilities, module relationships, or code files.
@@ -138,4 +140,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, and the first v0.2 generated evidence / inbox visibility / stale verify slice. Next work should connect hooks to evidence collection and then expand route scoring with graph/test ownership signals.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox visibility / stale verify, and observe/assist hook evidence collection. Next work should expand route scoring with graph/test ownership signals and selected context packing.

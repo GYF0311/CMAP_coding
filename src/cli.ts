@@ -240,14 +240,16 @@ update
 const hooks = program.command("hooks").description("Print hook reminders");
 hooks
   .command("session-start")
-  .option("--profile <profile>", "reminder or maintain", "reminder")
-  .action(async (options: { profile: "reminder" | "maintain" }) => {
+  .option("--profile <profile>", "reminder, maintain, observe, or assist", "reminder")
+  .action(async (options: { profile: "reminder" | "maintain" | "observe" | "assist" }) => {
     await runHookSessionStart(process.cwd(), options);
   });
 hooks
   .command("stop")
-  .option("--profile <profile>", "reminder or maintain", "reminder")
-  .action(async (options: { profile: "reminder" | "maintain" }) => {
+  .option("--profile <profile>", "reminder, maintain, observe, or assist", "reminder")
+  .option("--changed <csv>", "Changed files to observe, comma-separated")
+  .option("--summary <text>", "Hook event summary")
+  .action(async (options: { profile: "reminder" | "maintain" | "observe" | "assist"; changed?: string; summary?: string }) => {
     await runHookStop(process.cwd(), options);
   });
 

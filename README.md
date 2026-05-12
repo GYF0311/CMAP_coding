@@ -56,6 +56,7 @@ cmap finish
 cmap finish --agent --task "多人对话页面消息发不出去"
 cmap update --agent --from .context/out/update-request-xxxx.md --apply-routine
 cmap evidence append --module route --file src/commands/route.ts --summary "Route behavior verified"
+cmap hooks stop --profile assist --changed src/commands/route.ts --summary "Observed route work"
 cmap inbox status
 cmap verify --stale
 cmap verify --coverage --changed
@@ -73,6 +74,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap adopt` | Create adoption workspace and candidate signals for an existing project. |
 | `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
+| `cmap install --host both --hooks assist` | Write hook templates that can record generated evidence from changed files. |
 | `cmap route "<task>"` | Recommend context files to read. |
 | `cmap brief "<task>"` | Render an AI coding brief from route, checkpoint/status, and module docs. |
 | `cmap status` | Print `.context/STATUS.md`. |
@@ -87,6 +89,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap update --agent --from <json> --apply-routine` | Apply only routine checkpoint updates; route semantic candidates to `.context/inbox/`. |
 | `cmap update rollback <backupId>` | Restore files from a backup printed by `update --apply-routine`. |
 | `cmap evidence append --module <id> --file <path> --summary ...` | Append bounded generated evidence to a module doc. |
+| `cmap hooks stop --profile observe\|assist --changed <files>` | Record hook events; assist can append generated evidence for mapped changed files. |
 | `cmap inbox status` | Count candidate context updates and high-risk backlog under `.context/inbox/`. |
 | `cmap verify --stale` | Warn when module docs are older than owned files or inbox candidates need review. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
@@ -109,7 +112,7 @@ cmap CLI does not generate trusted project semantics.
 - `update --agent` can process AI-authored MapPatch JSON, but P0 only auto-applies low-risk checkpoint state with backup/audit; module semantics and decisions go to `.context/inbox/`.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
 - `inbox status` and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
-- Hooks only remind. They do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, or module docs.
+- Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs. Assist hooks may write generated evidence blocks, but they do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
 
 ## Verify

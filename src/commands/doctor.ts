@@ -15,22 +15,19 @@ export async function runDoctor(cwd: string): Promise<void> {
     lines.push("⚠ Entrypoints: missing AGENTS.md or CLAUDE.md");
   }
 
-  const reminderTemplates = [
-    path.join(cwd, ".context", "hooks", "claude-reminder.json"),
-    path.join(cwd, ".context", "hooks", "codex-reminder.json")
-  ];
-  const maintainTemplates = [
-    path.join(cwd, ".context", "hooks", "claude-maintain.json"),
-    path.join(cwd, ".context", "hooks", "codex-maintain.json")
-  ];
-
-  if ((await allExist(reminderTemplates))) {
-    lines.push("✓ Hooks: reminder templates present");
-  } else if (await allExist(maintainTemplates)) {
-    lines.push("✓ Hooks: maintain templates present");
-  } else {
-    lines.push("ℹ Hooks: none installed");
+  const profiles = ["reminder", "maintain", "observe", "assist"];
+  let foundProfile: string | undefined;
+  for (const profile of profiles) {
+    const templates = [
+      path.join(cwd, ".context", "hooks", `claude-${profile}.json`),
+      path.join(cwd, ".context", "hooks", `codex-${profile}.json`)
+    ];
+    if (await allExist(templates)) {
+      foundProfile = profile;
+      break;
+    }
   }
+  lines.push(foundProfile ? `✓ Hooks: ${foundProfile} templates present` : "ℹ Hooks: none installed");
 
   process.stdout.write(`${lines.join("\n")}\n`);
 }

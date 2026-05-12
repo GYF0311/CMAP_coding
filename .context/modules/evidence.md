@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T17:42:00+08:00
+updated_at: 2026-05-12T18:12:00+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -14,6 +14,7 @@ aliases:
   - generated evidence
   - inbox status
   - stale
+  - hooks assist
   - 证据
   - 候选池
 relations:
@@ -39,6 +40,7 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 - Print `.context/inbox/` candidate counts through `cmap inbox status`.
 - Count simple high-risk inbox markers so semantic backlog remains visible.
 - Support `verify --stale` by keeping evidence and inbox maintenance as deterministic signals.
+- Expose an internal append helper so assist-mode hooks can record bounded generated evidence without rewriting module semantics.
 
 ## Depends On
 - `core/module-index.ts` for module lookup and aliases.
@@ -51,10 +53,10 @@ Maintain deterministic support evidence around module docs and candidate inbox h
 - `cmap evidence append --module <id> --file <path> --summary "..."`
 - `cmap inbox status`
 - `cmap verify --stale`
-- Future host hooks that observe read/change/verify events.
+- `cmap hooks stop --profile assist --changed <files>`
 
 ## Data Flow
-User or hook provides explicit evidence -> `evidence append` resolves module and evidence file -> command updates the module doc generated evidence block -> `verify --stale` and human review can use that evidence as support, not as canonical semantics.
+User or assist hook provides explicit evidence -> evidence append helper resolves module and evidence file -> command updates the module doc generated evidence block -> `verify --stale` and human review can use that evidence as support, not as canonical semantics.
 
 ## State / Storage
 - Writes bounded generated sections inside `.context/modules/*.md`.
@@ -75,12 +77,13 @@ User or hook provides explicit evidence -> `evidence append` resolves module and
 
 ## Tests / Verification
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
+- `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm dev evidence append --module route --file src/commands/route.ts --summary "Route inspected"`
 - `pnpm dev inbox status`
 - `pnpm dev verify --stale`
 
 ## When to Update This Doc
-When generated evidence schema changes, when inbox triage/promotion commands are added, or when hooks start writing evidence automatically.
+When generated evidence schema changes, when inbox triage/promotion commands are added, or when hooks change how they write generated evidence.
 
 <!-- cmap:generated:evidence:start -->
 ## Generated Evidence

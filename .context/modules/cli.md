@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T17:42:00+08:00
+updated_at: 2026-05-12T18:12:00+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -26,6 +26,7 @@ relations:
     - finish
     - update-agent
     - evidence
+    - hooks-doctor
     - verify
 ---
 # Module: cli
@@ -46,6 +47,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Register `update --agent` and `update rollback` while keeping MapPatch policy out of `cli.ts`.
 - Register `evidence append` and `inbox status` while keeping generated evidence policy in command modules.
+- Register hook observe/assist profile options while keeping hook behavior in `hooks-doctor`.
 - Register `verify --stale` as a deterministic warning mode.
 - Convert expected CLI errors into exit code 2.
 - Preserve command-specific exit codes such as `verify` returning 1 on structural errors.
@@ -61,6 +63,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `reconcile-adapter` for external workflow candidate reports.
 - `update-agent` for MapPatch intake and routine context maintenance.
 - `evidence` for generated evidence and inbox visibility commands.
+- `hooks-doctor` for hook lifecycle command behavior.
 
 ## Used By
 - Package bin `cmap`.
@@ -82,6 +85,7 @@ No persistent state except files written by command modules.
 ## Tests / Verification
 - `pnpm test tests/integration/m1.test.ts`
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
+- `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm dev version`
 
 ## When to Update This Doc

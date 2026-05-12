@@ -1,7 +1,7 @@
 import { readFile, writeFile } from "node:fs/promises";
 import { CmapCommandError } from "../errors.js";
 import { fileExists } from "../context/scanner.js";
-import { loadModuleIndex } from "../core/module-index.js";
+import { loadModuleIndex, type ContextModule } from "../core/module-index.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 
 type EvidenceAppendOptions = {
@@ -33,17 +33,25 @@ export async function runEvidenceAppend(cwd: string, options: EvidenceAppendOpti
     throw new CmapCommandError(`Evidence file does not exist: ${evidenceFile}`, 2);
   }
 
-  const normalizedEvidence = projectRelative(cwd, absoluteEvidence);
+  await appendEvidenceToModule(cwd, targetModule, {
+    file: projectRelative(cwd, absoluteEvidence),
+    summary,
+    command: optionalText(options.command)
+  });
+  process.stdout.write(`Updated ${targetModule.docPath}\n`);
+}
+
+export async function appendEvidenceToModule(
+  _cwd: string,
+  targetModule: ContextModule,
+  evidence: { file: string; summary: string; command?: string }
+): Promise<void> {
   const current = await readFile(targetModule.absolutePath, "utf8");
   const next = upsertGeneratedEvidence(current, {
-    file: normalizedEvidence,
-    summary,
-    command: optionalText(options.command),
+    ...evidence,
     createdAt: new Date().toISOString()
   });
-
   await writeFile(targetModule.absolutePath, next, "utf8");
-  process.stdout.write(`Updated ${targetModule.docPath}\n`);
 }
 
 function upsertGeneratedEvidence(
