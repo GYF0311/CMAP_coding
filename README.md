@@ -59,6 +59,8 @@ cmap evidence append --module route --file src/commands/route.ts --summary "Rout
 cmap hooks stop --profile assist --changed src/commands/route.ts --summary "Observed route work"
 cmap hooks render --host claude --mode assist --out .context/hooks/claude.settings.generated.json
 cmap hooks test --event PostToolUse --mode observe --tool Read --file src/commands/route.ts
+cmap graph build
+cmap graph explain route
 cmap inbox status
 cmap inbox triage
 cmap inbox promote update-xxxx --dry-run
@@ -83,6 +85,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap hooks render --host claude --mode observe\|assist\|strict` | Render Claude lifecycle hook settings without editing global host config. |
 | `cmap hooks test --event <event> --mode observe\|assist\|strict` | Simulate hook lifecycle events and strict guard decisions locally. |
 | `cmap route "<task>" --max-context 4` | Recommend direct modules, bounded related context files, and suggested verification commands. |
+| `cmap route "<task>" --graph` | Enable explicit graph-aware route explanation while keeping direct matches separate from related context. |
 | `cmap brief "<task>" --max-context 4` | Render an AI coding brief from route, checkpoint/status, bounded context pack, and module docs. |
 | `cmap status` | Print `.context/STATUS.md`. |
 | `cmap checkpoint read` | Print `.context/CHECKPOINT.md`, falling back to `.context/STATUS.md`. |
@@ -105,6 +108,8 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
+| `cmap graph build` | Write deterministic `.context/graph/*.json` projections from reviewed module docs. |
+| `cmap graph explain <module>` | Explain one module's files and typed graph relations. |
 | `cmap benchmark route --file bench/tasks.jsonl` | Measure route top-k and context-pack accuracy against JSONL task fixtures. |
 | `cmap reconcile --adapter gsd-v1\|gsd-v2 --from <dir>` | Dry-run candidate facts from external workflow artifacts. |
 | `cmap add-module <name>` | Create a candidate module doc. |

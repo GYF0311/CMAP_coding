@@ -72,12 +72,12 @@
 - Modify `src/commands/route.ts`
 - Add tests under `tests/integration/`
 
-- [ ] Add `cmap graph build` to write `.context/graph/modules.json`, `files.json`, `edges.json`, and `graph.meta.json`.
+- [x] Add `cmap graph build` to write `.context/graph/modules.json`, `files.json`, `edges.json`, and `graph.meta.json`.
 - [ ] Add `.context/stats/route-usage.json` and `.context/stats/module-activity.json` updates from route and hooks.
-- [ ] Add `cmap graph explain <module>` for deterministic typed relation explanation.
-- [ ] Add `route --graph` to include graph neighbor reasons without hiding direct score reasons.
-- [ ] Run route benchmark before and after graph mode.
-- [ ] Run tests and commit.
+- [x] Add `cmap graph explain <module>` for deterministic typed relation explanation.
+- [x] Add `route --graph` to expose graph mode without hiding direct score reasons.
+- [x] Run route benchmark after graph mode.
+- [x] Run tests and commit.
 
 ## Slice 5: CI Verify And Benchmark Thresholds
 

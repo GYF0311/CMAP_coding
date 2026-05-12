@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:48:00+08:00
+updated_at: 2026-05-12T21:36:07+08:00
 confidence: ai-drafted
 module: route
 paths:
@@ -37,6 +37,7 @@ Recommend which `.context` files an AI should read first for a natural-language 
 - Score alias, module-name, and path-keyword matches.
 - Keep direct high-confidence matches separate from graph-related context modules.
 - Expand a bounded context pack from typed module relations such as `depends_on` and `used_by`.
+- Support `--graph` as an explicit graph-aware route output flag without changing direct route labels.
 - Respect `--max-context` so route output can stay compact for small handoffs.
 - Extract suggested verification commands from each selected module's `## Tests / Verification` section.
 - Output a route card with likely modules, related context, read-first files, suggested verify commands, and low-confidence notes.
@@ -74,6 +75,7 @@ Read-only.
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
+- `pnpm test tests/integration/m14-graph-route.test.ts`
 - `pnpm dev route "checkpoint 更新当前主线"`
 
 ## When to Update This Doc

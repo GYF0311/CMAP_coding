@@ -8,6 +8,7 @@ import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
+import { runGraphBuild, runGraphExplain } from "./commands/graph.js";
 import { runEvidenceAppend } from "./commands/evidence.js";
 import { runHookRender, runHookSessionStart, runHookStop, runHookTest } from "./commands/hooks.js";
 import { runInboxArchive, runInboxPromote, runInboxStatus, runInboxTriage } from "./commands/inbox.js";
@@ -73,8 +74,24 @@ program
   .argument("<task>", "Natural-language task description")
   .option("--format <format>", "Output format: text or json", "text")
   .option("--max-context <n>", "Maximum context modules to include in the route context pack", "6")
-  .action(async (task: string, options: { format?: string; maxContext?: string }) => {
+  .option("--graph", "Enable graph-aware route explanation")
+  .action(async (task: string, options: { format?: string; maxContext?: string; graph?: boolean }) => {
     await runRoute(process.cwd(), task, options);
+  });
+
+const graph = program.command("graph").description("Build and explain deterministic context graph projections");
+graph
+  .command("build")
+  .description("Write .context/graph JSON projections from module docs")
+  .action(async () => {
+    await runGraphBuild(process.cwd());
+  });
+graph
+  .command("explain")
+  .description("Explain one module's graph files and typed relations")
+  .argument("<module>", "Module id")
+  .action(async (module: string) => {
+    await runGraphExplain(process.cwd(), module);
   });
 
 program

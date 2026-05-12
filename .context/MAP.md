@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:27:45+08:00
+updated_at: 2026-05-12T21:36:07+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -38,6 +38,7 @@ confidence: ai-drafted
 | verify | deterministic L0 structure checks and report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
 | route | direct module routing plus bounded graph/test context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
+| graph | deterministic context graph projection and typed relation explanation | `src/commands/graph.ts`, `src/core/context-graph.ts` | `.context/modules/graph.md` | graph, context graph, graph build, graph explain, 关系图, 图谱 |
 | brief | AI coding startup brief from route/checkpoint/bounded context pack/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
 | benchmark | route benchmark over direct and context-pack JSONL task fixtures | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
 | handoff | current status printing and explicit checkpoint handoff updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
@@ -62,6 +63,7 @@ confidence: ai-drafted
 | 校验、漂移、TODO、missing file、verify | verify | `.context/modules/verify.md`, `src/commands/verify.ts` |
 | AGENTS、CLAUDE、宿主入口、host | host | `.context/modules/host.md`, `src/host/entrypoint-template.ts` |
 | route、alias、模块定位、推荐读取文件 | route | `.context/modules/route.md`, `src/commands/route.ts` |
+| graph、context graph、graph build、graph explain、图谱、关系图 | graph | `.context/modules/graph.md`, `src/commands/graph.ts`, `src/core/context-graph.ts` |
 | brief、AI brief、开工包、AI 开工包、启动包 | brief | `.context/modules/brief.md`, `src/commands/brief.ts`, `.context/CHECKPOINT.md`, `.context/STATUS.md` |
 | benchmark、bench、route benchmark、评测、命中率、top-k | benchmark | `.context/modules/benchmark.md`, `src/commands/benchmark.ts`, `bench/tasks.jsonl` |
 | checkpoint、status、续接、上下文压缩、当前主线 | handoff | `.context/modules/handoff.md`, `src/commands/checkpoint.ts`, `src/commands/status.ts` |
@@ -84,6 +86,7 @@ confidence: ai-drafted
 - `verify` reads `.context` files created by `context` and validates deterministic structure.
 - `host` generates entrypoint text used by `install`.
 - `route` reads the shared module index, recommends direct modules, expands bounded graph-related context, and surfaces module-owned verification commands; it must not propose nonexistent modules or treat related context as direct matches.
+- `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs.
 - `brief` packages route result, bounded route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
 - `benchmark` runs JSONL task fixtures through route scoring and reports top-k direct hit rates plus optional context-pack hit rates.
 - `handoff` reads `STATUS.md`, writes task-local `CHECKPOINT.md`, and keeps the legacy explicit `STATUS.md` update path compatible.
@@ -113,6 +116,7 @@ Generated evidence is a support layer: `evidence append` and `hooks stop --profi
 - Archived reviewed inbox candidates: `.context/inbox/archive/`
 - Generated evidence blocks: bounded sections inside `.context/modules/*.md`
 - Generated stats: `.context/stats/*.json`
+- Generated graph projections: `.context/graph/*.json`
 - MapPatch audit trail: `.context/audit/`
 - Hook observation log: `.context/logs/hooks.jsonl`
 - Hook lifecycle event journal: `.context/logs/session-events.jsonl`
@@ -147,4 +151,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, Claude hook lifecycle render/test, route context packing from module graph plus module-owned verification commands, and `--max-context` size controls. Next work should add graph/index and CI quality thresholds.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, Claude hook lifecycle render/test, deterministic graph projections, graph explanation, route context packing from module graph plus module-owned verification commands, and `--max-context` size controls. Next work should add CI quality thresholds and context pack.

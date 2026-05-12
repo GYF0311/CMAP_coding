@@ -5,6 +5,7 @@ import { CmapCommandError } from "../errors.js";
 type RouteOptions = {
   format?: string;
   maxContext?: string | number;
+  graph?: boolean;
 };
 
 const DEFAULT_MAX_CONTEXT_MODULES = 6;
@@ -40,6 +41,7 @@ export type RouteReport = {
   lowConfidence: boolean;
   readFirst: string[];
   verifyCommands: string[];
+  graphMode: boolean;
 };
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
@@ -70,7 +72,8 @@ export async function routeTask(cwd: string, task: string, options: RouteOptions
     ranked,
     lowConfidence: strong.length === 0,
     readFirst: buildReadFirst(contextModules),
-    verifyCommands
+    verifyCommands,
+    graphMode: Boolean(options.graph)
   };
 }
 
@@ -142,6 +145,9 @@ function buildReadFirst(modules: Array<{ docPath: string }>): string[] {
 
 function formatRouteReport(report: RouteReport): string {
   const lines = ["## Route Result", "", `Task: ${report.task}`, "", "Likely modules:"];
+  if (report.graphMode) {
+    lines.splice(3, 0, "Graph mode: enabled", "");
+  }
 
   if (report.modules.length === 0) {
     lines.push("No high-confidence module match.");
@@ -323,7 +329,8 @@ function toJsonReport(report: RouteReport): object {
     })),
     lowConfidence: report.lowConfidence,
     readFirst: report.readFirst,
-    verifyCommands: report.verifyCommands
+    verifyCommands: report.verifyCommands,
+    graphMode: report.graphMode
   };
 }
 
