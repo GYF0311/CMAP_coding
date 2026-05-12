@@ -101,12 +101,12 @@
 - Modify `src/commands/brief.ts` only where sharing helpers is useful
 - Add tests under `tests/integration/`
 
-- [ ] Add `cmap pack "<task>" --budget <n> --format markdown --out <path>`.
-- [ ] Pack only routed graph neighborhood, not the whole repository.
-- [ ] Include status/checkpoint, top module docs, graph neighbors, related tests, decisions, verify commands, and inbox warnings.
-- [ ] Enforce a deterministic approximate token/character budget.
-- [ ] Add secret-looking value redaction for obvious keys and tokens.
-- [ ] Run tests and commit.
+- [x] Add `cmap pack "<task>" --budget <n> --format markdown --out <path>`.
+- [x] Pack only routed graph neighborhood, not the whole repository.
+- [x] Include status/checkpoint, top module docs, graph neighbors, related tests, decisions, verify commands, and inbox warnings.
+- [x] Enforce a deterministic approximate token/character budget.
+- [x] Add secret-looking value redaction for obvious keys and tokens.
+- [x] Run tests and commit.
 
 ## Slice 7: Product Documentation And Showcase
 

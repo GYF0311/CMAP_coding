@@ -17,6 +17,7 @@ import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
 import { runLogAdd } from "./commands/log.js";
 import { runObsidianExport, runObsidianOpen, runObsidianPull } from "./commands/obsidian.js";
+import { runPack } from "./commands/pack.js";
 import { runReconcile } from "./commands/reconcile.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
@@ -105,6 +106,18 @@ program
   .option("--max-context <n>", "Maximum context modules to include in the brief", "6")
   .action(async (task: string, options: { out?: string; obsidian?: boolean; vaultName?: string; maxContext?: string }) => {
     await runBrief(process.cwd(), task, options);
+  });
+
+program
+  .command("pack")
+  .description("Render a budgeted routed context pack for an AI coding task")
+  .argument("<task>", "Natural-language task description")
+  .option("--budget <tokens>", "Approximate token budget", "4000")
+  .option("--format <format>", "Output format: markdown", "markdown")
+  .option("--max-context <n>", "Maximum context modules to include", "8")
+  .option("--out <path>", "Write pack to a project-relative file")
+  .action(async (task: string, options: { budget?: string; format?: string; maxContext?: string; out?: string }) => {
+    await runPack(process.cwd(), task, options);
   });
 
 program

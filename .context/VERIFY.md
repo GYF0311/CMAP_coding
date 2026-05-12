@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:48:27+08:00
+updated_at: 2026-05-12T21:59:49+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -32,6 +32,7 @@ confidence: ai-drafted
 | route | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Direct matches stay separate from graph-related context; `--max-context` bounds selected context and derived verify commands. |
 | graph | `pnpm test tests/integration/m14-graph-route.test.ts` | `graph build`, `graph explain`, and `route --graph` are covered. |
 | brief | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Writes a task-local AI brief from the bounded route context pack. |
+| pack | `pnpm test tests/integration/m16-context-pack.test.ts` | Writes a redacted, budgeted context pack from routed graph-neighborhood context only. |
 | handoff | `pnpm dev checkpoint read` | Prints current `CHECKPOINT.md`, falling back to `STATUS.md`; checkpoint writes only explicit fields. |
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report with context update and checkpoint close/write reminders; does not modify trusted memory. |
@@ -59,6 +60,7 @@ confidence: ai-drafted
 | policy and stats | `pnpm test tests/integration/m13-policy-stats.test.ts` | `policy.yml`, generated module activity stats, and policy-backed inbox thresholds are covered. |
 | graph build and route graph mode | `pnpm test tests/integration/m14-graph-route.test.ts` | Generated graph projections, graph explanation, and graph-mode route JSON are covered. |
 | CI report and benchmark thresholds | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | CI Markdown verify output and route threshold failures are covered. |
+| context pack | `pnpm test tests/integration/m16-context-pack.test.ts` | Context pack budget/redaction and graph-neighborhood selection are covered. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.
