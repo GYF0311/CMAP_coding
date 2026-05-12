@@ -72,7 +72,8 @@ program
   .description("Recommend context files to read for a task")
   .argument("<task>", "Natural-language task description")
   .option("--format <format>", "Output format: text or json", "text")
-  .action(async (task: string, options: { format?: string }) => {
+  .option("--max-context <n>", "Maximum context modules to include in the route context pack", "6")
+  .action(async (task: string, options: { format?: string; maxContext?: string }) => {
     await runRoute(process.cwd(), task, options);
   });
 
@@ -83,7 +84,8 @@ program
   .option("--out <path>", "Write brief to a project-relative file")
   .option("--obsidian", "Include Obsidian open links for routed module notes")
   .option("--vault-name <name>", "Obsidian vault name for obsidian:// links", "corpus")
-  .action(async (task: string, options: { out?: string; obsidian?: boolean; vaultName?: string }) => {
+  .option("--max-context <n>", "Maximum context modules to include in the brief", "6")
+  .action(async (task: string, options: { out?: string; obsidian?: boolean; vaultName?: string; maxContext?: string }) => {
     await runBrief(process.cwd(), task, options);
   });
 
@@ -311,7 +313,7 @@ program
   .command("install")
   .description("Install short AI host entrypoints")
   .option("--host <host>", "claude, codex, or both", "both")
-  .option("--hooks <profile>", "none, reminder, or maintain", "none")
+  .option("--hooks <profile>", "none, reminder, maintain, observe, or assist", "none")
   .action(async (options: { host: string; hooks: string }) => {
     await runInstall(process.cwd(), options);
   });

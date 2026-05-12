@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:28:00+08:00
+updated_at: 2026-05-12T18:48:00+08:00
 confidence: ai-drafted
 module: brief
 paths:
@@ -36,6 +36,7 @@ Render an AI coding brief from route results, route context pack, current checkp
 - Read `.context/CHECKPOINT.md` as the preferred current handoff source, falling back to `.context/STATUS.md`.
 - Include direct routed module docs and graph-related context module docs in a single AI-readable brief.
 - Include suggested verification commands extracted from selected module docs.
+- Respect `--max-context` by using the already-bounded route context pack.
 - Optionally include `obsidian://` links for selected context modules.
 - Write to `.context/out/brief.md` or another explicit project-relative output path.
 
@@ -60,6 +61,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 - Route output is a reading plan, not an implementation plan.
 - Do not let `brief` summarize hidden transcript state or invent module responsibilities.
 - Related context modules in a brief are for inspection; they are not automatically edit targets.
+- Smaller `--max-context` values intentionally omit related module docs and their derived verification commands.
 
 ## Traps
 - If module aliases are weak, `brief` will package the wrong docs; fix aliases or module docs instead of adding semantic guessing.
@@ -68,6 +70,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 ## Tests / Verification
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
+- `pnpm test tests/integration/m11-context-size-controls.test.ts`
 - `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md`
 
 ## When to Update This Doc

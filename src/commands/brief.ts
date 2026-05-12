@@ -9,11 +9,12 @@ type BriefOptions = {
   out?: string;
   obsidian?: boolean;
   vaultName?: string;
+  maxContext?: string;
 };
 
 export async function runBrief(cwd: string, task: string, options: BriefOptions): Promise<void> {
   const [route, modules, project] = await Promise.all([
-    routeTask(cwd, task),
+    routeTask(cwd, task, { maxContext: options.maxContext }),
     loadModuleIndex(cwd),
     loadProjectInfo(cwd)
   ]);

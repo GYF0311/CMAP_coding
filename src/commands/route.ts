@@ -1,9 +1,14 @@
 import type { ContextModule } from "../core/module-index.js";
 import { loadModuleIndex } from "../core/module-index.js";
+import { CmapCommandError } from "../errors.js";
 
 type RouteOptions = {
   format?: string;
+  maxContext?: string | number;
 };
+
+const DEFAULT_MAX_CONTEXT_MODULES = 6;
+const MAX_CONTEXT_MODULES_LIMIT = 20;
 
 export type ModuleCandidate = {
   id: string;
@@ -38,7 +43,7 @@ export type RouteReport = {
 };
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
-  const report = await routeTask(cwd, task);
+  const report = await routeTask(cwd, task, options);
 
   if (options.format === "json") {
     process.stdout.write(`${JSON.stringify(toJsonReport(report), null, 2)}\n`);
@@ -48,14 +53,15 @@ export async function runRoute(cwd: string, task: string, options: RouteOptions)
   process.stdout.write(formatRouteReport(report));
 }
 
-export async function routeTask(cwd: string, task: string): Promise<RouteReport> {
+export async function routeTask(cwd: string, task: string, options: RouteOptions = {}): Promise<RouteReport> {
+  const maxContext = parseMaxContext(options.maxContext);
   const candidates = (await loadModuleIndex(cwd)).map(toRouteCandidate);
   const ranked = candidates
     .map((candidate) => scoreCandidate(candidate, task))
     .sort((left, right) => right.score - left.score || left.name.localeCompare(right.name));
 
   const strong = ranked.filter((candidate) => candidate.score > 0 && hasHighConfidenceSignal(candidate));
-  const contextModules = buildContextModules(strong, candidates);
+  const contextModules = buildContextModules(strong, candidates, maxContext);
   const verifyCommands = unique(contextModules.flatMap((module) => module.verifyCommands));
   return {
     task,
@@ -213,12 +219,19 @@ function pathKeywords(paths: string[]): string[] {
   return [...keywords];
 }
 
-function buildContextModules(strong: ModuleCandidate[], candidates: ModuleCandidate[]): ContextModuleCandidate[] {
+function buildContextModules(
+  strong: ModuleCandidate[],
+  candidates: ModuleCandidate[],
+  maxContext: number
+): ContextModuleCandidate[] {
   const lookup = new Map(candidates.map((candidate) => [candidate.id, candidate]));
   const result: ContextModuleCandidate[] = [];
   const seen = new Set<string>();
 
   for (const module of strong.slice(0, 3)) {
+    if (result.length >= maxContext) {
+      break;
+    }
     result.push({ ...module, source: "direct" });
     seen.add(module.id);
   }
@@ -226,7 +239,7 @@ function buildContextModules(strong: ModuleCandidate[], candidates: ModuleCandid
   for (const module of strong.slice(0, 3)) {
     for (const [relationType, targets] of Object.entries(module.relations)) {
       for (const target of targets) {
-        if (seen.has(target) || result.length >= 6) {
+        if (seen.has(target) || result.length >= maxContext) {
           continue;
         }
         const candidate = lookup.get(target);
@@ -247,6 +260,20 @@ function buildContextModules(strong: ModuleCandidate[], candidates: ModuleCandid
   }
 
   return result;
+}
+
+function parseMaxContext(value: string | number | undefined): number {
+  if (value === undefined) {
+    return DEFAULT_MAX_CONTEXT_MODULES;
+  }
+  const parsed = typeof value === "number" ? value : Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > MAX_CONTEXT_MODULES_LIMIT) {
+    throw new CmapCommandError(
+      `Invalid --max-context "${value}". Expected an integer from 1 to ${MAX_CONTEXT_MODULES_LIMIT}.`,
+      2
+    );
+  }
+  return parsed;
 }
 
 function extractVerificationCommands(body: string): string[] {

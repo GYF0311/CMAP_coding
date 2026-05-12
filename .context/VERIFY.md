@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:28:00+08:00
+updated_at: 2026-05-12T18:48:00+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -26,8 +26,8 @@ confidence: ai-drafted
 | verify | `pnpm dev verify` | Errors are real structural problems; warnings are actionable. |
 | verify coverage | `pnpm dev verify --coverage --changed-files src/commands/verify.ts` | Reports changed-file module coverage and relation validity. |
 | host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
-| route | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Direct matches stay separate from graph-related context; suggested verify commands are extracted from module docs. |
-| brief | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Writes a task-local AI brief with direct and related context module docs plus suggested verification commands. |
+| route | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Direct matches stay separate from graph-related context; `--max-context` bounds selected context and derived verify commands. |
+| brief | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Writes a task-local AI brief from the bounded route context pack. |
 | handoff | `pnpm dev checkpoint read` | Prints current `CHECKPOINT.md`, falling back to `STATUS.md`; checkpoint writes only explicit fields. |
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report with context update and checkpoint close/write reminders; does not modify trusted memory. |
@@ -49,6 +49,7 @@ confidence: ai-drafted
 | generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append`, `inbox status`, and `verify --stale` are covered. |
 | hooks observe / assist | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, and unmapped file reporting are covered. |
 | route context pack | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Route JSON/text context pack and brief consumption are covered. |
+| context size controls | `pnpm test tests/integration/m11-context-size-controls.test.ts` | `route --max-context`, `brief --max-context`, and invalid limit handling are covered. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.
