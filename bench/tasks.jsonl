@@ -1,4 +1,8 @@
-{"task":"生成 AI 开工包并带上当前状态","expected_modules":["brief"],"bad_modules":["cp"]}
-{"task":"Obsidian 导出后图谱没有连线","expected_modules":["obsidian-adapter"],"bad_modules":["finish"]}
-{"task":"检查 changed files 是否都映射到模块","expected_modules":["verify"],"bad_modules":["memory-lite"]}
-{"task":"任务结束前提示哪些 context 文件要更新","expected_modules":["finish"],"bad_modules":["obsidian-adapter"]}
+{"task":"生成 AI 开工包并带上当前状态","expected_modules":["brief"],"expected_context_modules":["route","handoff","verify"],"bad_modules":["cp"]}
+{"task":"Obsidian 导出后图谱没有连线","expected_modules":["obsidian-adapter"],"expected_context_modules":["route","module-docs"],"bad_modules":["finish"]}
+{"task":"检查 changed files 是否都映射到模块","expected_modules":["verify"],"expected_context_modules":["evidence","update-agent"],"bad_modules":["memory-lite"]}
+{"task":"任务结束前提示哪些 context 文件要更新","expected_modules":["finish"],"expected_context_modules":["handoff","update-agent","verify"],"bad_modules":["obsidian-adapter"]}
+{"task":"route aliases 模块定位","expected_modules":["route"],"expected_context_modules":["module-docs","brief"],"bad_modules":["cp"]}
+{"task":"hooks assist changed files evidence","expected_modules":["evidence","hooks-doctor"],"expected_context_modules":["verify"],"bad_modules":["obsidian-adapter"]}
+{"task":"generated evidence stale inbox status","expected_modules":["evidence"],"expected_context_modules":["verify","update-agent"],"bad_modules":["cp"]}
+{"task":"MapPatch rollback routine 自动维护","expected_modules":["update-agent"],"expected_context_modules":["handoff","finish","verify","evidence"],"bad_modules":["obsidian-adapter"]}

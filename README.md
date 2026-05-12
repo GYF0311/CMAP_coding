@@ -95,7 +95,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
-| `cmap benchmark route --file bench/tasks.jsonl` | Measure route top-k accuracy against JSONL task fixtures. |
+| `cmap benchmark route --file bench/tasks.jsonl` | Measure route top-k and context-pack accuracy against JSONL task fixtures. |
 | `cmap reconcile --adapter gsd-v1\|gsd-v2 --from <dir>` | Dry-run candidate facts from external workflow artifacts. |
 | `cmap add-module <name>` | Create a candidate module doc. |
 | `cmap cp copy/move/delete/restore` | Move existing line blocks with backups for destructive edits. |
@@ -116,6 +116,14 @@ cmap CLI does not generate trusted project semantics.
 - `inbox status` and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
 - Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs. Assist hooks may write generated evidence blocks, but they do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
+
+## Route Benchmark Fixtures
+
+`bench/tasks.jsonl` supports:
+
+- `expected_modules`: direct route modules that should appear in top results.
+- `bad_modules`: direct route modules that should not appear in top results.
+- `expected_context_modules`: context-pack modules that should be selected through direct matches or graph relations.
 
 ## Verify
 

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:48:00+08:00
+updated_at: 2026-05-12T19:08:00+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -34,6 +34,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m9-hooks-assist.test.ts`
 - `tests/integration/m10-route-context-pack.test.ts`
 - `tests/integration/m11-context-size-controls.test.ts`
+- `tests/integration/m12-route-benchmark-context.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `scripts/smoke-test.mjs`
@@ -49,6 +50,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert observe/assist hook profiles write only non-canonical hook logs or bounded generated evidence.
 - Assert route context pack behavior separates direct matches from related context and surfaces module-owned verification commands.
 - Assert route/brief context size controls bound selected context modules and derived verification commands.
+- Assert route benchmark fixtures can measure context-pack hits separately from direct module hits.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On
@@ -80,6 +82,7 @@ Temporary directories under the system temp path.
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
+- `pnpm test tests/integration/m12-route-benchmark-context.test.ts`
 - `pnpm smoke`
 
 ## When to Update This Doc
