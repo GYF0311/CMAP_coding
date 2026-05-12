@@ -54,14 +54,14 @@
 - Modify `src/commands/doctor.ts`
 - Add tests under `tests/integration/`
 
-- [ ] Add `hooks render --host claude --mode observe|assist|strict`.
-- [ ] Add `hooks test --event SessionStart|UserPromptSubmit|PreToolUse|PostToolUse|Stop`.
-- [ ] Generate Claude-compatible settings and local scripts under `.context/hooks/scripts/`.
-- [ ] Implement observe mode session event logging to `.context/logs/session-events.jsonl`.
+- [x] Add `hooks render --host claude --mode observe|assist|strict`.
+- [x] Add `hooks test --event SessionStart|UserPromptSubmit|PreToolUse|PostToolUse|Stop`.
+- [x] Generate Claude-compatible lifecycle settings as a project-local file.
+- [x] Implement observe mode session event logging to `.context/logs/session-events.jsonl`.
 - [ ] Implement assist mode route/brief output to `.context/out/session-brief.md`.
-- [ ] Implement strict dry-run guards for direct semantic canonical writes.
-- [ ] Verify hooks never directly mutate high-risk canonical semantic sections.
-- [ ] Run tests and commit.
+- [x] Implement strict dry-run guards for direct semantic canonical writes.
+- [x] Verify hooks never directly mutate high-risk canonical semantic sections in lifecycle tests.
+- [x] Run tests and commit.
 
 ## Slice 4: Index, Stats, And Graph v0
 

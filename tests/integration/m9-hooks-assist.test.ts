@@ -98,4 +98,52 @@ describe("M9 hooks observe and assist profiles", () => {
     expect(result.stdout).toContain("Unmapped changed files");
     await expect(expectFile(path.join(cwd, ".context/modules/route.md"))).resolves.toBe(routeBefore);
   });
+
+  test("hooks render writes Claude lifecycle settings for assist mode", async () => {
+    const cwd = await createHookProject("m9-render");
+
+    const result = await runCmap(
+      ["hooks", "render", "--host", "claude", "--mode", "assist", "--out", ".context/hooks/claude.settings.generated.json"],
+      cwd
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Rendered hook settings");
+    const settings = await expectFile(path.join(cwd, ".context/hooks/claude.settings.generated.json"));
+    expect(settings).toContain("SessionStart");
+    expect(settings).toContain("UserPromptSubmit");
+    expect(settings).toContain("PreToolUse");
+    expect(settings).toContain("PostToolUse");
+    expect(settings).toContain("Stop");
+    expect(settings).toContain("cmap hooks test --event PreToolUse --mode assist");
+  });
+
+  test("hooks test records PostToolUse events to the session event journal", async () => {
+    const cwd = await createHookProject("m9-post-tool-use");
+
+    const result = await runCmap(
+      ["hooks", "test", "--event", "PostToolUse", "--mode", "observe", "--tool", "Read", "--file", "src/commands/route.ts"],
+      cwd
+    );
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Recorded PostToolUse event");
+    const journal = await expectFile(path.join(cwd, ".context/logs/session-events.jsonl"));
+    expect(journal).toContain("\"event\":\"PostToolUse\"");
+    expect(journal).toContain("\"tool\":\"Read\"");
+    expect(journal).toContain("src/commands/route.ts");
+  });
+
+  test("hooks test strict PreToolUse blocks direct semantic canonical writes", async () => {
+    const cwd = await createHookProject("m9-pre-tool-use-strict");
+
+    const result = await runCmap(
+      ["hooks", "test", "--event", "PreToolUse", "--mode", "strict", "--tool", "Write", "--file", ".context/DECISIONS.md"],
+      cwd
+    );
+
+    expect(result.code).toBe(1);
+    expect(result.stdout).toContain("Decision: block");
+    expect(result.stdout).toContain("direct semantic canonical writes are blocked");
+  });
 });

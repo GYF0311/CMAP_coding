@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:18:31+08:00
+updated_at: 2026-05-12T21:27:45+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -48,7 +48,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
 - Assert coverage, pull dry-run, and benchmark commands surface candidate issues without canonical writes.
 - Assert MapPatch routine apply, generated evidence, inbox status/triage/promote/archive, and stale verify behavior.
-- Assert observe/assist hook profiles write only non-canonical hook logs or bounded generated evidence.
+- Assert observe/assist/strict hook profiles write only non-canonical hook logs/session events, bounded generated evidence, or guard decisions.
 - Assert route context pack behavior separates direct matches from related context and surfaces module-owned verification commands.
 - Assert route/brief context size controls bound selected context modules and derived verification commands.
 - Assert route benchmark fixtures can measure context-pack hits separately from direct module hits.

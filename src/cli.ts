@@ -9,7 +9,7 @@ import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.j
 import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
 import { runEvidenceAppend } from "./commands/evidence.js";
-import { runHookSessionStart, runHookStop } from "./commands/hooks.js";
+import { runHookRender, runHookSessionStart, runHookStop, runHookTest } from "./commands/hooks.js";
 import { runInboxArchive, runInboxPromote, runInboxStatus, runInboxTriage } from "./commands/inbox.js";
 import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
@@ -274,6 +274,26 @@ hooks
   .option("--summary <text>", "Hook event summary")
   .action(async (options: { profile: "reminder" | "maintain" | "observe" | "assist"; changed?: string; summary?: string }) => {
     await runHookStop(process.cwd(), options);
+  });
+hooks
+  .command("render")
+  .option("--host <host>", "Hook host to render for", "claude")
+  .option("--mode <mode>", "observe, assist, or strict", "assist")
+  .option("--out <path>", "Project-relative output path", ".context/hooks/claude.settings.generated.json")
+  .action(async (options: { host?: string; mode?: string; out?: string }) => {
+    await runHookRender(process.cwd(), options);
+  });
+hooks
+  .command("test")
+  .requiredOption("--event <event>", "SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, or Stop")
+  .option("--mode <mode>", "observe, assist, or strict", "assist")
+  .option("--tool <tool>", "Simulated tool name")
+  .option("--file <path>", "Simulated project-relative file path")
+  .option("--command <cmd>", "Simulated shell command")
+  .option("--prompt <text>", "Simulated user prompt")
+  .action(async (options: { event: string; mode?: string; tool?: string; file?: string; command?: string; prompt?: string }) => {
+    const code = await runHookTest(process.cwd(), options);
+    process.exitCode = code;
   });
 
 const obsidian = program.command("obsidian").description("Export and open Obsidian-friendly cmap views");

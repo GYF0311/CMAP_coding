@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:06:51+08:00
+updated_at: 2026-05-12T21:27:45+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -48,7 +48,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Register `update --agent` and `update rollback` while keeping MapPatch policy out of `cli.ts`.
 - Register `evidence append` and `inbox status/triage/promote/archive` while keeping generated evidence and inbox governance policy in command modules.
-- Register hook observe/assist profile options while keeping hook behavior in `hooks-doctor`.
+- Register hook observe/assist/strict profile options plus `hooks render` and `hooks test` while keeping hook behavior in `hooks-doctor`.
 - Register `verify --stale` as a deterministic warning mode.
 - Convert expected CLI errors into exit code 2.
 - Preserve command-specific exit codes such as `verify` returning 1 on structural errors.

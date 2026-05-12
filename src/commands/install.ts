@@ -9,14 +9,14 @@ type InstallOptions = {
 };
 
 const validHosts = new Set(["claude", "codex", "both"]);
-const validHooks = new Set(["none", "reminder", "maintain", "observe", "assist"]);
+const validHooks = new Set(["none", "reminder", "maintain", "observe", "assist", "strict"]);
 
 export async function runInstall(cwd: string, options: InstallOptions): Promise<void> {
   if (!validHosts.has(options.host)) {
     throw new Error(`Invalid host "${options.host}". Expected claude, codex, or both.`);
   }
   if (!validHooks.has(options.hooks)) {
-    throw new Error(`Invalid hooks profile "${options.hooks}". Expected none, reminder, maintain, observe, or assist.`);
+    throw new Error(`Invalid hooks profile "${options.hooks}". Expected none, reminder, maintain, observe, assist, or strict.`);
   }
 
   const content = hostEntrypoint(path.basename(cwd));

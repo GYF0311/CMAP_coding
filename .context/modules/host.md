@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T18:15:00+08:00
+updated_at: 2026-05-12T21:30:00+08:00
 confidence: ai-drafted
 module: host
 paths:
@@ -29,14 +29,14 @@ Generate short host entrypoints and optional project-local hook templates for AI
 - Generate same-source `AGENTS.md` and/or `CLAUDE.md`.
 - Keep entrypoints short and route-oriented.
 - Point agents to `CHECKPOINT.md` for current handoff and `STATUS.md` for durable status.
-- Validate host and hook profile options, including `reminder`, `maintain`, `observe`, and `assist`.
+- Validate host and hook profile options, including `reminder`, `maintain`, `observe`, `assist`, and `strict`.
 
 ## Depends On
 - Node filesystem/path APIs.
 
 ## Used By
 - `cmap install --host claude|codex|both`
-- `cmap install --host both --hooks reminder|maintain|observe|assist`
+- `cmap install --host both --hooks reminder|maintain|observe|assist|strict`
 
 ## Data Flow
 Options choose target files and hook profile, template receives project name, command writes entrypoints at project root and optional hook templates under `.context/hooks/`.

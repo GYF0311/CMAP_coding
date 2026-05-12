@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:18:31+08:00
+updated_at: 2026-05-12T21:27:45+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -51,7 +51,7 @@ confidence: ai-drafted
 | memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
 | adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
 | module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
-| hooks-doctor | hook templates, hook reminder/observe/assist output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, 诊断 |
+| hooks-doctor | hook templates, lifecycle render/test, hook reminder/observe/assist/strict output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, strict, 诊断 |
 | tests | integration and built-CLI smoke coverage for CLI milestones | `tests`, `scripts/smoke-test.mjs` | `.context/modules/tests.md` | test, vitest, smoke, 自测, 集成测试, 行为测试 |
 
 ## Natural Language Route
@@ -75,7 +75,7 @@ confidence: ai-drafted
 | log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
 | adopt、接管已有项目、候选模块、ADOPTION | adoption | `.context/modules/adoption.md`, `src/commands/adopt.ts` |
 | add-module、新模块文档、module template | module-docs | `.context/modules/module-docs.md`, `src/commands/add-module.ts` |
-| hooks、doctor、reminder、maintain、observe、assist、诊断 | hooks-doctor | `.context/modules/hooks-doctor.md`, `src/commands/hooks.ts`, `src/commands/doctor.ts` |
+| hooks、doctor、render、test、reminder、maintain、observe、assist、strict、诊断 | hooks-doctor | `.context/modules/hooks-doctor.md`, `src/commands/hooks.ts`, `src/hooks/templates.ts`, `src/commands/doctor.ts` |
 | 测试、红绿、M1 验收、fixture | tests | `.context/modules/tests.md`, `tests/integration/m1.test.ts` |
 
 ## Module Relationships
@@ -97,7 +97,7 @@ confidence: ai-drafted
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
 - `module-docs` creates candidate module docs without editing MAP.
-- `hooks-doctor` writes project-local hook templates, prints reminders, records observe logs, can append generated evidence in assist mode, and diagnoses install state.
+- `hooks-doctor` writes project-local hook templates, renders Claude lifecycle settings, simulates hook events, records observe/session logs, can append generated evidence in assist mode, blocks direct semantic canonical writes in strict PreToolUse tests, and diagnoses install state.
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
@@ -115,6 +115,7 @@ Generated evidence is a support layer: `evidence append` and `hooks stop --profi
 - Generated stats: `.context/stats/*.json`
 - MapPatch audit trail: `.context/audit/`
 - Hook observation log: `.context/logs/hooks.jsonl`
+- Hook lifecycle event journal: `.context/logs/session-events.jsonl`
 - Reversible canonical-write backups: `.context/backups/`
 - Obsidian view export: `_cmap/<project>/`
 - Product overview artifact: `docs/cmap-product-overview.html`
@@ -132,8 +133,9 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 - Over-expanding templates until `.context` becomes noisy.
 - `verify` producing too many warnings and making users ignore it.
 - Future `cp`/delete behavior must preserve data and avoid irreversible deletion.
-- Host hooks must remind only; they must not write canonical memory.
+- Host hooks must not write canonical memory.
 - Assist hooks may write generated evidence blocks only; they must not write canonical semantic sections.
+- Strict hook guards may block direct semantic canonical writes, but should be introduced gradually.
 - Route graph-related context must remain a reading hint; it must not be counted as the task's direct module match.
 - Context size controls must not hide the direct module match from `route.modules`; they only trim context pack modules and derived verify commands.
 - Obsidian `_cmap` output is a view layer; do not treat it as the canonical fact source.
@@ -145,4 +147,4 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, route context packing from module graph plus module-owned verification commands, and `--max-context` size controls. Next work should expand hook lifecycle rendering and route quality thresholds.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics, conservative GSD v1/v2 dry-run reconciliation, a P0 MapPatch gate, generated evidence / inbox governance / policy-backed stale verify / module activity stats, observe/assist hook evidence collection, Claude hook lifecycle render/test, route context packing from module graph plus module-owned verification commands, and `--max-context` size controls. Next work should add graph/index and CI quality thresholds.

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:18:31+08:00
+updated_at: 2026-05-12T21:27:45+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -40,14 +40,14 @@ confidence: ai-drafted
 | reconcile-adapter | `pnpm dev reconcile --adapter gsd-v1 --from .planning` when fixture/source exists | Produces dry-run candidate reports only; canonical `.context` files are not changed. |
 | adoption | `pnpm test tests/integration/m4m5.test.ts` | Adopt writes ADOPTION candidate signals without promoting them into MAP. |
 | module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
-| hooks-doctor | `pnpm test tests/integration/m9-hooks-assist.test.ts` | observe writes hook logs only; assist writes bounded generated evidence for mapped changed files and reports unmapped files. |
+| hooks-doctor | `pnpm test tests/integration/m9-hooks-assist.test.ts` | observe writes hook logs/session events only; assist writes bounded generated evidence for mapped changed files; render/test covers Claude lifecycle settings and strict guard decisions. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
 | verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
 | verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |
 | brief and Obsidian export | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | Brief output, Obsidian module notes, relation wikilinks, and URI printing are covered. |
 | agent MapPatch gate | `pnpm test tests/integration/m7-update-agent.test.ts` | Dry-run, routine apply, high-risk inbox routing, rollback, and `finish --agent` request generation are covered. |
 | generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append`, `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox archive`, and `verify --stale` are covered. |
-| hooks observe / assist | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, and unmapped file reporting are covered. |
+| hooks observe / assist / strict | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, lifecycle render/test, strict canonical write guard, and unmapped file reporting are covered. |
 | route context pack | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Route JSON/text context pack and brief consumption are covered. |
 | context size controls | `pnpm test tests/integration/m11-context-size-controls.test.ts` | `route --max-context`, `brief --max-context`, and invalid limit handling are covered. |
 | route benchmark context | `pnpm test tests/integration/m12-route-benchmark-context.test.ts` | `expected_context_modules` metrics and legacy fixture compatibility are covered. |

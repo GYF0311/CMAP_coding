@@ -1,19 +1,37 @@
 import { execFile } from "node:child_process";
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileExists } from "../context/scanner.js";
+import { CmapCommandError } from "../errors.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
+import { resolveInsideRoot, projectRelative } from "../fs/safe-path.js";
+import { claudeLifecycleSettings, type HookMode } from "../hooks/templates.js";
 import { appendEvidenceToModule } from "./evidence.js";
 
 const execFileAsync = promisify(execFile);
 
-type HookProfile = "reminder" | "maintain" | "observe" | "assist";
+type HookProfile = "reminder" | "maintain" | "observe" | "assist" | "strict";
 
 type HookOptions = {
   profile: HookProfile;
   changed?: string;
   summary?: string;
+};
+
+type HookRenderOptions = {
+  host?: string;
+  mode?: string;
+  out?: string;
+};
+
+type HookTestOptions = {
+  event: string;
+  mode?: string;
+  tool?: string;
+  file?: string;
+  command?: string;
+  prompt?: string;
 };
 
 export async function runHookSessionStart(_cwd: string, options: HookOptions): Promise<void> {
@@ -96,6 +114,25 @@ Generated evidence updates: ${result.updated.length}
     return;
   }
 
+  if (options.profile === "strict") {
+    const changedFiles = options.changed ? splitCsv(options.changed) : await readGitChangedFiles(cwd);
+    await writeHookEvent(cwd, {
+      event: "stop",
+      profile: options.profile,
+      summary: options.summary?.trim() || "cmap hooks strict stop event",
+      changedFiles
+    });
+    process.stdout.write(`## cmap strict hook
+
+Changed files: ${changedFiles.length}
+Run verification before finishing:
+- cmap finish --changed <files>
+- cmap verify --changed
+- cmap verify --stale
+`);
+    return;
+  }
+
   process.stdout.write(`## cmap reminder
 
 Before ending work, consider:
@@ -103,6 +140,61 @@ Before ending work, consider:
 - cmap finish
 - cmap verify --changed
 `);
+}
+
+export async function runHookRender(cwd: string, options: HookRenderOptions): Promise<void> {
+  const host = options.host ?? "claude";
+  const mode = parseHookMode(options.mode ?? "assist");
+  if (host !== "claude") {
+    throw new CmapCommandError("hooks render currently supports --host claude");
+  }
+  const out = options.out ?? ".context/hooks/claude.settings.generated.json";
+  const target = await resolveInsideRoot(cwd, out);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, `${JSON.stringify(claudeLifecycleSettings(mode), null, 2)}\n`, "utf8");
+  process.stdout.write(`Rendered hook settings: ${projectRelative(cwd, target)}\n`);
+}
+
+export async function runHookTest(cwd: string, options: HookTestOptions): Promise<number> {
+  const mode = parseHookMode(options.mode ?? "assist");
+  if (options.event === "SessionStart") {
+    await runHookSessionStart(cwd, { profile: mode });
+    return 0;
+  }
+  if (options.event === "UserPromptSubmit") {
+    await writeSessionEvent(cwd, { event: options.event, mode, tool: "prompt", file: undefined, command: undefined, prompt: options.prompt });
+    process.stdout.write("Recorded UserPromptSubmit event\nSuggested command: cmap brief \"<task>\"\n");
+    return 0;
+  }
+  if (options.event === "PostToolUse") {
+    await writeSessionEvent(cwd, {
+      event: options.event,
+      mode,
+      tool: options.tool ?? "unknown",
+      file: options.file,
+      command: options.command,
+      prompt: undefined
+    });
+    process.stdout.write("Recorded PostToolUse event\nLog: .context/logs/session-events.jsonl\n");
+    return 0;
+  }
+  if (options.event === "PreToolUse") {
+    const tool = options.tool ?? "unknown";
+    const file = options.file;
+    if (mode === "strict" && isDirectSemanticCanonicalWrite(tool, file)) {
+      await writeSessionEvent(cwd, { event: options.event, mode, tool, file, command: options.command, prompt: undefined });
+      process.stdout.write("Decision: block\nReason: direct semantic canonical writes are blocked; use cmap update/evidence/cp or inbox review.\n");
+      return 1;
+    }
+    await writeSessionEvent(cwd, { event: options.event, mode, tool, file, command: options.command, prompt: undefined });
+    process.stdout.write("Decision: allow\n");
+    return 0;
+  }
+  if (options.event === "Stop") {
+    await runHookStop(cwd, { profile: mode });
+    return 0;
+  }
+  throw new CmapCommandError(`Unsupported hook test event: ${options.event}`);
 }
 
 async function appendAssistEvidence(
@@ -148,6 +240,43 @@ async function writeHookEvent(
     changed_files: input.changedFiles
   });
   await appendFile(path.join(logsRoot, "hooks.jsonl"), `${line}\n`, "utf8");
+}
+
+async function writeSessionEvent(
+  cwd: string,
+  input: { event: string; mode: HookMode; tool?: string; file?: string; command?: string; prompt?: string }
+): Promise<void> {
+  const logsRoot = path.join(cwd, ".context", "logs");
+  await mkdir(logsRoot, { recursive: true });
+  const line = JSON.stringify({
+    created_at: new Date().toISOString(),
+    event: input.event,
+    mode: input.mode,
+    tool: input.tool,
+    file: input.file,
+    command: input.command,
+    prompt: input.prompt
+  });
+  await appendFile(path.join(logsRoot, "session-events.jsonl"), `${line}\n`, "utf8");
+}
+
+function parseHookMode(value: string): HookMode {
+  if (value === "observe" || value === "assist" || value === "strict") {
+    return value;
+  }
+  throw new CmapCommandError(`Invalid hook mode "${value}". Expected observe, assist, or strict.`);
+}
+
+function isDirectSemanticCanonicalWrite(tool: string, file: string | undefined): boolean {
+  if (!["Write", "Edit", "MultiEdit"].includes(tool) || !file) {
+    return false;
+  }
+  return (
+    file === ".context/MAP.md" ||
+    file === ".context/DECISIONS.md" ||
+    file === ".context/VERIFY.md" ||
+    /^\.context\/modules\/[^/]+\.md$/.test(file)
+  );
 }
 
 async function readGitChangedFiles(cwd: string): Promise<string[]> {

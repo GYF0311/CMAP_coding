@@ -57,6 +57,8 @@ cmap finish --agent --task "多人对话页面消息发不出去"
 cmap update --agent --from .context/out/update-request-xxxx.md --apply-routine
 cmap evidence append --module route --file src/commands/route.ts --summary "Route behavior verified"
 cmap hooks stop --profile assist --changed src/commands/route.ts --summary "Observed route work"
+cmap hooks render --host claude --mode assist --out .context/hooks/claude.settings.generated.json
+cmap hooks test --event PostToolUse --mode observe --tool Read --file src/commands/route.ts
 cmap inbox status
 cmap inbox triage
 cmap inbox promote update-xxxx --dry-run
@@ -78,6 +80,8 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
 | `cmap install --host both --hooks assist` | Write hook templates that can record generated evidence from changed files. |
+| `cmap hooks render --host claude --mode observe\|assist\|strict` | Render Claude lifecycle hook settings without editing global host config. |
+| `cmap hooks test --event <event> --mode observe\|assist\|strict` | Simulate hook lifecycle events and strict guard decisions locally. |
 | `cmap route "<task>" --max-context 4` | Recommend direct modules, bounded related context files, and suggested verification commands. |
 | `cmap brief "<task>" --max-context 4` | Render an AI coding brief from route, checkpoint/status, bounded context pack, and module docs. |
 | `cmap status` | Print `.context/STATUS.md`. |
@@ -121,7 +125,7 @@ cmap CLI does not generate trusted project semantics.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
 - `.context/policy.yml` controls bounded routine/generated maintenance defaults such as stats updates and inbox thresholds; semantic and decision auto-writes remain disabled.
 - `inbox status`, `inbox triage`, `inbox promote --dry-run`, and `verify --stale` keep candidate backlog and map drift visible, but they do not promote facts automatically.
-- Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs. Assist hooks may write generated evidence blocks, but they do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
+- Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs/session events. Assist hooks may write generated evidence blocks, and strict hook tests can block direct semantic canonical writes, but hooks do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
 
 ## Route Benchmark Fixtures
