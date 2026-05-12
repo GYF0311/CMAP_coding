@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T11:35:00+08:00
+updated_at: 2026-05-12T13:32:28+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -43,6 +43,7 @@ confidence: ai-drafted
 | handoff | current status printing and explicit checkpoint handoff updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
 | cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
 | finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
+| update-agent | MapPatch intake, routine apply policy, backup/audit, and candidate inbox routing | `src/commands/update.ts`, `src/core/map-patch.ts`, `src/fs/backup.ts` | `.context/modules/update-agent.md` | update, MapPatch, agent update, 自主维护, 自动维护, inbox, rollback |
 | obsidian-adapter | Obsidian-friendly markdown export and module note links | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
 | reconcile-adapter | dry-run candidate facts from external workflow artifacts | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
 | showcase | interactive product overview and external-review handoff artifact | `docs/cmap-product-overview.html` | `.context/modules/showcase.md` | showcase, product overview, HTML, 介绍页, 产品介绍, 思维导图 |
@@ -65,6 +66,7 @@ confidence: ai-drafted
 | checkpoint、status、续接、上下文压缩、当前主线 | handoff | `.context/modules/handoff.md`, `src/commands/checkpoint.ts`, `src/commands/status.ts` |
 | cp、copy、move、delete、restore、行块、搬运、备份 | cp | `.context/modules/cp.md`, `src/commands/cp.ts`, `src/fs/line-block.ts` |
 | finish、收尾、closeout、context review | finish | `.context/modules/finish.md`, `src/commands/finish.ts` |
+| update、MapPatch、agent update、自动维护、自主维护、rollback、inbox | update-agent | `.context/modules/update-agent.md`, `src/commands/update.ts`, `src/core/map-patch.ts` |
 | obsidian、图谱、关系图谱、可视化、export、vault | obsidian-adapter | `.context/modules/obsidian-adapter.md`, `src/commands/obsidian.ts` |
 | reconcile、GSD adapter、gsd-v1、gsd-v2、外部产物、候选事实 | reconcile-adapter | `.context/modules/reconcile-adapter.md`, `src/commands/reconcile.ts` |
 | 产品介绍、展示页、HTML、思维导图、DeepSeek handoff | showcase | `.context/modules/showcase.md`, `docs/cmap-product-overview.html` |
@@ -84,7 +86,8 @@ confidence: ai-drafted
 - `benchmark` runs JSONL task fixtures through route scoring and reports top-k hit rates.
 - `handoff` reads `STATUS.md`, writes task-local `CHECKPOINT.md`, and keeps the legacy explicit `STATUS.md` update path compatible.
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
-- `finish` reads changed file hints through the shared module index and produces a read-only closeout report, including checkpoint write/close reminders.
+- `finish` reads changed file hints through the shared module index and produces a closeout report; with `--agent` it writes a MapPatch request artifact under `.context/out/` but does not apply it.
+- `update-agent` parses AI-authored MapPatch JSON, classifies operations by policy, applies only routine checkpoint updates with backup/audit, routes semantic updates to `.context/inbox/`, and supports rollback.
 - `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph.
 - `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
 - `showcase` turns current product facts and workflow framing into a static interactive overview for human and external-model review.
@@ -95,13 +98,15 @@ confidence: ai-drafted
 - `tests` exercise public CLI behavior through temporary projects, not just internal functions.
 
 ## Data Flow
-User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
+User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and only auto-applies low-risk checkpoint state. `obsidian export` writes view-layer notes under `_cmap/<project>/`.
 
 ## State / Storage
 - Project memory: `.context/`
 - Current handoff checkpoint: `.context/CHECKPOINT.md`
 - Task-local generated outputs: `.context/out/`
 - Candidate fact inbox for future adapters: `.context/inbox/`
+- MapPatch audit trail: `.context/audit/`
+- Reversible canonical-write backups: `.context/backups/`
 - Obsidian view export: `_cmap/<project>/`
 - Product overview artifact: `docs/cmap-product-overview.html`
 - Route benchmark fixtures: `bench/tasks.jsonl`
@@ -120,9 +125,11 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 - Future `cp`/delete behavior must preserve data and avoid irreversible deletion.
 - Host hooks must remind only; they must not write canonical memory.
 - Obsidian `_cmap` output is a view layer; do not treat it as the canonical fact source.
+- `update --agent` is a policy gate for external AI proposals, not a model call or autonomous daemon.
+- `update-agent` must not auto-write `MAP.md`, `DECISIONS.md`, module responsibilities, module relationships, or code files.
 
 ## Verification Summary
-Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. New brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`.
+Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, and conservative GSD v1/v2 dry-run reconciliation. Next work should inspect `_cmap/CMAP_coding` in Obsidian and dogfood `reconcile` against real `.planning` / `.gsd` artifacts before adding richer adapters.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, Obsidian view-layer export/pull dry-run, changed-file coverage checks, relation checks, route benchmarking, conservative GSD v1/v2 dry-run reconciliation, and a P0 MapPatch gate for AI-assisted context maintenance. Next work should dogfood `finish --agent` -> filled MapPatch -> `update --agent --apply-routine`, then decide whether P1 may auto-append low-risk module evidence blocks.

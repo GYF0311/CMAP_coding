@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:35:00+08:00
+updated_at: 2026-05-12T13:32:28+08:00
 confidence: ai-drafted
 module: handoff
 paths:
@@ -42,9 +42,10 @@ Keep the current project thread resumable through durable `STATUS.md` and task-l
 - Long sessions before compaction.
 - `brief`, which prefers `CHECKPOINT.md` over `STATUS.md` for session startup context.
 - Future `finish` flow.
+- `update-agent`, which may write routine checkpoint state from an accepted MapPatch.
 
 ## Data Flow
-Explicit CLI fields -> `CHECKPOINT.md` or `STATUS.md` sections. No transcript auto-summary.
+Explicit CLI fields -> `CHECKPOINT.md` or `STATUS.md` sections. `update-agent` may also write `CHECKPOINT.md` from explicit MapPatch fields. No transcript auto-summary.
 
 ## State / Storage
 Writes `.context/CHECKPOINT.md` for active handoff state and `.context/STATUS.md` for durable project status.

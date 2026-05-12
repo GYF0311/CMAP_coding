@@ -17,6 +17,7 @@ import { runObsidianExport, runObsidianOpen, runObsidianPull } from "./commands/
 import { runReconcile } from "./commands/reconcile.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
+import { runUpdate, runUpdateRollback } from "./commands/update.js";
 import { runVerify } from "./commands/verify.js";
 import { CmapCommandError } from "./errors.js";
 import { readPackageVersion } from "./version.js";
@@ -190,8 +191,29 @@ program
   .command("finish")
   .description("Print a QA-lite context closeout report")
   .option("--changed <csv>", "Changed files, comma-separated")
-  .action(async (options: { changed?: string }) => {
+  .option("--agent", "Write a MapPatch request for agent-maintained context")
+  .option("--task <text>", "Task summary for --agent request")
+  .option("--verified <text>", "Verification evidence for --agent request")
+  .action(async (options: { changed?: string; agent?: boolean; task?: string; verified?: string }) => {
     await runFinish(process.cwd(), options);
+  });
+
+const update = program.command("update").description("Process AI-authored MapPatch proposals safely");
+update
+  .option("--agent", "Accept an external AI-authored MapPatch")
+  .option("--from <path>", "Project-relative JSON file, or '-' for stdin")
+  .option("--dry-run", "Classify operations without writing files", true)
+  .option("--apply-routine", "Apply only routine operations and route the rest to inbox")
+  .option("--write-inbox", "Write the classification report to .context/inbox/")
+  .action(async (options: { agent?: boolean; from?: string; dryRun?: boolean; applyRoutine?: boolean; writeInbox?: boolean }) => {
+    await runUpdate(process.cwd(), options);
+  });
+update
+  .command("rollback")
+  .description("Restore files from a MapPatch backup id")
+  .argument("<backupId>", "Backup id printed by update --apply-routine")
+  .action(async (backupId: string) => {
+    await runUpdateRollback(process.cwd(), backupId);
   });
 
 const hooks = program.command("hooks").description("Print hook reminders");

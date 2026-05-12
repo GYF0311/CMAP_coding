@@ -53,6 +53,8 @@ cmap route "多人对话页面消息发不出去"
 cmap checkpoint write --task "多人对话页面消息发不出去" --next "Read routed module docs"
 cmap brief "多人对话页面消息发不出去" --out .context/out/brief.md
 cmap finish
+cmap finish --agent --task "多人对话页面消息发不出去"
+cmap update --agent --from .context/out/update-request-xxxx.md --apply-routine
 cmap verify --coverage --changed
 cmap obsidian export
 cmap benchmark route --file bench/tasks.jsonl
@@ -77,6 +79,10 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap checkpoint --goal ... --next ...` | Legacy-compatible update of `.context/STATUS.md`. |
 | `cmap verify [--changed]` | Check context structure. |
 | `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
+| `cmap finish --agent --task ...` | Write a local MapPatch request artifact under `.context/out/`. |
+| `cmap update --agent --from <json>` | Classify an AI-authored MapPatch without changing canonical facts. |
+| `cmap update --agent --from <json> --apply-routine` | Apply only routine checkpoint updates; route semantic candidates to `.context/inbox/`. |
+| `cmap update rollback <backupId>` | Restore files from a backup printed by `update --apply-routine`. |
 | `cmap obsidian export` | Export Obsidian-friendly module notes under `_cmap/<project>/`. |
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
@@ -94,6 +100,7 @@ cmap CLI does not generate trusted project semantics.
 
 - CLI creates skeletons, scans deterministic signals, routes by aliases, and checks structure.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
+- `update --agent` can process AI-authored MapPatch JSON, but P0 only auto-applies low-risk checkpoint state with backup/audit; module semantics and decisions go to `.context/inbox/`.
 - Hooks only remind. They do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, or module docs.
 - `logs/`, `ideas/`, and `pending/` are not canonical project facts.
 

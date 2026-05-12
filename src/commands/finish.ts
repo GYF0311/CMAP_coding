@@ -1,11 +1,17 @@
 import { execFile } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { promisify } from "node:util";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
+import { projectRelative } from "../fs/safe-path.js";
 
 const execFileAsync = promisify(execFile);
 
 type FinishOptions = {
   changed?: string;
+  agent?: boolean;
+  task?: string;
+  verified?: string;
 };
 
 export async function runFinish(cwd: string, options: FinishOptions): Promise<void> {
@@ -15,6 +21,16 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
   const modules = await loadModuleIndex(cwd);
   const mapping = mapChangedFilesToModules(changedFiles, modules);
   const affectedModules = mapping.affectedModules;
+
+  const agentRequestPath = options.agent
+    ? await writeAgentUpdateRequest(cwd, {
+      task: options.task,
+      verified: options.verified,
+      changedFiles,
+      affectedModules: affectedModules.map((module) => module.id),
+      unmappedFiles: mapping.unmapped
+    })
+    : undefined;
 
   const lines = [
     "# Finish Report",
@@ -43,7 +59,13 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
     "- Suggested: cmap checkpoint close if the task is complete",
     "",
     "## Pending Updates",
-    "- None generated automatically in v0.1",
+    ...(agentRequestPath
+      ? [
+        `- MapPatch request: ${agentRequestPath}`,
+        "- Next command after an AI fills it: cmap update --agent --from <file> --apply-routine",
+        "- Routine updates may write CHECKPOINT.md with backup/audit; semantic changes go to .context/inbox/"
+      ]
+      : ["- None generated automatically in v0.1"]),
     "",
     "## Verification",
     "- Suggested: cmap verify --changed",
@@ -52,6 +74,82 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
   ];
 
   process.stdout.write(lines.join("\n"));
+}
+
+async function writeAgentUpdateRequest(
+  cwd: string,
+  input: {
+    task: string | undefined;
+    verified: string | undefined;
+    changedFiles: string[];
+    affectedModules: string[];
+    unmappedFiles: string[];
+  }
+): Promise<string> {
+  const outRoot = path.join(cwd, ".context", "out");
+  await mkdir(outRoot, { recursive: true });
+  const target = path.join(outRoot, `update-request-${timeStamp()}.md`);
+  const task = input.task?.trim() || "Describe the current task explicitly.";
+  const patch = {
+    schema: "cmap.map_patch.v1",
+    agent: "codex",
+    summary: "Routine task handoff and candidate context updates after finish.",
+    task,
+    operations: [
+      {
+        op: "checkpoint.write",
+        target: ".context/CHECKPOINT.md",
+        risk: "routine",
+        confidence: 0.8,
+        summary: "Update current checkpoint from explicit finish evidence.",
+        evidence: input.changedFiles,
+        fields: {
+          task,
+          next: "Review this MapPatch request and continue from the latest changed files.",
+          files: input.changedFiles,
+          verified: input.verified?.trim() || "Not recorded.",
+          failed: "None recorded.",
+          do_not_redo: "Do not re-scan unrelated modules unless route evidence changes."
+        }
+      },
+      {
+        op: "module.update",
+        target: ".context/modules/<module>.md",
+        risk: "high",
+        confidence: 0.5,
+        summary: "If responsibilities, dependencies, traps, or verification changed, replace this with a concrete module candidate.",
+        evidence: input.changedFiles,
+        fields: {}
+      }
+    ]
+  };
+  const body = [
+    "# Agent MapPatch Request",
+    "",
+    "Fill the JSON below with explicit evidence. `cmap update --agent` will only auto-apply routine checkpoint state; semantic updates are routed to `.context/inbox/`.",
+    "",
+    "## Finish Evidence",
+    "",
+    `Task: ${task}`,
+    "",
+    "Changed files:",
+    ...(input.changedFiles.length ? input.changedFiles.map((file) => `- ${file}`) : ["- None detected"]),
+    "",
+    "Affected modules:",
+    ...(input.affectedModules.length ? input.affectedModules.map((module) => `- ${module}`) : ["- None detected"]),
+    "",
+    "Unmapped files:",
+    ...(input.unmappedFiles.length ? input.unmappedFiles.map((file) => `- ${file}`) : ["- None"]),
+    "",
+    "## MapPatch JSON",
+    "",
+    "```json",
+    JSON.stringify(patch, null, 2),
+    "```",
+    ""
+  ];
+  await writeFile(target, body.join("\n"), "utf8");
+  return projectRelative(cwd, target);
 }
 
 async function readGitChangedFiles(cwd: string): Promise<string[]> {
@@ -71,4 +169,8 @@ function splitCsv(value: string): string[] {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function timeStamp(): string {
+  return new Date().toISOString().replace(/[:.]/g, "-").toLowerCase();
 }

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:35:00+08:00
+updated_at: 2026-05-12T13:32:28+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -24,6 +24,7 @@ relations:
     - obsidian-adapter
     - reconcile-adapter
     - finish
+    - update-agent
     - verify
 ---
 # Module: cli
@@ -42,6 +43,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `checkpoint` actions while keeping the legacy option-only STATUS update path compatible.
 - Register `benchmark route` as a public evaluation command.
 - Register `reconcile` as a dry-run external artifact adapter command.
+- Register `update --agent` and `update rollback` while keeping MapPatch policy out of `cli.ts`.
 - Convert expected CLI errors into exit code 2.
 - Preserve command-specific exit codes such as `verify` returning 1 on structural errors.
 
@@ -54,6 +56,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `benchmark` for route fixture evaluation.
 - `obsidian-adapter` for Obsidian view commands.
 - `reconcile-adapter` for external workflow candidate reports.
+- `update-agent` for MapPatch intake and routine context maintenance.
 
 ## Used By
 - Package bin `cmap`.

@@ -3,33 +3,42 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-12T03:32:35Z'
+updated_at: '2026-05-12T13:36:08+08:00'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Show current cmap product/workflow capabilities as an interactive HTML overview and hand it to DeepSeek for external review
+Land the P0 AI-maintained map workflow without letting the CLI invent trusted project semantics.
 
 ## Done Recently
-Added `docs/cmap-product-overview.html`, a single-file interactive product atlas for cmap. It explains the canonical `.context` layer, AI coding workflow, module directory, dogfood feasibility, Obsidian graph/view layer, and verification evidence. Added a `showcase` module owner and uploaded the HTML attachment to DeepSeek Chat with a structured review prompt.
+Added `cmap update --agent` as a MapPatch policy gate. It parses AI-authored JSON, classifies operations into routine apply / inbox / reject, applies only low-risk `CHECKPOINT.md` updates with backup/audit, routes semantic proposals to `.context/inbox/`, and supports `cmap update rollback <backupId>`. Added `finish --agent` to generate a local MapPatch request artifact under `.context/out/`.
 
 ## Left Off
-DeepSeek handoff succeeded at https://chat.deepseek.com/a/chat/s/1b212acc-4ea6-4d3c-b827-7b397aec03a8. Full local verification passed. `research/` remains pre-existing untracked content and was not committed.
+Implementation and verification passed locally. Full test discovery was tightened to `tests/**/*.test.ts` after Vitest picked up historical test copies under `.context/out/`.
 
 ## Next Steps
-Review DeepSeek feedback when it finishes, then decide whether to iterate the HTML overview or turn it into a reusable `cmap showcase`/docs export workflow.
+Commit and push the MapPatch/update-agent implementation. Then dogfood `finish --agent` -> filled MapPatch -> `update --agent --apply-routine` on a real follow-up task before expanding auto-apply beyond checkpoint state.
 
 ## Changed Files
-- docs/cmap-product-overview.html
-- .gitignore
+- README.md
 - .context/MAP.md
 - .context/CHECKPOINT.md
 - .context/STATUS.md
-- .context/modules/showcase.md
+- .context/VERIFY.md
+- .context/modules/cli.md
+- .context/modules/finish.md
+- .context/modules/handoff.md
+- .context/modules/update-agent.md
+- src/cli.ts
+- src/commands/finish.ts
+- src/commands/update.ts
+- src/core/map-patch.ts
+- tests/integration/m7-update-agent.test.ts
+- vitest.config.ts
 
 ## Risks
-The HTML overview is a static presentation artifact. It now has a `showcase` module owner, but it is not yet generated automatically from `.context`.
+P0 intentionally does not auto-write module responsibilities, module relationships, `MAP.md`, `DECISIONS.md`, `VERIFY.md`, or code files. The main product risk is inbox candidates being ignored; future finish/verify work should keep pending candidates visible.
 
 ## Last Verified
-2026-05-12: node HTML content check, Playwright desktop/mobile preview, console check after favicon fix, DeepSeek attachment upload/send, pnpm test, pnpm typecheck, pnpm dev verify, pnpm dev route "产品介绍 HTML 思维导图 DeepSeek handoff", pnpm dev finish, pnpm smoke, and git diff --check passed. Coverage maps `docs/cmap-product-overview.html` to `showcase`; `.gitignore` and canonical `.context` status/map files still report expected unmapped warnings.
+2026-05-12: `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm smoke`, `pnpm dev route "AI 自动维护 MapPatch rollback inbox"`, and `git diff --check` passed.
