@@ -5,7 +5,9 @@ import { CmapCommandError } from "../errors.js";
 export async function resolveInsideRoot(root: string, inputPath: string): Promise<string> {
   const absolute = path.resolve(root, inputPath);
   if (!isInside(root, absolute)) {
-    throw new CmapCommandError(`Path escapes project root: ${inputPath}`);
+    throw new CmapCommandError(
+      `Path escapes project root: ${inputPath}. Output paths must stay inside the project — use a relative path (e.g. _cmap-view/ or .context/out/view.html) or an absolute path inside ${root}.`
+    );
   }
 
   try {
@@ -13,7 +15,9 @@ export async function resolveInsideRoot(root: string, inputPath: string): Promis
     if (info.isSymbolicLink()) {
       const resolved = await realpath(absolute);
       if (!isInside(root, resolved)) {
-        throw new CmapCommandError(`Symlink escapes project root: ${inputPath}`);
+        throw new CmapCommandError(
+          `Symlink escapes project root: ${inputPath} -> ${resolved}. The link target must also stay inside ${root}.`
+        );
       }
     }
   } catch (error) {
