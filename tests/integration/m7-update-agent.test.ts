@@ -258,6 +258,63 @@ describe("M7 agent MapPatch update", () => {
     expect(inboxFiles.some((file) => file.startsWith("update-") && file.endsWith(".md"))).toBe(true);
   });
 
+  test("MapPatch v2 rejects generated evidence for unknown modules and missing fields.files", async () => {
+    const cwd = await createUpdateProject("m7-v2-evidence-validation");
+    const patchPath = await writePatch(cwd, "patch.json", {
+      schema: "cmap.map_patch.v2",
+      agent: "codex",
+      summary: "Evidence validation should protect generated store.",
+      operations: [
+        {
+          op: "evidence.append",
+          risk: "routine",
+          confidence: 0.9,
+          summary: "Unknown module should not apply.",
+          fields: {
+            module: "missing-module",
+            summary: "Unknown module should not apply.",
+            files: ["src/commands/update.ts"]
+          },
+          evidence: ["src/commands/update.ts"]
+        },
+        {
+          op: "evidence.append",
+          risk: "routine",
+          confidence: 0.9,
+          summary: "Missing fields.files should route to inbox.",
+          fields: {
+            module: "route",
+            summary: "Missing fields.files should route to inbox.",
+            files: ["src/commands/missing.ts"]
+          },
+          evidence: []
+        },
+        {
+          op: "verification.evidence",
+          risk: "routine",
+          confidence: 0.9,
+          summary: "Command-only verification is allowed.",
+          fields: {
+            summary: "Command-only verification is allowed.",
+            commands: ["pnpm test"]
+          },
+          evidence: ["cmd: pnpm test"]
+        }
+      ]
+    });
+
+    const result = await runCmap(["update", "--agent", "--from", patchPath, "--apply-routine"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Applied routine operations: 1");
+    expect(result.stdout).toContain("unknown module: missing-module");
+    expect(result.stdout).toContain("missing evidence: src/commands/missing.ts");
+    await expect(expectFile(path.join(cwd, ".context/generated/evidence/modules/missing-module.jsonl"))).rejects.toThrow();
+    await expect(expectFile(path.join(cwd, ".context/generated/evidence/modules/route.jsonl"))).rejects.toThrow();
+    const verificationEvidence = await expectFile(path.join(cwd, ".context/generated/evidence/verification.jsonl"));
+    expect(verificationEvidence).toContain("Command-only verification is allowed.");
+  });
+
   test("MapPatch v2 policy disables evidence auto-apply and blocks code writes", async () => {
     const cwd = await createUpdateProject("m7-v2-policy");
     await writeFile(

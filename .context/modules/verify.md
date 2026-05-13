@@ -48,6 +48,8 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Warn when a module doc appears older than one of its owned source paths under `--stale`.
 - Warn under `--freshness` when owned source files or generated evidence are newer than the last semantic review.
 - Warn under `--freshness` when a module has pending inbox candidates that need review.
+- Warn under `--freshness` when no generated freshness snapshot exists, so users know to run `cmap freshness snapshot`.
+- Classify pending freshness candidates as relation, high-risk, or routine when possible.
 - Render stable CI-friendly Markdown output with `--ci --format markdown`.
 - Return exit code 1 only for errors.
 

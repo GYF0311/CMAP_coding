@@ -382,7 +382,11 @@ async function relationCandidateWarnings(cwd: string): Promise<string[]> {
   if (entries.length === 0) {
     return [];
   }
-  const files = entries.slice(0, 5).map((entry) => `.context/inbox/relations/${entry}`).join(", ");
-  const suffix = entries.length > 5 ? `, +${entries.length - 5} more` : "";
-  return [`Pending relation candidates exist (${entries.length}): ${files}${suffix}. Route does not consume unpromoted candidates.`];
+  const ids = [...new Set(entries.map((entry) => entry.replace(/\.(json|md)$/, "")))].sort();
+  const files = ids
+    .slice(0, 5)
+    .map((id) => `.context/inbox/relations/${entries.includes(`${id}.json`) ? `${id}.json` : `${id}.md`}`)
+    .join(", ");
+  const suffix = ids.length > 5 ? `, +${ids.length - 5} more` : "";
+  return [`Pending relation candidates exist (${ids.length}): ${files}${suffix}. Route does not consume unpromoted candidates.`];
 }

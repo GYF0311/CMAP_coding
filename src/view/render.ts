@@ -46,6 +46,10 @@ export function renderViewHtml(data: CmapViewData): string {
   </header>
   <main>
     <section>
+      <h2>Overview</h2>
+      ${renderOverview(safeData)}
+    </section>
+    <section>
       <h2>Warnings</h2>
       ${safeData.warnings.length > 0 ? `<div class="panel warning"><ul>${safeData.warnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : `<p class="meta">No warnings.</p>`}
     </section>
@@ -54,22 +58,33 @@ export function renderViewHtml(data: CmapViewData): string {
       <div class="modules">${safeData.modules.map(renderModule).join("")}</div>
     </section>
     <section>
-      <h2>Generated Evidence</h2>
-      ${renderEvidence(safeData)}
+      <h2>Canonical Relations</h2>
+      ${renderCanonicalRelations(safeData)}
     </section>
     <section>
-      <h2>Review Candidates</h2>
-      ${renderCandidates(safeData)}
+      <h2>Verification</h2>
+      ${renderVerification(safeData)}
     </section>
-    <section>
-      <h2>Relation Candidates</h2>
-      ${renderRelationCandidates(safeData)}
-    </section>
+    ${safeData.included.freshness ? `<section><h2>Freshness</h2>${renderFreshness(safeData)}</section>` : ""}
+    ${safeData.included.generated ? `<section><h2>Generated Evidence</h2>${renderEvidence(safeData)}</section>` : ""}
+    ${safeData.included.inbox ? `<section><h2>Review Candidates</h2>${renderCandidates(safeData)}</section><section><h2>Relation Candidates</h2>${renderRelationCandidates(safeData)}</section>` : ""}
     <script type="application/json" id="cmap-view-data">${json}</script>
   </main>
 </body>
 </html>
 `;
+}
+
+function renderOverview(data: CmapViewData): string {
+  const rows = [
+    ["Purpose", data.overview.purpose],
+    ["Active Goal", data.overview.activeGoal],
+    ["Current Task", data.overview.currentTask],
+    ["Next Step", data.overview.nextStep],
+    ["Verified", data.overview.verified],
+    ["Last Verified", data.overview.lastVerified]
+  ];
+  return `<table><tbody>${rows.map(([label, value]) => `<tr><th>${escapeHtml(label ?? "")}</th><td>${escapeHtml(value || "Not available")}</td></tr>`).join("")}</tbody></table>`;
 }
 
 function stat(label: string, value: number): string {
@@ -88,6 +103,50 @@ function renderModule(module: CmapViewData["modules"][number]): string {
     <p><strong>Relations:</strong> ${escapeHtml(relationText)}</p>
     <p><strong>Freshness:</strong> ${escapeHtml(module.freshness.state)} · ${escapeHtml(module.freshness.lastReviewedAt)}</p>
   </article>`;
+}
+
+function renderCanonicalRelations(data: CmapViewData): string {
+  const rows = data.modules.flatMap((module) =>
+    module.relations.map((relation) => ({
+      from: module.id,
+      type: relation.type,
+      target: relation.target
+    }))
+  );
+  if (rows.length === 0) {
+    return `<p class="meta">Not available.</p>`;
+  }
+  return `<table><thead><tr><th>From</th><th>Relation</th><th>To</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.from)}</td><td>${escapeHtml(row.type)}</td><td>${escapeHtml(row.target)}</td></tr>`).join("")}</tbody></table>`;
+}
+
+function renderVerification(data: CmapViewData): string {
+  const commands = data.verify.requiredCommands.length > 0
+    ? `<table><thead><tr><th>Purpose</th><th>Command</th><th>Expected</th><th>When</th></tr></thead><tbody>${data.verify.requiredCommands.map((entry) => `<tr><td>${escapeHtml(entry.purpose)}</td><td><code>${escapeHtml(entry.command)}</code></td><td>${escapeHtml(entry.expected ?? "Not available")}</td><td>${escapeHtml(entry.when ?? "Not available")}</td></tr>`).join("")}</tbody></table>`
+    : `<p class="meta">Required commands: Not available.</p>`;
+  const checks = data.verify.manualChecks.length > 0
+    ? `<ul>${data.verify.manualChecks.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+    : `<p class="meta">Manual checks: Not available.</p>`;
+  return `${commands}<h3>Manual Checks</h3>${checks}`;
+}
+
+function renderFreshness(data: CmapViewData): string {
+  if (data.modules.length === 0) {
+    return `<p class="meta">Not available.</p>`;
+  }
+  return `<table><thead><tr><th>Module</th><th>State</th><th>Last Review</th><th>Generated Evidence</th><th>Pending Candidates</th></tr></thead><tbody>${data.modules.map((module) => `<tr><td>${escapeHtml(module.id)}</td><td>${escapeHtml(freshnessLabel(module.freshness.state, module.freshness.pendingInboxCandidates.length))}</td><td>${escapeHtml(module.freshness.lastReviewedAt)}</td><td>${escapeHtml(module.freshness.newestGeneratedEvidenceAt)}</td><td>${escapeHtml(module.freshness.pendingInboxCandidates.join(", ") || "None")}</td></tr>`).join("")}</tbody></table>`;
+}
+
+function freshnessLabel(state: string, pendingCount: number): string {
+  if (pendingCount > 0) {
+    return "Pending candidates";
+  }
+  if (state === "baseline") {
+    return "Baseline only";
+  }
+  if (state === "reviewed") {
+    return "Reviewed";
+  }
+  return state || "Not available";
 }
 
 function renderEvidence(data: CmapViewData): string {

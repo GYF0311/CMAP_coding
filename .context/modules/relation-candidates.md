@@ -39,6 +39,7 @@ Accept AI-authored relation proposals as candidate-only RelationPatch input, val
 - Render `cmap relate request` templates for AI review workflows.
 - Parse `cmap.relation_patch.v1` JSON.
 - Validate source/target module ids, evidence files, base relation types, confidence, and risk fields.
+- Resolve RelationPatch input and evidence paths through project-root safe path checks; repo escape is rejected before inbox writes.
 - Reject unknown relation types and tell the user to extend the relation schema first.
 - Write accepted relation candidates into `.context/inbox/relations/*.json|md`.
 - Create relation ingest audit files under `.context/audit/`.
@@ -50,6 +51,7 @@ Accept AI-authored relation proposals as candidate-only RelationPatch input, val
 - Does not auto-apply relations into `.context/modules/*.md`.
 - Relation candidates are non-canonical until a human edits reviewed module docs.
 - Route may warn that relation candidates exist, but must not consume them as route facts.
+- Route warning counts candidate ids once even when both `.json` and `.md` files exist for the same candidate.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`

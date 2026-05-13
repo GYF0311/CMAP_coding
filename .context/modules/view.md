@@ -25,9 +25,12 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 ## Boundaries
 - Owns `cmap view export/open` command handlers and the vanilla HTML/CSS/JS-free view renderer.
 - Emits `cmap.view_data.v1` as embedded JSON for deterministic checks and future UI iteration.
+- Default export shows canonical Overview, Modules, Canonical Relations, Verification, and Warnings.
+- `--include-generated`, `--include-inbox`, and `--include-freshness` gate generated/support-layer detail sections.
 - Treats generated evidence, inbox candidates, freshness metadata, and relation candidates as support signals only.
 - Marks relation candidates as Candidate / Non-canonical and never offers browser-side apply/promote.
 - Missing support layers must degrade to warnings and "Not available", not hard failures.
+- `--check` compares normalized full HTML, not only embedded JSON, so renderer/template drift is caught while volatile `generatedAt` is ignored.
 
 ## Safety
 - Escape all rendered text.
@@ -37,4 +40,6 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 
 ## Verification
 - `pnpm test tests/integration/m19-view-export.test.ts`
+- `pnpm dev view export --out _cmap-view`
+- `pnpm dev view export --check --out _cmap-view`
 - `pnpm typecheck`

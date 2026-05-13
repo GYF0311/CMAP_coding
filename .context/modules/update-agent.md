@@ -40,6 +40,8 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - Parse and validate `cmap.map_patch.v1` and `cmap.map_patch.v2` MapPatch JSON.
 - Classify operations into routine auto-apply, inbox candidate, or reject.
 - Apply only policy-approved checkpoint, generated evidence, verification evidence, and generated stats operations with explicit confidence and evidence.
+- Validate `evidence.append` module ids and `fields.files` before writing generated evidence; unknown modules or missing evidence files route to inbox.
+- Allow command-only `verification.evidence`, while validating any provided file evidence through project-root safe paths.
 - Route module semantics, decisions, verification policy, status updates, and low-risk metadata candidates to `.context/inbox/`.
 - Reject blocked operations such as code writes, shell runs, module delete/rename, and semantic map overwrite.
 - Leave inbox backlog visible and governable through `cmap inbox status`, `cmap inbox triage`, `cmap inbox promote --dry-run|--apply`, `cmap inbox archive`, `cmap verify --stale`, and `cmap verify --freshness`.

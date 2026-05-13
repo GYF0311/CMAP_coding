@@ -4,6 +4,7 @@ import path from "node:path";
 import { z } from "zod";
 import { fileExists } from "../context/scanner.js";
 import { isBaseRelationType, type BaseRelationType } from "../context/relation-schema.js";
+import { resolveInsideRoot } from "../fs/safe-path.js";
 import { loadModuleIndex } from "./module-index.js";
 
 const relationOperationSchema = z.object({
@@ -90,7 +91,7 @@ export function parseRelationPatch(raw: string): RelationPatch {
 }
 
 export async function readRelationPatch(cwd: string, from: string): Promise<RelationPatch> {
-  const target = path.resolve(cwd, from);
+  const target = await resolveInsideRoot(cwd, from);
   return parseRelationPatch(await readFile(target, "utf8"));
 }
 
@@ -218,7 +219,13 @@ async function validateOperation(cwd: string, operation: RelationPatchOperation,
     }
   }
   for (const evidence of operation.evidence) {
-    if (!(await fileExists(path.join(cwd, evidence)))) {
+    let evidencePath: string;
+    try {
+      evidencePath = await resolveInsideRoot(cwd, evidence);
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error);
+    }
+    if (!(await fileExists(evidencePath))) {
       return `missing evidence: ${evidence}`;
     }
   }

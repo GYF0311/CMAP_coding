@@ -17,23 +17,40 @@ const execFileAsync = promisify(execFile);
 type InboxCandidateView = CmapViewData["candidates"][number];
 type RelationCandidateView = CmapViewData["relationCandidates"][number];
 
-export async function collectViewData(cwd: string, generatedAt = new Date().toISOString()): Promise<CmapViewData> {
+export type CollectViewOptions = {
+  includeGenerated?: boolean;
+  includeInbox?: boolean;
+  includeFreshness?: boolean;
+  generatedAt?: string;
+};
+
+export async function collectViewData(cwd: string, options: CollectViewOptions = {}): Promise<CmapViewData> {
   const warnings: string[] = [];
   const [project, modules] = await Promise.all([loadProjectInfo(cwd), loadModuleIndex(cwd)]);
-  const freshness = await maybeReadFreshness(cwd, warnings);
-  const evidence = await collectEvidence(cwd, modules, warnings);
-  const { candidates, relationCandidates } = await collectInboxCandidates(cwd, warnings);
+  const included = {
+    generated: Boolean(options.includeGenerated),
+    inbox: Boolean(options.includeInbox),
+    freshness: Boolean(options.includeFreshness)
+  };
+  const freshness = included.freshness ? await maybeReadFreshness(cwd, warnings) : undefined;
+  const evidence = included.generated ? await collectEvidence(cwd, modules, warnings) : [];
+  const { candidates, relationCandidates } = included.inbox
+    ? await collectInboxCandidates(cwd, warnings)
+    : { candidates: [], relationCandidates: [] };
   await checkRelationData(modules, warnings);
 
   return {
     schema: viewDataSchemaId,
-    generatedAt,
+    generatedAt: options.generatedAt ?? new Date().toISOString(),
     sourceCommit: await maybeSourceCommit(cwd),
     projectRootName: path.basename(cwd),
+    included,
     project: {
       id: project.projectId,
       name: project.projectName
     },
+    overview: await collectOverview(cwd),
+    verify: await collectVerify(cwd),
     summary: {
       moduleCount: modules.length,
       evidenceCount: evidence.length,
@@ -195,6 +212,123 @@ async function checkRelationData(modules: ContextModule[], warnings: string[]): 
   if (!hasRelations) {
     warnings.push("Reviewed relations: Not available");
   }
+}
+
+async function collectOverview(cwd: string): Promise<CmapViewData["overview"]> {
+  const [map, status, checkpoint] = await Promise.all([
+    maybeReadContextFile(cwd, "MAP.md"),
+    maybeReadContextFile(cwd, "STATUS.md"),
+    maybeReadContextFile(cwd, "CHECKPOINT.md")
+  ]);
+  return {
+    purpose: firstText(section(map, "Purpose")) ?? firstText(section(map, "Project Purpose")),
+    activeGoal: firstText(section(status, "Active Goal")),
+    currentTask: firstText(section(checkpoint, "Current Task")),
+    nextStep: firstText(section(checkpoint, "Next Step")) ?? firstText(section(status, "Next Steps")),
+    verified: firstText(section(checkpoint, "Verified")),
+    lastVerified: firstText(section(status, "Last Verified"))
+  };
+}
+
+async function collectVerify(cwd: string): Promise<CmapViewData["verify"]> {
+  const raw = await maybeReadContextFile(cwd, "VERIFY.md");
+  if (!raw) {
+    return { requiredCommands: [], manualChecks: [] };
+  }
+  return {
+    requiredCommands: parseRequiredCommands(section(raw, "Required Commands") ?? ""),
+    manualChecks: bulletItems(section(raw, "Manual Verification") ?? "")
+  };
+}
+
+async function maybeReadContextFile(cwd: string, relative: string): Promise<string | undefined> {
+  const target = path.join(cwd, ".context", relative);
+  if (!(await fileExists(target))) {
+    return undefined;
+  }
+  return readFile(target, "utf8");
+}
+
+function section(raw: string | undefined, heading: string): string | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const lines = raw.split(/\r?\n/);
+  const headingPattern = new RegExp(`^##\\s+${heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "i");
+  const start = lines.findIndex((line) => headingPattern.test(line.trim()));
+  if (start === -1) {
+    return undefined;
+  }
+  const body: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    if (/^##\s+/.test(line.trim())) {
+      break;
+    }
+    body.push(line);
+  }
+  return body.join("\n").trim() || undefined;
+}
+
+function firstText(raw: string | undefined): string | undefined {
+  if (!raw) {
+    return undefined;
+  }
+  const line = raw
+    .split(/\r?\n/)
+    .map((item) => item.replace(/^[-*]\s+/, "").trim())
+    .find((item) => item && !item.startsWith("|") && !/^---+$/.test(item));
+  return line || undefined;
+}
+
+function bulletItems(raw: string): string[] {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.match(/^[-*]\s+(.+)$/)?.[1]?.trim() ?? "")
+    .filter(Boolean);
+}
+
+function parseRequiredCommands(raw: string): CmapViewData["verify"]["requiredCommands"] {
+  const rows = raw
+    .split(/\r?\n/)
+    .filter((line) => line.trim().startsWith("|"))
+    .map(parseTableRow)
+    .filter((cells) => cells.length > 0 && !cells.every((cell) => /^-+$/.test(cell)));
+  if (rows.length < 2) {
+    return [];
+  }
+  const header = rows[0].map((cell) => cell.toLocaleLowerCase());
+  const purposeIndex = header.indexOf("purpose");
+  const commandIndex = header.indexOf("command");
+  const expectedIndex = header.indexOf("expected");
+  const whenIndex = header.indexOf("when");
+  if (commandIndex === -1) {
+    return [];
+  }
+  return rows.slice(1)
+    .map((cells) => ({
+      purpose: uncode(cells[purposeIndex] ?? "Command"),
+      command: uncode(cells[commandIndex] ?? ""),
+      expected: expectedIndex >= 0 ? optional(uncode(cells[expectedIndex] ?? "")) : undefined,
+      when: whenIndex >= 0 ? optional(uncode(cells[whenIndex] ?? "")) : undefined
+    }))
+    .filter((entry) => entry.command);
+}
+
+function parseTableRow(line: string): string[] {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function uncode(value: string): string {
+  return value.replace(/`/g, "").trim();
+}
+
+function optional(value: string): string | undefined {
+  return value || undefined;
 }
 
 function stringField(value: unknown): string {

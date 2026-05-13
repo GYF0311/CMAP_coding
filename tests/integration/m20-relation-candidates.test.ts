@@ -149,6 +149,31 @@ describe("M20 relation candidate workflow", () => {
     expect(evidenceEvaluations[0]).toMatchObject({ action: "reject", reason: "missing evidence: src/commands/missing.ts" });
   });
 
+  test("rejects relation patch input and evidence paths that escape the project root", async () => {
+    const cwd = await createRelationProject("m20-safe-path");
+    await writeFile(path.join(cwd, "..", "outside-relation.json"), relationPatch(), "utf8");
+    await expect(runRelateIngest(cwd, { from: "../outside-relation.json", dryRun: true })).rejects.toThrow(/inside project root|outside/i);
+
+    const escapedEvidence = parseRelationPatch(
+      relationPatch({
+        operations: [
+          {
+            op: "relation.candidate.add",
+            relation: "depends_on",
+            from: "route",
+            to: "auth",
+            summary: "Escaped evidence should be rejected.",
+            evidence: ["../outside.ts"]
+          }
+        ]
+      })
+    );
+
+    const evaluations = await evaluateRelationPatch(cwd, escapedEvidence);
+    expect(evaluations[0]).toMatchObject({ action: "reject" });
+    expect(evaluations[0].reason).toMatch(/inside project root|outside|escape/i);
+  });
+
   test("ingest dry-run renders stable fingerprint without writing inbox files", async () => {
     const cwd = await createRelationProject("m20-dry-run");
     const input = path.join(cwd, "relation.json");
@@ -240,5 +265,6 @@ describe("M20 relation candidate workflow", () => {
     expect(parsed.modules.map((module) => module.id)).toEqual(["route"]);
     expect(parsed.contextModules.map((module) => module.id)).toEqual(["route"]);
     expect(parsed.warnings[0]).toContain("Pending relation candidates exist");
+    expect(parsed.warnings[0]).toContain("(1)");
   });
 });

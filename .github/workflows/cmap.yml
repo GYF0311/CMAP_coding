@@ -34,11 +34,26 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Smoke
+        run: pnpm smoke
+
       - name: Verify context
         run: pnpm dev verify --ci --format markdown
 
       - name: Verify stale context
         run: pnpm dev verify --stale
+
+      - name: Snapshot freshness
+        run: pnpm dev freshness snapshot
+
+      - name: Verify freshness
+        run: pnpm dev verify --freshness
+
+      - name: Export HTML view
+        run: pnpm dev view export --out _cmap-view
+
+      - name: Check HTML view
+        run: pnpm dev view export --check --out _cmap-view
 
       - name: Route benchmark
         run: pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0

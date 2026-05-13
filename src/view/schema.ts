@@ -7,9 +7,31 @@ export const CmapViewDataSchema = z.object({
   generatedAt: z.string(),
   sourceCommit: z.string().optional(),
   projectRootName: z.string(),
+  included: z.object({
+    generated: z.boolean(),
+    inbox: z.boolean(),
+    freshness: z.boolean()
+  }),
   project: z.object({
     id: z.string(),
     name: z.string()
+  }),
+  overview: z.object({
+    purpose: z.string().optional(),
+    activeGoal: z.string().optional(),
+    currentTask: z.string().optional(),
+    nextStep: z.string().optional(),
+    verified: z.string().optional(),
+    lastVerified: z.string().optional()
+  }),
+  verify: z.object({
+    requiredCommands: z.array(z.object({
+      purpose: z.string(),
+      command: z.string(),
+      expected: z.string().optional(),
+      when: z.string().optional()
+    })),
+    manualChecks: z.array(z.string())
   }),
   summary: z.object({
     moduleCount: z.number().int().nonnegative(),

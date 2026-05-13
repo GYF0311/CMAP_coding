@@ -86,6 +86,9 @@ export async function markModuleReviewed(
 
 export async function freshnessWarnings(cwd: string): Promise<FreshnessWarning[]> {
   const previous = await readFreshnessIndex(cwd);
+  if (!previous) {
+    return [{ moduleId: "project", message: "Freshness: no snapshot found; run cmap freshness snapshot" }];
+  }
   const current = await buildFreshnessIndex(cwd, previous);
   const warnings: FreshnessWarning[] = [];
   for (const [moduleId, module] of Object.entries(current.modules)) {
@@ -105,10 +108,7 @@ export async function freshnessWarnings(cwd: string): Promise<FreshnessWarning[]
       });
     }
     if (module.pendingInboxCandidates.length > 0) {
-      warnings.push({
-        moduleId,
-        message: `Freshness: module ${moduleId} has pending inbox candidates (${module.pendingInboxCandidates.join(", ")})`
-      });
+      warnings.push(await pendingCandidateWarning(cwd, moduleId, module.pendingInboxCandidates));
     }
   }
   return warnings;
@@ -165,7 +165,16 @@ async function buildFreshnessModule(
 
   return {
     doc: module.docPath,
-    semanticHash: sha256(Buffer.from(module.body)),
+    semanticHash: sha256(JSON.stringify({
+      body: module.body,
+      aliases: module.aliases,
+      pathsInclude: module.pathsInclude,
+      pathsExclude: module.pathsExclude,
+      relations: module.relations,
+      status: module.status,
+      layer: module.layer,
+      risk: module.risk
+    })),
     reviewState: previous?.reviewState ?? "baseline",
     lastSemanticReviewedAt: previous?.lastSemanticReviewedAt ?? new Date().toISOString(),
     reviewEvidence: previous?.reviewEvidence,
@@ -189,7 +198,66 @@ async function pendingInboxCandidatesForModule(cwd: string, moduleId: string): P
       matches.push(projectRelative(cwd, absolute));
     }
   }
-  return matches.sort();
+  const relationsRoot = path.join(inboxRoot, "relations");
+  if (await fileExists(relationsRoot)) {
+    const relationEntries = await readdir(relationsRoot);
+    const jsonIds = new Set(relationEntries.filter((entry) => entry.endsWith(".json")).map((entry) => path.basename(entry, ".json")));
+    for (const entry of relationEntries.filter((item) => item.endsWith(".json"))) {
+      const absolute = path.join(relationsRoot, entry);
+      try {
+        const parsed = JSON.parse(await readFile(absolute, "utf8")) as Record<string, unknown>;
+        if ([parsed.from, parsed.to, parsed.target_module].includes(moduleId)) {
+          matches.push(projectRelative(cwd, absolute));
+        }
+      } catch {
+        // Ignore malformed candidate files here; inbox/view checks can surface them separately.
+      }
+    }
+    for (const entry of relationEntries.filter((item) => item.endsWith(".md") && !jsonIds.has(path.basename(item, ".md")))) {
+      const absolute = path.join(relationsRoot, entry);
+      const raw = await readFile(absolute, "utf8");
+      if (
+        raw.includes(`module: ${moduleId}`) ||
+        raw.includes(`moduleId: ${moduleId}`) ||
+        raw.includes(`from: ${moduleId}`) ||
+        raw.includes(`to: ${moduleId}`)
+      ) {
+        matches.push(projectRelative(cwd, absolute));
+      }
+    }
+  }
+  return [...new Set(matches)].sort();
+}
+
+async function pendingCandidateWarning(cwd: string, moduleId: string, candidates: string[]): Promise<FreshnessWarning> {
+  const relation = candidates.find((item) => item.includes("/relations/"));
+  if (relation) {
+    return {
+      moduleId,
+      message: `Freshness: relation candidate pending for ${moduleId} (${candidates.join(", ")})`
+    };
+  }
+  for (const candidate of candidates) {
+    const raw = await maybeRead(cwd, candidate);
+    if (raw && (/risk:\s*high/i.test(raw) || /high-risk/i.test(raw) || /operation is marked high risk/i.test(raw))) {
+      return {
+        moduleId,
+        message: `Freshness: high-risk candidate pending for ${moduleId} (${candidates.join(", ")})`
+      };
+    }
+  }
+  return {
+    moduleId,
+    message: `Freshness: routine candidate pending for ${moduleId} (${candidates.join(", ")})`
+  };
+}
+
+async function maybeRead(cwd: string, relative: string): Promise<string | undefined> {
+  const absolute = path.join(cwd, relative);
+  if (!(await fileExists(absolute))) {
+    return undefined;
+  }
+  return readFile(absolute, "utf8");
 }
 
 function sha256(value: Buffer | string): string {

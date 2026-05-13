@@ -20,6 +20,18 @@ export function viewDataMatches(left: CmapViewData, right: CmapViewData): boolea
   return JSON.stringify(normalizeViewData(left)) === JSON.stringify(normalizeViewData(right));
 }
 
+export function viewHtmlMatches(left: string, right: string): boolean {
+  return normalizeViewHtml(left) === normalizeViewHtml(right);
+}
+
+export function normalizeViewHtml(value: string): string {
+  return value
+    .replace(/("generatedAt":\s*")[^"]+(")/g, "$1[generatedAt]$2")
+    .replace(/(Generated\s+)[0-9]{4}-[0-9]{2}-[0-9]{2}T[^<\s]+/g, "$1[generatedAt]")
+    .replace(/\r\n/g, "\n")
+    .trim();
+}
+
 function stripVolatile(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(stripVolatile);

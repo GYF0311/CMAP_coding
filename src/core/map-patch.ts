@@ -12,6 +12,7 @@ import {
   appendModuleEvidence,
   appendVerificationEvidence
 } from "./generated-store.js";
+import { loadModuleIndex } from "./module-index.js";
 
 const schemaVersions = ["cmap.map_patch.v1", "cmap.mappatch.v1", "cmap.map_patch.v2"] as const;
 
@@ -309,6 +310,19 @@ async function evaluateOperation(
     if (!moduleId || !summary || !files || files.length === 0) {
       return { operation, target, action: "inbox", reason: "evidence.append requires fields.module, fields.summary, and fields.files", missingEvidence };
     }
+    if (!(await moduleExists(cwd, moduleId))) {
+      return { operation, target, action: "inbox", reason: `unknown module: ${moduleId}`, missingEvidence };
+    }
+    const missingFieldFiles = await collectMissingEvidence(cwd, files);
+    if (missingFieldFiles.length > 0) {
+      return {
+        operation,
+        target,
+        action: "inbox",
+        reason: `missing evidence: ${missingFieldFiles.join(", ")}`,
+        missingEvidence: uniqueStrings([...missingEvidence, ...missingFieldFiles])
+      };
+    }
     return { operation, target: `.context/generated/evidence/modules/${moduleId}.jsonl`, action: "apply", reason: "generated evidence is auto-applicable support data", missingEvidence };
   }
 
@@ -325,6 +339,16 @@ async function evaluateOperation(
     }
     if (!summary) {
       return { operation, target, action: "inbox", reason: "verification.evidence requires fields.summary or operation.summary", missingEvidence };
+    }
+    const missingFieldFiles = await collectMissingEvidence(cwd, files);
+    if (missingFieldFiles.length > 0) {
+      return {
+        operation,
+        target,
+        action: "inbox",
+        reason: `missing evidence: ${missingFieldFiles.join(", ")}`,
+        missingEvidence: uniqueStrings([...missingEvidence, ...missingFieldFiles])
+      };
     }
     return { operation, target: ".context/generated/evidence/verification.jsonl", action: "apply", reason: "verification evidence is generated support data", missingEvidence };
   }
@@ -400,12 +424,23 @@ async function collectMissingEvidence(cwd: string, evidence: string[]): Promise<
     if (!looksLikeFileEvidence(item)) {
       continue;
     }
-    const absolute = await resolveInsideRoot(cwd, item);
+    let absolute: string;
+    try {
+      absolute = await resolveInsideRoot(cwd, item);
+    } catch {
+      missing.push(item);
+      continue;
+    }
     if (!(await fileExists(absolute))) {
       missing.push(item);
     }
   }
   return missing;
+}
+
+async function moduleExists(cwd: string, moduleId: string): Promise<boolean> {
+  const modules = await loadModuleIndex(cwd);
+  return modules.some((module) => module.id === moduleId);
 }
 
 function looksLikeFileEvidence(value: string): boolean {
@@ -647,6 +682,10 @@ function stringArrayField(value: unknown): string[] | undefined {
   }
   const values = value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
   return values.length > 0 ? values : undefined;
+}
+
+function uniqueStrings(values: string[]): string[] {
+  return [...new Set(values)];
 }
 
 function formatList(value: unknown): string {

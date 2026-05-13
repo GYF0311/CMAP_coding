@@ -31,6 +31,15 @@ Recommend module docs for a task.
 }
 
 describe("M18 freshness v2 and inbox promotion", () => {
+  test("verify --freshness warns when no freshness snapshot exists", async () => {
+    const cwd = await createMaintenanceProject("m18-freshness-missing-snapshot");
+
+    const result = await runCmap(["verify", "--freshness"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Freshness: no snapshot found; run cmap freshness snapshot");
+  });
+
   test("freshness mark-reviewed clears owned-file freshness warning until code changes again", async () => {
     const cwd = await createMaintenanceProject("m18-freshness-code");
 
@@ -114,6 +123,38 @@ Own CLI command wiring.
     expect(index.modules.cli.ownedFiles).toEqual({});
   });
 
+  test("freshness diff treats frontmatter aliases and relations as semantic changes", async () => {
+    const cwd = await createMaintenanceProject("m18-freshness-frontmatter");
+    await runCmap(["freshness", "snapshot"], cwd);
+    await writeFile(
+      path.join(cwd, ".context/modules/route.md"),
+      `---
+context_type: module
+module: route
+paths:
+  - src/commands/route.ts
+aliases:
+  - route
+  - router
+relations:
+  depends_on:
+    - route
+confidence: ai-drafted
+---
+# Module: route
+
+## Purpose
+Recommend module docs for a task.
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["freshness", "diff"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("semantic changed route");
+  });
+
   test("freshness warns when generated evidence is newer than reviewed facts", async () => {
     const cwd = await createMaintenanceProject("m18-freshness-evidence");
     await runCmap(["freshness", "snapshot"], cwd);
@@ -160,8 +201,52 @@ evidence:
     const result = await runCmap(["verify", "--freshness"], cwd);
 
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Freshness: module route has pending inbox candidates");
+    expect(result.stdout).toContain("Freshness: high-risk candidate pending for route");
     expect(result.stdout).toContain(".context/inbox/route-decision.md");
+  });
+
+  test("freshness scans relation candidate subdirectories", async () => {
+    const cwd = await createMaintenanceProject("m18-freshness-relations");
+    await runCmap(["freshness", "snapshot"], cwd);
+    await runCmap(["freshness", "mark-reviewed", "--module", "route", "--evidence", "Reviewed route."], cwd);
+    await mkdir(path.join(cwd, ".context/inbox/relations"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context/inbox/relations/relation-2026-05-13t00-00-00-abc123def0.json"),
+      JSON.stringify({
+        schema: "cmap.relation_candidate.v1",
+        id: "relation-2026-05-13t00-00-00-abc123def0",
+        fingerprint: "abc",
+        createdAt: "2026-05-13T00:00:00.000Z",
+        operation: "relation.candidate.add",
+        relation: "depends_on",
+        from: "route",
+        to: "route",
+        risk: "medium",
+        summary: "Self relation test.",
+        evidence: ["src/commands/route.ts"],
+        confidence: 0.8,
+        canonical: false
+      }, null, 2),
+      "utf8"
+    );
+    await writeFile(
+      path.join(cwd, ".context/inbox/relations/relation-2026-05-13t00-00-00-abc123def0.md"),
+      `---
+type: relation.candidate.add
+risk: medium
+from: route
+to: route
+---
+# Relation candidate
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["verify", "--freshness"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Freshness: relation candidate pending for route");
+    expect(result.stdout).toContain(".context/inbox/relations/relation-2026-05-13t00-00-00-abc123def0.json");
   });
 
   test("freshness mode leaves missing paths and missing relations as verify errors", async () => {

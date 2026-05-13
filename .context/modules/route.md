@@ -44,6 +44,7 @@ Recommend which `.context` files an AI should read first for a natural-language 
 - Record generated route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
 - Output a route card with likely modules, related context, read-first files, suggested verify commands, and low-confidence notes.
 - Surface pending relation candidates only as non-canonical review warnings when that workflow exists.
+- De-duplicate relation candidate warnings by candidate id so `.json` + `.md` pairs count once.
 - Avoid inventing modules when no high-confidence match exists.
 
 ## Depends On

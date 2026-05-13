@@ -49,6 +49,8 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Record deterministic module activity stats under `.context/generated/stats/module-activity.json` when policy allows `stats.update`.
 - Record deterministic route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
 - Maintain `.context/generated/freshness.json` snapshots and freshness review markers.
+- Treat the first freshness snapshot as a baseline, not a human semantic review; `mark-reviewed` is the explicit review marker.
+- Surface missing snapshot, frontmatter semantic drift, generated evidence drift, high-risk/routine inbox candidates, and relation candidate subdirectory signals through `verify --freshness`.
 - Require explicit module id or alias, evidence file, and summary before writing evidence.
 - Verify evidence files exist inside the project root.
 - Keep generated evidence non-canonical and separate from reviewed module semantics.

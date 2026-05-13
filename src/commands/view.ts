@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { writeFile } from "node:fs/promises";
@@ -6,7 +6,7 @@ import { fileExists } from "../context/scanner.js";
 import { CmapCommandError } from "../errors.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 import { collectViewData } from "../view/collect.js";
-import { readEmbeddedViewData, viewDataMatches } from "../view/check.js";
+import { viewHtmlMatches } from "../view/check.js";
 import { renderViewHtml } from "../view/render.js";
 
 type ViewExportOptions = {
@@ -27,14 +27,19 @@ const DEFAULT_VIEW_DIR = "_cmap-view";
 
 export async function runViewExport(cwd: string, options: ViewExportOptions): Promise<number> {
   const target = await resolveInsideRoot(cwd, outputPath(options));
-  const data = await collectViewData(cwd);
+  const data = await collectViewData(cwd, {
+    includeGenerated: Boolean(options.includeGenerated),
+    includeInbox: Boolean(options.includeInbox),
+    includeFreshness: Boolean(options.includeFreshness)
+  });
+  const expectedHtml = renderViewHtml(data);
   if (options.check) {
     if (!(await fileExists(target))) {
       process.stdout.write(`View output missing. Run cmap view export --out ${options.out ?? DEFAULT_VIEW_DIR}.\n`);
       return 1;
     }
-    const current = await readEmbeddedViewData(target);
-    if (!current || !viewDataMatches(current, data)) {
+    const currentHtml = await readFile(target, "utf8");
+    if (!viewHtmlMatches(currentHtml, expectedHtml)) {
       process.stdout.write("View output is stale.\n");
       return 1;
     }
@@ -43,7 +48,7 @@ export async function runViewExport(cwd: string, options: ViewExportOptions): Pr
   }
 
   await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, renderViewHtml(data), "utf8");
+  await writeFile(target, expectedHtml, "utf8");
   process.stdout.write(`Exported cmap view to ${projectRelative(cwd, target)}\n`);
   return 0;
 }

@@ -18,6 +18,8 @@ confidence: ai-drafted
 | cmap CI report | `pnpm dev verify --ci --format markdown` | exit 0 and stable Markdown report | in CI or before push |
 | cmap stale verify | `pnpm dev verify --stale` | exit 0 or warnings understood | after generated evidence, inbox, or module-path changes |
 | cmap freshness verify | `pnpm dev verify --freshness` | exit 0 or warnings understood | after source/module/evidence review changes |
+| HTML view export | `pnpm dev view export --out _cmap-view` | exit 0 and writes read-only dashboard | after view/data contract changes |
+| HTML view check | `pnpm dev view export --check --out _cmap-view` | exit 0 when normalized HTML is up to date | after `.context`, view, or renderer edits |
 | Obsidian view check | `pnpm dev obsidian export --check` | exit 0 when local `_cmap` view is up to date | after `.context` module or core context edits |
 | route benchmark thresholds | `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0` | exit 0 when quality gates pass | in CI or before route changes ship |
 | smoke | `pnpm smoke` | exit 0 | before release or handoff |
@@ -42,6 +44,7 @@ confidence: ai-drafted
 | update-agent | `pnpm test tests/integration/m7-update-agent.test.ts` | MapPatch v1/v2 dry-run is read-only; `--apply-routine` writes only policy-approved checkpoint/generated state, backup, audit, and inbox candidates. |
 | evidence | `pnpm test tests/integration/m13-policy-stats.test.ts` | Generated evidence writes `.context/generated/evidence/**` and policy-backed module activity stats; inbox thresholds remain deterministic. |
 | freshness | `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts` | Freshness snapshots, semantic review markers, generated evidence drift, low-risk inbox promote apply, and explicit reject archive are covered. |
+| HTML view | `pnpm test tests/integration/m19-view-export.test.ts` | View include flags, Overview/Verification parsing, normalized HTML check, escaping/redaction, and size caps are covered. |
 | obsidian-adapter | `pnpm dev obsidian export --out _cmap/CMAP_coding` | Writes Obsidian-friendly notes with Properties and relation wikilinks; generated files remain view-layer artifacts. |
 | obsidian export check | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | `obsidian export --check` detects stale or missing view-layer files without writing. |
 | obsidian pull | `pnpm dev obsidian pull --from _cmap/CMAP_coding` | Reports candidate note edits only; no canonical `.context` writes unless `--write-inbox`. |
@@ -62,6 +65,7 @@ confidence: ai-drafted
 | generated evidence / stale verify | `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts` | `evidence append/list/migrate`, `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox archive`, and `verify --stale` are covered. |
 | hooks observe / assist / strict | `pnpm test tests/integration/m9-hooks-assist.test.ts` | `install --hooks observe|assist`, `doctor`, hook logs, generated evidence, lifecycle render/test, strict canonical write guard, and unmapped file reporting are covered. |
 | hooks Codex-first ingest | `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts` | Codex `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, and `Stop` ingest paths are covered with real stdin payloads and missing optional fields. |
+| relation candidates | `pnpm test tests/integration/m20-relation-candidates.test.ts` | RelationPatch schema, safe path validation, JSON+Markdown inbox, duplicate skip, promote dry-run, and route warning de-dupe are covered. |
 | route context pack | `pnpm test tests/integration/m10-route-context-pack.test.ts` | Route JSON/text context pack and brief consumption are covered. |
 | context size controls | `pnpm test tests/integration/m11-context-size-controls.test.ts` | `route --max-context`, `brief --max-context`, and invalid limit handling are covered. |
 | route benchmark context | `pnpm test tests/integration/m12-route-benchmark-context.test.ts` | `expected_context_modules` metrics and legacy fixture compatibility are covered. |
