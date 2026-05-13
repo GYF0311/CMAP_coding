@@ -4,6 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
+import { parseCmapCandidate } from "../core/candidate-store.js";
 import { generatedRoot, listModuleEvidence, type ModuleEvidence } from "../core/generated-store.js";
 import { readFreshnessIndex, type FreshnessIndex } from "../core/freshness.js";
 import { loadModuleIndex, loadProjectInfo, type ContextModule } from "../core/module-index.js";
@@ -176,12 +177,23 @@ async function collectInboxCandidates(
       });
     }
   }
+  // v0.2 candidate-store: read structured candidates under .context/inbox/candidates/*.json.
+  // Without this, the HTML review dashboard cannot see candidates produced by
+  // `cmap update --agent --write-inbox` / relate ingest — defeating the whole
+  // "human review layer" purpose of the v0.2 trust boundary.
+  const structured = await collectStructuredCandidates(cwd, candidates.length);
+  candidates.push(...structured.candidates);
+  relationCandidates.push(...structured.relationCandidates);
+  if (structured.omitted > 0) {
+    warnings.push(`Structured candidates omitted: ${structured.omitted}`);
+  }
+
   relationCandidates.push(...await collectRelationCandidateFiles(cwd, warnings));
   if (topLevelFiles.length > MAX_CANDIDATES) {
     warnings.push(`Inbox candidates omitted: ${topLevelFiles.length - MAX_CANDIDATES}`);
   }
 
-  if (files.length === 0) {
+  if (candidates.length === 0) {
     warnings.push("Inbox candidates: Not available");
   }
   if (relationCandidates.length === 0) {
@@ -189,6 +201,60 @@ async function collectInboxCandidates(
   }
 
   return { candidates, relationCandidates };
+}
+
+async function collectStructuredCandidates(
+  cwd: string,
+  alreadyCollected: number
+): Promise<{ candidates: InboxCandidateView[]; relationCandidates: RelationCandidateView[]; omitted: number }> {
+  const root = path.join(cwd, ".context", "inbox", "candidates");
+  if (!(await fileExists(root))) {
+    return { candidates: [], relationCandidates: [], omitted: 0 };
+  }
+  const entries = (await readdir(root)).filter((entry) => entry.endsWith(".json")).sort();
+  const budget = Math.max(0, MAX_CANDIDATES - alreadyCollected);
+  const accepted = entries.slice(0, budget);
+  const omitted = entries.length - accepted.length;
+  const candidates: InboxCandidateView[] = [];
+  const relationCandidates: RelationCandidateView[] = [];
+  for (const entry of accepted) {
+    const absolutePath = path.join(root, entry);
+    const parsed = parseCmapCandidate(await readFile(absolutePath, "utf8"));
+    if (!parsed) {
+      continue;
+    }
+    const moduleId =
+      stringField((parsed.fields as Record<string, unknown>).module) ||
+      stringField((parsed.fields as Record<string, unknown>).moduleId) ||
+      parsed.target ||
+      "Not available";
+    const base: InboxCandidateView = {
+      id: parsed.id,
+      file: projectRelative(cwd, absolutePath),
+      type: parsed.type,
+      risk: parsed.risk,
+      moduleId,
+      summary: parsed.summary,
+      suggestedCommands: [
+        { label: "Dry run", command: `cmap inbox promote ${parsed.id} --dry-run` }
+      ]
+    };
+    candidates.push(base);
+    if (parsed.type.includes("relation")) {
+      relationCandidates.push({
+        id: parsed.id,
+        file: base.file,
+        from: stringField((parsed.fields as Record<string, unknown>).from) || moduleId,
+        to: stringField((parsed.fields as Record<string, unknown>).to) || "Not available",
+        relation: stringField((parsed.fields as Record<string, unknown>).relation) || parsed.type,
+        summary: parsed.summary,
+        suggestedCommands: [
+          { label: "Dry run", command: `cmap relate promote ${parsed.id} --dry-run` }
+        ]
+      });
+    }
+  }
+  return { candidates, relationCandidates, omitted };
 }
 
 async function collectRelationCandidateFiles(cwd: string, warnings: string[]): Promise<RelationCandidateView[]> {
