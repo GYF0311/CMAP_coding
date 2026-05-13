@@ -196,4 +196,120 @@ describe("M7 agent MapPatch update", () => {
     expect(dryRun).toMatchObject({ code: 0 });
     expect(dryRun.stdout).toContain("# MapPatch Dry Run");
   });
+
+  test("MapPatch v2 applies generated evidence and verification evidence without changing canonical docs", async () => {
+    const cwd = await createUpdateProject("m7-v2-generated");
+    const beforeRouteDoc = await expectFile(path.join(cwd, ".context/modules/route.md"));
+    const patchPath = await writePatch(cwd, "patch.json", {
+      schema: "cmap.map_patch.v2",
+      agent: "codex",
+      task: "Generated evidence migration",
+      summary: "Record generated support signals.",
+      operations: [
+        {
+          op: "evidence.append",
+          risk: "routine",
+          confidence: 0.9,
+          summary: "Route implementation inspected.",
+          fields: {
+            module: "route",
+            summary: "Route implementation inspected.",
+            files: ["src/commands/update.ts"],
+            commands: ["pnpm test tests/integration/m7-update-agent.test.ts"]
+          },
+          evidence: ["src/commands/update.ts"]
+        },
+        {
+          op: "verification.evidence",
+          risk: "routine",
+          confidence: 0.9,
+          summary: "Update-agent tests passed.",
+          fields: {
+            summary: "Update-agent tests passed.",
+            files: ["src/commands/update.ts"],
+            commands: ["pnpm test tests/integration/m7-update-agent.test.ts"]
+          },
+          evidence: ["src/commands/update.ts"]
+        },
+        {
+          op: "decision.record",
+          risk: "high",
+          confidence: 0.9,
+          summary: "Decisions stay candidate-only.",
+          evidence: ["src/commands/update.ts"],
+          fields: {}
+        }
+      ]
+    });
+
+    const result = await runCmap(["update", "--agent", "--from", patchPath, "--apply-routine"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Applied routine operations: 2");
+    expect(result.stdout).toContain("evidence.append -> `.context/generated/evidence/modules/route.jsonl`");
+    expect(result.stdout).toContain("verification.evidence -> `.context/generated/evidence/verification.jsonl`");
+    expect(result.stdout).toContain("decision.record -> `.context/DECISIONS.md`");
+    await expect(expectFile(path.join(cwd, ".context/modules/route.md"))).resolves.toBe(beforeRouteDoc);
+    const moduleEvidence = await expectFile(path.join(cwd, ".context/generated/evidence/modules/route.jsonl"));
+    expect(moduleEvidence).toContain("Route implementation inspected.");
+    const verificationEvidence = await expectFile(path.join(cwd, ".context/generated/evidence/verification.jsonl"));
+    expect(verificationEvidence).toContain("Update-agent tests passed.");
+    const inboxFiles = await readdir(path.join(cwd, ".context/inbox"));
+    expect(inboxFiles.some((file) => file.startsWith("update-") && file.endsWith(".md"))).toBe(true);
+  });
+
+  test("MapPatch v2 policy disables evidence auto-apply and blocks code writes", async () => {
+    const cwd = await createUpdateProject("m7-v2-policy");
+    await writeFile(
+      path.join(cwd, ".context/policy.yml"),
+      [
+        "version: 2",
+        "auto_apply:",
+        "  evidence.append: false",
+        "  stats.update: true",
+        "thresholds:",
+        "  routine_confidence: 0.75",
+        "  evidence_confidence: 0.70",
+        ""
+      ].join("\n"),
+      "utf8"
+    );
+    const patchPath = await writePatch(cwd, "patch.json", {
+      schema: "cmap.map_patch.v2",
+      agent: "codex",
+      summary: "Policy alignment.",
+      operations: [
+        {
+          op: "evidence.append",
+          risk: "routine",
+          confidence: 0.9,
+          summary: "Should go to inbox when disabled.",
+          evidence: ["src/commands/update.ts"],
+          fields: {
+            module: "route",
+            summary: "Should go to inbox when disabled.",
+            files: ["src/commands/update.ts"]
+          }
+        },
+        {
+          op: "code.write",
+          target: "src/commands/update.ts",
+          risk: "high",
+          confidence: 1,
+          summary: "Never allowed.",
+          evidence: ["src/commands/update.ts"],
+          fields: {}
+        }
+      ]
+    });
+
+    const result = await runCmap(["update", "--agent", "--from", patchPath, "--apply-routine"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Applied routine operations: 0");
+    expect(result.stdout).toContain("evidence.append is disabled by policy");
+    expect(result.stdout).toContain("code.write -> `src/commands/update.ts`");
+    expect(result.stdout).toContain("operation is blocked by policy");
+    await expect(expectFile(path.join(cwd, ".context/generated/evidence/modules/route.jsonl"))).rejects.toThrow();
+  });
 });

@@ -1,0 +1,1 @@
+{"version":1,"id":"evidence-2026-05-12t10-04-21-164z","moduleId":"hooks-doctor","createdAt":"2026-05-12T10:04:21.164Z","source":"manual","summary":"Implemented observe and assist hook profiles for generated evidence collection.","files":["src/commands/hooks.ts"],"commands":["pnpm test tests/integration/m9-hooks-assist.test.ts"],"confidence":1,"canonical":false}

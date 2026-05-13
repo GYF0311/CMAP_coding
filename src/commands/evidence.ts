@@ -1,9 +1,15 @@
-import { readFile, writeFile } from "node:fs/promises";
 import { CmapCommandError } from "../errors.js";
 import { fileExists } from "../context/scanner.js";
 import { loadContextPolicy } from "../context/policy.js";
 import { recordModuleActivity } from "../core/generated-stats.js";
 import { loadModuleIndex, type ContextModule } from "../core/module-index.js";
+import {
+  appendModuleEvidence,
+  listModuleEvidence,
+  migrateModuleDocEvidence,
+  moduleEvidencePath,
+  moduleIdsWithGeneratedEvidence
+} from "../core/generated-store.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 
 type EvidenceAppendOptions = {
@@ -13,8 +19,16 @@ type EvidenceAppendOptions = {
   command?: string;
 };
 
-const startMarker = "<!-- cmap:generated:evidence:start -->";
-const endMarker = "<!-- cmap:generated:evidence:end -->";
+type EvidenceListOptions = {
+  module?: string;
+};
+
+type EvidenceMigrateOptions = {
+  fromModuleDocs?: boolean;
+  dryRun?: boolean;
+  apply?: boolean;
+};
+
 export async function runEvidenceAppend(cwd: string, options: EvidenceAppendOptions): Promise<void> {
   const moduleId = requiredText(options.module, "--module");
   const evidenceFile = requiredText(options.file, "--file");
@@ -38,7 +52,7 @@ export async function runEvidenceAppend(cwd: string, options: EvidenceAppendOpti
     summary,
     command: optionalText(options.command)
   });
-  process.stdout.write(`Updated ${targetModule.docPath}\n`);
+  process.stdout.write(`Wrote ${projectRelative(cwd, moduleEvidencePath(cwd, targetModule.id))}\n`);
 }
 
 export async function appendEvidenceToModule(
@@ -48,12 +62,15 @@ export async function appendEvidenceToModule(
 ): Promise<void> {
   const policy = await loadContextPolicy(cwd);
   const createdAt = new Date().toISOString();
-  const current = await readFile(targetModule.absolutePath, "utf8");
-  const next = upsertGeneratedEvidence(current, {
-    ...evidence,
+  await appendModuleEvidence(cwd, {
+    moduleId: targetModule.id,
+    files: [evidence.file],
+    summary: evidence.summary,
+    commands: evidence.command ? [evidence.command] : undefined,
+    source: evidence.command?.startsWith("cmap hooks") ? "hook" : "manual",
+    confidence: 1,
     createdAt
   }, policy.generatedEvidence.maxEntries);
-  await writeFile(targetModule.absolutePath, next, "utf8");
   if (policy.autoApply.statsUpdate) {
     await recordModuleActivity(cwd, {
       moduleId: targetModule.id,
@@ -65,46 +82,47 @@ export async function appendEvidenceToModule(
   }
 }
 
-function upsertGeneratedEvidence(
-  raw: string,
-  evidence: { file: string; summary: string; command?: string; createdAt: string },
-  maxEvidenceItems: number
-): string {
-  const entry = renderEntry(evidence);
-  const existingBlock = extractBlock(raw);
-  const existingEntries = existingBlock
-    ? existingBlock.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.startsWith("- "))
-    : [];
-  const entries = [entry, ...existingEntries.filter((line) => line !== entry)].slice(0, maxEvidenceItems);
-  const block = [
-    startMarker,
-    "## Generated Evidence",
-    "",
-    "This section is generated support evidence. It is not a semantic source of truth.",
-    "",
-    ...entries,
-    endMarker
-  ].join("\n");
-
-  if (existingBlock !== undefined) {
-    return ensureTrailingNewline(raw.replace(new RegExp(`${escapeRegExp(startMarker)}[\\s\\S]*?${escapeRegExp(endMarker)}`), block));
+export async function runEvidenceList(cwd: string, options: EvidenceListOptions): Promise<void> {
+  const moduleIds = options.module ? [options.module] : await moduleIdsWithGeneratedEvidence(cwd);
+  const lines = ["# Generated Evidence", ""];
+  if (moduleIds.length === 0) {
+    lines.push("- No generated module evidence found.");
   }
-
-  return ensureTrailingNewline(`${raw.trimEnd()}\n\n${block}`);
+  for (const moduleId of moduleIds) {
+    const entries = await listModuleEvidence(cwd, moduleId);
+    lines.push(`## ${moduleId}`, "");
+    if (entries.length === 0) {
+      lines.push("- No entries.");
+    } else {
+      for (const entry of entries.slice().reverse()) {
+        const commands = entry.commands && entry.commands.length > 0 ? `; commands: ${entry.commands.join(", ")}` : "";
+        lines.push(`- ${entry.createdAt}: ${entry.summary} (${entry.files.join(", ")}${commands})`);
+      }
+    }
+    lines.push("");
+  }
+  process.stdout.write(lines.join("\n"));
 }
 
-function extractBlock(raw: string): string | undefined {
-  const start = raw.indexOf(startMarker);
-  const end = raw.indexOf(endMarker);
-  if (start === -1 || end === -1 || end < start) {
-    return undefined;
+export async function runEvidenceMigrate(cwd: string, options: EvidenceMigrateOptions): Promise<void> {
+  if (!options.fromModuleDocs) {
+    throw new CmapCommandError("evidence migrate currently requires --from-module-docs", 2);
   }
-  return raw.slice(start + startMarker.length, end);
-}
-
-function renderEntry(evidence: { file: string; summary: string; command?: string; createdAt: string }): string {
-  const command = evidence.command ? `; command: \`${evidence.command}\`` : "";
-  return `- ${evidence.createdAt}: ${evidence.summary} Evidence: \`${evidence.file}\`${command}`;
+  if (options.apply && options.dryRun) {
+    throw new CmapCommandError("Use either --dry-run or --apply, not both", 2);
+  }
+  const apply = Boolean(options.apply);
+  const modules = await loadModuleIndex(cwd);
+  const result = await migrateModuleDocEvidence(cwd, modules, apply);
+  process.stdout.write(`# Evidence Migration ${apply ? "Apply" : "Dry Run"}\n\n`);
+  process.stdout.write(`Migrated entries: ${result.migrated}\n`);
+  process.stdout.write(`Modules: ${result.modules.length > 0 ? result.modules.join(", ") : "none"}\n`);
+  if (result.backupId) {
+    process.stdout.write(`Backup: ${result.backupId}\n`);
+  }
+  if (result.auditPath) {
+    process.stdout.write(`Audit: ${result.auditPath}\n`);
+  }
 }
 
 function requiredText(value: string | undefined, flag: string): string {
@@ -118,12 +136,4 @@ function requiredText(value: string | undefined, flag: string): string {
 function optionalText(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed || undefined;
-}
-
-function ensureTrailingNewline(value: string): string {
-  return value.endsWith("\n") ? value : `${value}\n`;
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

@@ -78,9 +78,10 @@ describe("M9 hooks observe and assist profiles", () => {
     expect(result.stdout).toContain("Generated evidence updates: 1");
     expect(result.stdout).toContain("src/commands/route.ts -> route");
     const routeDoc = await expectFile(path.join(cwd, ".context/modules/route.md"));
-    expect(routeDoc).toContain("<!-- cmap:generated:evidence:start -->");
-    expect(routeDoc).toContain("Assist captured route change");
-    expect(routeDoc).toContain("src/commands/route.ts");
+    expect(routeDoc).not.toContain("<!-- cmap:generated:evidence:start -->");
+    const evidence = await expectFile(path.join(cwd, ".context/generated/evidence/modules/route.jsonl"));
+    expect(evidence).toContain("Assist captured route change");
+    expect(evidence).toContain("src/commands/route.ts");
   });
 
   test("hooks stop --profile assist reports unmapped changed files without writing module evidence", async () => {
@@ -115,7 +116,7 @@ describe("M9 hooks observe and assist profiles", () => {
     expect(settings).toContain("PreToolUse");
     expect(settings).toContain("PostToolUse");
     expect(settings).toContain("Stop");
-    expect(settings).toContain("cmap hooks test --event PreToolUse --mode assist");
+    expect(settings).toContain("cmap hooks ingest --host claude --event PreToolUse --mode assist");
   });
 
   test("hooks test records PostToolUse events to the session event journal", async () => {
@@ -148,7 +149,7 @@ describe("M9 hooks observe and assist profiles", () => {
     expect(brief).toContain("# cmap Session Brief");
     expect(brief).toContain("route 模块定位");
     expect(brief).toContain(".context/modules/route.md");
-    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/stats/route-usage.json"))) as {
+    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/generated/stats/route-usage.json"))) as {
       total: number;
       by_source: Record<string, number>;
       modules: Record<string, number>;

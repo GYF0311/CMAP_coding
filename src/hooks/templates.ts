@@ -41,27 +41,93 @@ export function claudeLifecycleSettings(mode: HookMode): object {
       SessionStart: [
         {
           matcher: "startup|resume",
-          hooks: [{ type: "command", command: `cmap hooks test --event SessionStart --mode ${mode}` }]
+          hooks: [{ type: "command", command: `cmap hooks ingest --host claude --event SessionStart --mode ${mode}` }]
         }
       ],
       UserPromptSubmit: [
         {
-          hooks: [{ type: "command", command: `cmap hooks test --event UserPromptSubmit --mode ${mode}` }]
+          hooks: [{ type: "command", command: `cmap hooks ingest --host claude --event UserPromptSubmit --mode ${mode}` }]
         }
       ],
       PreToolUse: [
         {
           matcher: "Write|Edit|MultiEdit|Bash",
-          hooks: [{ type: "command", command: `cmap hooks test --event PreToolUse --mode ${mode}` }]
+          hooks: [{ type: "command", command: `cmap hooks ingest --host claude --event PreToolUse --mode ${mode}` }]
         }
       ],
       PostToolUse: [
         {
           matcher: "Read|Write|Edit|MultiEdit|Bash",
-          hooks: [{ type: "command", command: `cmap hooks test --event PostToolUse --mode ${mode}` }]
+          hooks: [{ type: "command", command: `cmap hooks ingest --host claude --event PostToolUse --mode ${mode}` }]
         }
       ],
-      Stop: [{ hooks: [{ type: "command", command: `cmap hooks test --event Stop --mode ${mode}` }] }]
+      Stop: [{ hooks: [{ type: "command", command: `cmap hooks ingest --host claude --event Stop --mode ${mode}` }] }]
+    }
+  };
+}
+
+export function codexLifecycleSettings(mode: HookMode): object {
+  return {
+    hooks: {
+      SessionStart: [
+        {
+          matcher: "startup|resume|clear",
+          hooks: [
+            {
+              type: "command",
+              command: `cmap hooks ingest --host codex --event SessionStart --mode ${mode}`,
+              statusMessage: "Loading cmap project map"
+            }
+          ]
+        }
+      ],
+      UserPromptSubmit: [
+        {
+          hooks: [
+            {
+              type: "command",
+              command: `cmap hooks ingest --host codex --event UserPromptSubmit --mode ${mode}`,
+              statusMessage: "Preparing cmap session brief"
+            }
+          ]
+        }
+      ],
+      PreToolUse: [
+        {
+          matcher: "Bash|apply_patch|Edit|Write",
+          hooks: [
+            {
+              type: "command",
+              command: `cmap hooks ingest --host codex --event PreToolUse --mode ${mode}`,
+              statusMessage: "Checking cmap context write policy"
+            }
+          ]
+        }
+      ],
+      PostToolUse: [
+        {
+          matcher: "Bash|apply_patch|Edit|Write|Read",
+          hooks: [
+            {
+              type: "command",
+              command: `cmap hooks ingest --host codex --event PostToolUse --mode ${mode}`,
+              statusMessage: "Recording cmap hook observation"
+            }
+          ]
+        }
+      ],
+      Stop: [
+        {
+          hooks: [
+            {
+              type: "command",
+              command: `cmap hooks ingest --host codex --event Stop --mode ${mode}`,
+              timeout: 30,
+              statusMessage: "Checking cmap closeout"
+            }
+          ]
+        }
+      ]
     }
   };
 }

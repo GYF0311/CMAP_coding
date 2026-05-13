@@ -31,8 +31,9 @@ Recommend module docs for a task.
 }
 
 describe("M8 evidence, stale verify, and inbox governance", () => {
-  test("evidence append writes a bounded generated evidence block to a module doc", async () => {
+  test("evidence append writes generated module evidence outside canonical module docs", async () => {
     const cwd = await createEvidenceProject("m8-evidence");
+    const before = await expectFile(path.join(cwd, ".context/modules/route.md"));
 
     const result = await runCmap(
       [
@@ -51,12 +52,70 @@ describe("M8 evidence, stale verify, and inbox governance", () => {
     );
 
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Updated .context/modules/route.md");
-    const routeDoc = await expectFile(path.join(cwd, ".context/modules/route.md"));
-    expect(routeDoc).toContain("<!-- cmap:generated:evidence:start -->");
-    expect(routeDoc).toContain("Route command was inspected while improving graph-aware routing.");
-    expect(routeDoc).toContain("src/commands/route.ts");
-    expect(routeDoc).toContain("pnpm test tests/integration/m8-evidence-stale-inbox.test.ts");
+    expect(result.stdout).toContain("Wrote .context/generated/evidence/modules/route.jsonl");
+    await expect(expectFile(path.join(cwd, ".context/modules/route.md"))).resolves.toBe(before);
+    const evidence = await expectFile(path.join(cwd, ".context/generated/evidence/modules/route.jsonl"));
+    expect(evidence).toContain("Route command was inspected while improving graph-aware routing.");
+    expect(evidence).toContain("src/commands/route.ts");
+    expect(evidence).toContain("pnpm test tests/integration/m8-evidence-stale-inbox.test.ts");
+  });
+
+  test("evidence list prints generated evidence entries", async () => {
+    const cwd = await createEvidenceProject("m8-evidence-list");
+    await runCmap(
+      ["evidence", "append", "--module", "route", "--file", "src/commands/route.ts", "--summary", "Route evidence listed."],
+      cwd
+    );
+
+    const result = await runCmap(["evidence", "list", "--module", "route"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("# Generated Evidence");
+    expect(result.stdout).toContain("## route");
+    expect(result.stdout).toContain("Route evidence listed.");
+  });
+
+  test("evidence migrate moves legacy generated evidence blocks out of module docs", async () => {
+    const cwd = await createEvidenceProject("m8-evidence-migrate");
+    const moduleDoc = path.join(cwd, ".context/modules/route.md");
+    await writeFile(
+      moduleDoc,
+      `${await expectFile(moduleDoc)}
+<!-- cmap:generated:evidence:start -->
+## Generated Evidence
+
+This section is generated support evidence. It is not a semantic source of truth.
+
+- 2026-05-12T09:43:47.009Z: Legacy generated block. Evidence: \`src/commands/route.ts\`; command: \`pnpm test\`
+<!-- cmap:generated:evidence:end -->
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["evidence", "migrate", "--from-module-docs", "--apply"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Migrated entries: 1");
+    expect(result.stdout).toContain("Backup: ");
+    expect(result.stdout).toContain("Audit: .context/audit/evidence-migrate-");
+    const backupId = result.stdout.match(/^Backup: (.+)$/m)?.[1]?.trim();
+    const auditPath = result.stdout.match(/^Audit: (.+)$/m)?.[1]?.trim();
+    expect(backupId).toBeTruthy();
+    expect(auditPath).toBeTruthy();
+    await expectFile(path.join(cwd, ".context/backups", `${backupId}.json`));
+    const audit = await expectFile(path.join(cwd, auditPath!));
+    expect(audit).toContain("# Evidence Migration Audit");
+    expect(audit).toContain("Migrated entries: 1");
+    const routeDoc = await expectFile(moduleDoc);
+    expect(routeDoc).not.toContain("cmap:generated:evidence:start");
+    const evidence = await expectFile(path.join(cwd, ".context/generated/evidence/modules/route.jsonl"));
+    expect(evidence).toContain("Legacy generated block.");
+    expect(evidence).toContain("src/commands/route.ts");
+
+    const list = await runCmap(["evidence", "list", "--module", "route"], cwd);
+    expect(list.code).toBe(0);
+    expect(list.stdout).toContain("# Generated Evidence");
+    expect(list.stdout).toContain("Legacy generated block.");
   });
 
   test("evidence append rejects missing file evidence and does not edit module docs", async () => {
@@ -146,5 +205,32 @@ describe("M8 evidence, stale verify, and inbox governance", () => {
     expect(result.code).toBe(0);
     expect(result.stdout).toContain("Module doc may be stale: .context/modules/route.md");
     expect(result.stdout).toContain("src/commands/route.ts");
+  });
+
+  test("verify warns for legacy pending, stats, and module-doc evidence locations", async () => {
+    const cwd = await createEvidenceProject("m8-legacy-warnings");
+    await mkdir(path.join(cwd, ".context/pending"), { recursive: true });
+    await mkdir(path.join(cwd, ".context/stats"), { recursive: true });
+    await writeFile(path.join(cwd, ".context/pending/old-candidate.md"), "# Old candidate\n", "utf8");
+    await writeFile(path.join(cwd, ".context/stats/route.json"), "{}\n", "utf8");
+    const moduleDoc = path.join(cwd, ".context/modules/route.md");
+    await writeFile(
+      moduleDoc,
+      `${await expectFile(moduleDoc)}
+<!-- cmap:generated:evidence:start -->
+- 2026-05-12T09:43:47.009Z: Legacy generated block. Evidence: \`src/commands/route.ts\`
+<!-- cmap:generated:evidence:end -->
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Legacy: .context/pending exists with 1 markdown file(s); new candidates should use .context/inbox");
+    expect(result.stdout).toContain("Legacy: .context/stats contains 1 file(s); new stats should use .context/generated/stats");
+    expect(result.stdout).toContain(
+      "Legacy: .context/modules/route.md contains generated evidence block; run cmap evidence migrate --from-module-docs --dry-run"
+    );
   });
 });

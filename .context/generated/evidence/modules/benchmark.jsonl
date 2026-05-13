@@ -1,0 +1,1 @@
+{"version":1,"id":"evidence-2026-05-12t11-07-48-035z","moduleId":"benchmark","createdAt":"2026-05-12T11:07:48.035Z","source":"manual","summary":"Added route benchmark context-pack metrics and richer project fixtures.","files":["src/commands/benchmark.ts"],"commands":["pnpm test tests/integration/m12-route-benchmark-context.test.ts"],"confidence":1,"canonical":false}

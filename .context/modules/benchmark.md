@@ -74,11 +74,3 @@ Read-only. Benchmark fixtures live under `bench/`.
 
 ## When to Update This Doc
 When benchmark file format, metrics, exit-code behavior, or route evaluation policy changes.
-
-<!-- cmap:generated:evidence:start -->
-## Generated Evidence
-
-This section is generated support evidence. It is not a semantic source of truth.
-
-- 2026-05-12T11:07:48.035Z: Added route benchmark context-pack metrics and richer project fixtures. Evidence: `src/commands/benchmark.ts`; command: `pnpm test tests/integration/m12-route-benchmark-context.test.ts`
-<!-- cmap:generated:evidence:end -->

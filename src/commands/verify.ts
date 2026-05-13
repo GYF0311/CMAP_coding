@@ -6,6 +6,8 @@ import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
 import { loadContextPolicy } from "../context/policy.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
+import { freshnessWarnings } from "../core/freshness.js";
+import { hasLegacyModuleDocEvidence } from "../core/generated-store.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -14,6 +16,7 @@ type VerifyOptions = {
   changedFiles?: string;
   coverage?: boolean;
   stale?: boolean;
+  freshness?: boolean;
   ci?: boolean;
   format?: string;
 };
@@ -88,10 +91,15 @@ export async function verifyContext(cwd: string, options: VerifyOptions = {}): P
   checkModuleRelations(modules, report);
   await checkEntrypoints(cwd, report);
   await checkVerifyCommands(cwd, contextRoot, report);
-  await checkPendingThreshold(contextRoot, report);
+  await checkLegacyPending(contextRoot, report);
+  await checkLegacyStats(contextRoot, report);
+  await checkLegacyModuleEvidence(contextRoot, report);
   if (options.stale) {
     await checkStaleModuleDocs(cwd, modules, report);
     await checkInboxBacklog(cwd, contextRoot, report);
+  }
+  if (options.freshness) {
+    await checkFreshness(cwd, report);
   }
   if (options.changed || options.coverage) {
     await checkChangedCoverage(cwd, modules, options, report);
@@ -324,7 +332,7 @@ function commandCellsFromVerify(verify: string): string[] {
   return commands;
 }
 
-async function checkPendingThreshold(contextRoot: string, report: VerifyReport): Promise<void> {
+async function checkLegacyPending(contextRoot: string, report: VerifyReport): Promise<void> {
   const pendingRoot = path.join(contextRoot, "pending");
   if (!(await fileExists(pendingRoot))) {
     return;
@@ -332,8 +340,41 @@ async function checkPendingThreshold(contextRoot: string, report: VerifyReport):
 
   const entries = await readdir(pendingRoot);
   const pendingFiles = entries.filter((entry) => entry.endsWith(".md"));
-  if (pendingFiles.length > 3) {
-    report.issues.push({ level: "warning", message: `Pending: ${pendingFiles.length} pending updates need review` });
+  report.issues.push({
+    level: "warning",
+    message: `Legacy: .context/pending exists with ${pendingFiles.length} markdown file(s); new candidates should use .context/inbox`
+  });
+}
+
+async function checkLegacyStats(contextRoot: string, report: VerifyReport): Promise<void> {
+  const statsRoot = path.join(contextRoot, "stats");
+  if (!(await fileExists(statsRoot))) {
+    return;
+  }
+  const entries = await readdir(statsRoot);
+  const statsFiles = entries.filter((entry) => entry.endsWith(".json"));
+  if (statsFiles.length > 0) {
+    report.issues.push({
+      level: "warning",
+      message: `Legacy: .context/stats contains ${statsFiles.length} file(s); new stats should use .context/generated/stats`
+    });
+  }
+}
+
+async function checkLegacyModuleEvidence(contextRoot: string, report: VerifyReport): Promise<void> {
+  const modulesRoot = path.join(contextRoot, "modules");
+  if (!(await fileExists(modulesRoot))) {
+    return;
+  }
+  const entries = await readdir(modulesRoot);
+  for (const entry of entries.filter((item) => item.endsWith(".md"))) {
+    const raw = await readFile(path.join(modulesRoot, entry), "utf8");
+    if (hasLegacyModuleDocEvidence(raw)) {
+      report.issues.push({
+        level: "warning",
+        message: `Legacy: .context/modules/${entry} contains generated evidence block; run cmap evidence migrate --from-module-docs --dry-run`
+      });
+    }
   }
 }
 
@@ -407,6 +448,14 @@ async function checkInboxBacklog(cwd: string, contextRoot: string, report: Verif
     level: "warning",
     message: `Inbox: ${inboxFiles.length} candidate updates need review${highRisk > 0 ? ` (${highRisk} high-risk)` : ""}`
   });
+}
+
+async function checkFreshness(cwd: string, report: VerifyReport): Promise<void> {
+  const warnings = await freshnessWarnings(cwd);
+  report.ok.push("Freshness: generated freshness index checked");
+  for (const warning of warnings) {
+    report.issues.push({ level: "warning", message: warning.message });
+  }
 }
 
 async function checkChangedCoverage(

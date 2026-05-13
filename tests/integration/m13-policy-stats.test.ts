@@ -38,9 +38,41 @@ describe("M13 policy and generated stats foundations", () => {
 
     expect(policy).toContain("checkpoint.write: true");
     expect(policy).toContain("evidence.append: true");
+    expect(policy).toContain("verification.evidence: true");
     expect(policy).toContain("stats.update: true");
-    expect(policy).toContain("semantic.update: false");
-    expect(policy).toContain("decision.append: false");
+    expect(policy).toContain("candidate_only:");
+    expect(policy).toContain("module.semantic.update: true");
+    expect(policy).toContain("decision.record: true");
+    expect(policy).toContain("blocked:");
+    expect(policy).toContain("code.write: true");
+    expect(policy).toContain("routine_confidence: 0.75");
+  });
+
+  test("policy show and validate expose policy v2 warnings for unknown keys", async () => {
+    const cwd = await createPolicyProject("m13-policy-validate");
+    await writeFile(
+      path.join(cwd, ".context/policy.yml"),
+      [
+        "version: 2",
+        "auto_apply:",
+        "  checkpoint.write: true",
+        "  unknown.op: true",
+        "thresholds:",
+        "  routine_confidence: 0.8",
+        ""
+      ].join("\n"),
+      "utf8"
+    );
+
+    const show = await runCmap(["policy", "show"], cwd);
+    expect(show.code).toBe(0);
+    expect(show.stdout).toContain("\"version\": 2");
+    expect(show.stdout).toContain("\"routineConfidence\": 0.8");
+
+    const validate = await runCmap(["policy", "validate"], cwd);
+    expect(validate.code).toBe(0);
+    expect(validate.stdout).toContain("Warnings: 1");
+    expect(validate.stdout).toContain("unknown policy key auto_apply.unknown.op");
   });
 
   test("evidence append records deterministic module activity stats", async () => {
@@ -63,7 +95,7 @@ describe("M13 policy and generated stats foundations", () => {
     );
 
     expect(result.code).toBe(0);
-    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/stats/module-activity.json"))) as {
+    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/generated/stats/module-activity.json"))) as {
       modules: Record<string, { evidence_count: number; files: Record<string, number>; commands: Record<string, number> }>;
     };
     expect(stats.modules.route.evidence_count).toBe(1);
@@ -77,7 +109,7 @@ describe("M13 policy and generated stats foundations", () => {
     const result = await runCmap(["route", "route 模块定位"], cwd);
 
     expect(result.code).toBe(0);
-    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/stats/route-usage.json"))) as {
+    const stats = JSON.parse(await expectFile(path.join(cwd, ".context/generated/stats/route-usage.json"))) as {
       total: number;
       by_source: Record<string, number>;
       modules: Record<string, number>;

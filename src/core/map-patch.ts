@@ -3,18 +3,24 @@ import path from "node:path";
 import matter from "gray-matter";
 import { z } from "zod";
 import { fileExists } from "../context/scanner.js";
+import { loadContextPolicy, type ContextPolicy } from "../context/policy.js";
 import { CmapCommandError } from "../errors.js";
 import { createBackup } from "../fs/backup.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
+import {
+  appendGeneratedStatsEvent,
+  appendModuleEvidence,
+  appendVerificationEvidence
+} from "./generated-store.js";
 
-const schemaVersions = ["cmap.map_patch.v1", "cmap.mappatch.v1"] as const;
+const schemaVersions = ["cmap.map_patch.v1", "cmap.mappatch.v1", "cmap.map_patch.v2"] as const;
 
 const operationSchema = z.object({
   op: z.string().min(1),
   target: z.string().optional(),
   risk: z.enum(["routine", "high"]).optional(),
   confidence: z.number().min(0).max(1).optional(),
-  summary: z.string().min(1),
+  summary: z.string().min(1).optional(),
   evidence: z.array(z.string()).optional(),
   fields: z.record(z.string(), z.unknown()).optional()
 });
@@ -44,7 +50,7 @@ const mapPatchSchema = z
 export type MapPatchOperation = z.infer<typeof operationSchema>;
 
 export type MapPatch = {
-  schema: "cmap.map_patch.v1" | "cmap.mappatch.v1";
+  schema: "cmap.map_patch.v1" | "cmap.mappatch.v1" | "cmap.map_patch.v2";
   agent?: string;
   source?: string;
   task?: string;
@@ -118,9 +124,10 @@ function extractJson(raw: string): string {
 }
 
 export async function evaluateMapPatch(cwd: string, patch: MapPatch): Promise<EvaluatedMapPatchOperation[]> {
+  const policy = await loadContextPolicy(cwd);
   const evaluations: EvaluatedMapPatchOperation[] = [];
   for (const operation of patch.operations) {
-    evaluations.push(await evaluateOperation(cwd, operation));
+    evaluations.push(await evaluateOperation(cwd, operation, policy));
   }
   return evaluations;
 }
@@ -143,6 +150,18 @@ export async function applyRoutineMapPatch(
   for (const evaluation of routine) {
     if (evaluation.operation.op === "checkpoint.write") {
       await writeCheckpointFromOperation(cwd, patch, evaluation.operation);
+    }
+    if (evaluation.operation.op === "checkpoint.close") {
+      await closeCheckpointFromOperation(cwd, patch, evaluation.operation);
+    }
+    if (evaluation.operation.op === "evidence.append") {
+      await writeGeneratedEvidenceFromOperation(cwd, evaluation.operation);
+    }
+    if (evaluation.operation.op === "verification.evidence" || evaluation.operation.op === "verification.record") {
+      await writeVerificationEvidenceFromOperation(cwd, evaluation.operation);
+    }
+    if (evaluation.operation.op === "stats.update") {
+      await writeStatsEventFromOperation(cwd, evaluation.operation);
     }
   }
 
@@ -202,8 +221,21 @@ export function renderMapPatchApplyReport(result: MapPatchApplyResult): string {
   return lines.join("\n");
 }
 
-async function evaluateOperation(cwd: string, operation: MapPatchOperation): Promise<EvaluatedMapPatchOperation> {
+async function evaluateOperation(
+  cwd: string,
+  operation: MapPatchOperation,
+  policy: ContextPolicy
+): Promise<EvaluatedMapPatchOperation> {
   const target = defaultTarget(operation);
+  if (policy.blocked[operation.op]) {
+    return {
+      operation,
+      target,
+      action: "reject",
+      reason: "operation is blocked by policy",
+      missingEvidence: []
+    };
+  }
   const rejected = await validateTarget(cwd, target);
   const missingEvidence = await collectMissingEvidence(cwd, operation.evidence ?? []);
   if (rejected) {
@@ -232,13 +264,80 @@ async function evaluateOperation(cwd: string, operation: MapPatchOperation): Pro
     if (operation.risk === "high") {
       return { operation, target, action: "inbox", reason: "operation is marked high risk", missingEvidence };
     }
-    if (confidence < 0.75) {
-      return { operation, target, action: "inbox", reason: "confidence below routine threshold 0.75", missingEvidence };
+    if (!policy.autoApply.checkpointWrite) {
+      return { operation, target, action: "inbox", reason: "checkpoint.write is disabled by policy", missingEvidence };
+    }
+    if (confidence < policy.thresholds.routineConfidence) {
+      return { operation, target, action: "inbox", reason: `confidence below routine threshold ${policy.thresholds.routineConfidence}`, missingEvidence };
     }
     if (!task || !next) {
       return { operation, target, action: "inbox", reason: "checkpoint.write requires fields.task and fields.next", missingEvidence };
     }
     return { operation, target, action: "apply", reason: "low-risk checkpoint state with explicit task and next step", missingEvidence };
+  }
+
+  if (operation.op === "checkpoint.close") {
+    const fields = operation.fields ?? {};
+    const confidence = operation.confidence ?? 0.5;
+    if (!policy.autoApply.checkpointClose) {
+      return { operation, target, action: "inbox", reason: "checkpoint.close is disabled by policy", missingEvidence };
+    }
+    if (operation.risk === "high") {
+      return { operation, target, action: "inbox", reason: "operation is marked high risk", missingEvidence };
+    }
+    if (confidence < policy.thresholds.routineConfidence) {
+      return { operation, target, action: "inbox", reason: `confidence below routine threshold ${policy.thresholds.routineConfidence}`, missingEvidence };
+    }
+    if (!stringField(fields.verified)) {
+      return { operation, target, action: "inbox", reason: "checkpoint.close requires fields.verified", missingEvidence };
+    }
+    return { operation, target, action: "apply", reason: "low-risk checkpoint close with verification evidence", missingEvidence };
+  }
+
+  if (operation.op === "evidence.append") {
+    const fields = operation.fields ?? {};
+    const confidence = operation.confidence ?? 0.5;
+    const moduleId = stringField(fields.module) ?? stringField(fields.moduleId);
+    const summary = stringField(fields.summary) ?? operation.summary;
+    const files = stringArrayField(fields.files) ?? stringArrayField(fields.file ? [fields.file] : undefined);
+    if (!policy.autoApply.evidenceAppend) {
+      return { operation, target, action: "inbox", reason: "evidence.append is disabled by policy", missingEvidence };
+    }
+    if (confidence < policy.thresholds.evidenceConfidence) {
+      return { operation, target, action: "inbox", reason: `confidence below evidence threshold ${policy.thresholds.evidenceConfidence}`, missingEvidence };
+    }
+    if (!moduleId || !summary || !files || files.length === 0) {
+      return { operation, target, action: "inbox", reason: "evidence.append requires fields.module, fields.summary, and fields.files", missingEvidence };
+    }
+    return { operation, target: `.context/generated/evidence/modules/${moduleId}.jsonl`, action: "apply", reason: "generated evidence is auto-applicable support data", missingEvidence };
+  }
+
+  if (operation.op === "verification.evidence" || operation.op === "verification.record") {
+    const fields = operation.fields ?? {};
+    const confidence = operation.confidence ?? 0.5;
+    const summary = stringField(fields.summary) ?? operation.summary;
+    const files = stringArrayField(fields.files) ?? [];
+    if (!policy.autoApply.verificationEvidence) {
+      return { operation, target, action: "inbox", reason: "verification.evidence is disabled by policy", missingEvidence };
+    }
+    if (confidence < policy.thresholds.evidenceConfidence) {
+      return { operation, target, action: "inbox", reason: `confidence below evidence threshold ${policy.thresholds.evidenceConfidence}`, missingEvidence };
+    }
+    if (!summary) {
+      return { operation, target, action: "inbox", reason: "verification.evidence requires fields.summary or operation.summary", missingEvidence };
+    }
+    return { operation, target: ".context/generated/evidence/verification.jsonl", action: "apply", reason: "verification evidence is generated support data", missingEvidence };
+  }
+
+  if (operation.op === "stats.update") {
+    const confidence = operation.confidence ?? 0.5;
+    if (!policy.autoApply.statsUpdate) {
+      return { operation, target, action: "inbox", reason: "stats.update is disabled by policy", missingEvidence };
+    }
+    if (confidence < policy.thresholds.routineConfidence) {
+      return { operation, target, action: "inbox", reason: `confidence below routine threshold ${policy.thresholds.routineConfidence}`, missingEvidence };
+    }
+    return { operation, target: ".context/generated/stats/events.jsonl", action: "apply", reason: "generated stats event is auto-applicable support data", missingEvidence };
   }
 
   if (operation.op === "status.update") {
@@ -247,7 +346,10 @@ async function evaluateOperation(cwd: string, operation: MapPatchOperation): Pro
   if (operation.op === "verification.record") {
     return { operation, target, action: "inbox", reason: "VERIFY.md is canonical verification policy", missingEvidence };
   }
-  if (operation.op === "module.update" || operation.op.startsWith("candidate.module")) {
+  if (operation.op === "module.alias.add" || operation.op === "module.path.add") {
+    return { operation, target, action: "inbox", reason: "low-risk module metadata requires inbox promotion review", missingEvidence };
+  }
+  if (operation.op === "module.semantic.update" || operation.op === "module.update" || operation.op.startsWith("candidate.module")) {
     return { operation, target, action: "inbox", reason: "module semantics and boundaries require candidate review", missingEvidence };
   }
   if (operation.op === "decision.record" || operation.op.startsWith("candidate.decision")) {
@@ -284,6 +386,9 @@ async function validateTarget(cwd: string, target: string): Promise<string | und
     return undefined;
   }
   if (/^\.context\/modules\/[^/]+\.md$/.test(target)) {
+    return undefined;
+  }
+  if (/^\.context\/generated\/.+/.test(target)) {
     return undefined;
   }
   return "target is outside the MapPatch canonical whitelist";
@@ -326,10 +431,96 @@ function defaultTarget(operation: MapPatchOperation): string {
   if (operation.op === "verification.record") {
     return ".context/VERIFY.md";
   }
+  if (operation.op === "verification.evidence") {
+    return ".context/generated/evidence/verification.jsonl";
+  }
+  if (operation.op === "evidence.append") {
+    const fields = operation.fields ?? {};
+    const moduleId = stringField(fields.module) ?? stringField(fields.moduleId) ?? "unknown";
+    return `.context/generated/evidence/modules/${moduleId}.jsonl`;
+  }
+  if (operation.op === "stats.update") {
+    return ".context/generated/stats/events.jsonl";
+  }
   if (operation.op === "decision.record") {
     return ".context/DECISIONS.md";
   }
+  if (operation.op === "module.alias.add" || operation.op === "module.path.add" || operation.op === "module.semantic.update") {
+    const fields = operation.fields ?? {};
+    const moduleId = stringField(fields.module) ?? stringField(fields.moduleId) ?? "unknown";
+    return `.context/modules/${moduleId}.md`;
+  }
   return ".context/inbox/agent.md";
+}
+
+async function closeCheckpointFromOperation(cwd: string, patch: MapPatch, operation: MapPatchOperation): Promise<void> {
+  const checkpointPath = path.join(cwd, ".context", "CHECKPOINT.md");
+  const current = await readFile(checkpointPath, "utf8");
+  const parsed = matter(current);
+  const data = {
+    ...parsed.data,
+    context_type: "checkpoint",
+    status: "closed",
+    source: "cmap update --agent",
+    updated_at: new Date().toISOString()
+  };
+  const body = `# Current Checkpoint
+
+## Current Task
+${patch.task ?? operation.summary ?? "Closed checkpoint"}
+
+## Current Hypothesis
+Checkpoint closed by MapPatch operation with explicit verification.
+
+## Changed Files
+None recorded.
+
+## Verified
+${stringField(operation.fields?.verified) ?? "Not recorded."}
+
+## Failed / Pending
+None recorded.
+
+## Next Step
+${stringField(operation.fields?.next) ?? "Start the next task."}
+
+## Do Not Redo
+${stringField(operation.fields?.do_not_redo ?? operation.fields?.doNotRedo) ?? "None recorded."}
+`;
+  await writeFile(checkpointPath, ensureTrailingNewline(matter.stringify(body, data)), "utf8");
+}
+
+async function writeGeneratedEvidenceFromOperation(cwd: string, operation: MapPatchOperation): Promise<void> {
+  const policy = await loadContextPolicy(cwd);
+  const fields = operation.fields ?? {};
+  const moduleId = stringField(fields.module) ?? stringField(fields.moduleId) ?? "unknown";
+  await appendModuleEvidence(cwd, {
+    moduleId,
+    summary: stringField(fields.summary) ?? operation.summary ?? "Generated evidence from MapPatch.",
+    files: stringArrayField(fields.files) ?? stringArrayField(fields.file ? [fields.file] : undefined) ?? [],
+    commands: stringArrayField(fields.commands),
+    source: "mappatch",
+    confidence: operation.confidence ?? 1
+  }, policy.generatedEvidence.maxEntries);
+}
+
+async function writeVerificationEvidenceFromOperation(cwd: string, operation: MapPatchOperation): Promise<void> {
+  const fields = operation.fields ?? {};
+  await appendVerificationEvidence(cwd, {
+    summary: stringField(fields.summary) ?? operation.summary ?? "Verification evidence from MapPatch.",
+    files: stringArrayField(fields.files) ?? [],
+    commands: stringArrayField(fields.commands),
+    source: "mappatch",
+    confidence: operation.confidence ?? 1
+  });
+}
+
+async function writeStatsEventFromOperation(cwd: string, operation: MapPatchOperation): Promise<void> {
+  await appendGeneratedStatsEvent(cwd, {
+    type: stringField(operation.fields?.type) ?? "mappatch.stats.update",
+    summary: operation.summary ?? "Stats update from MapPatch.",
+    fields: operation.fields ?? {}
+  });
 }
 
 async function writeCheckpointFromOperation(cwd: string, patch: MapPatch, operation: MapPatchOperation): Promise<void> {
@@ -434,7 +625,7 @@ function renderEvaluationGroups(evaluations: EvaluatedMapPatchOperation[]): stri
     } else {
       for (const evaluation of group) {
         lines.push(`- ${evaluation.operation.op} -> \`${evaluation.target}\``);
-        lines.push(`  - summary: ${evaluation.operation.summary}`);
+        lines.push(`  - summary: ${evaluation.operation.summary ?? stringField(evaluation.operation.fields?.summary) ?? "not recorded"}`);
         lines.push(`  - reason: ${evaluation.reason}`);
         if (evaluation.missingEvidence.length > 0) {
           lines.push(`  - missing evidence: ${evaluation.missingEvidence.map((item) => `\`${item}\``).join(", ")}`);
@@ -448,6 +639,14 @@ function renderEvaluationGroups(evaluations: EvaluatedMapPatchOperation[]): stri
 
 function stringField(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function stringArrayField(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const values = value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
+  return values.length > 0 ? values : undefined;
 }
 
 function formatList(value: unknown): string {

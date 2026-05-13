@@ -24,7 +24,7 @@ relations:
 # Module: graph
 
 ## Purpose
-Build deterministic machine-readable graph projections from reviewed module docs and explain module files/typed relations without making Obsidian the typed graph source.
+Build deterministic machine-readable graph projections from reviewed module docs and explain module files/typed relations without making Obsidian, imports, tests, or source-code analysis the typed graph source.
 
 ## Code Paths
 - `src/commands/graph.ts`
@@ -37,6 +37,7 @@ Build deterministic machine-readable graph projections from reviewed module docs
 - Build `.context/graph/graph.meta.json` with generation metadata.
 - Explain one module's files, outgoing relations, and incoming relations.
 - Keep graph data deterministic and derived from `.context/modules/*.md`.
+- Represent canonical module relations only after they have been reviewed in module docs.
 
 ## Depends On
 - `core/module-index.ts` for reviewed module docs and relations.
@@ -45,7 +46,7 @@ Build deterministic machine-readable graph projections from reviewed module docs
 ## Used By
 - `cmap graph build`
 - `cmap graph explain <module>`
-- Future graph-aware route and context pack work.
+- Route and pack as reviewed relation context, not as direct scoring truth.
 
 ## Data Flow
 Module docs -> module index -> graph projection -> `.context/graph/*.json` and graph explain text.
@@ -56,11 +57,14 @@ Writes deterministic generated JSON under `.context/graph/`.
 ## Constraints
 - Graph files are generated data, not canonical semantic facts.
 - Does not infer imports, symbols, or ownership beyond reviewed module docs in v0.
+- Is not an import graph, test ownership graph, call graph, or code indexer.
+- Does not read unpromoted relation candidates as canonical edges.
 - Does not write module docs or MAP semantics.
 
 ## Traps
 - A graph edge proves a documented relation exists; it does not prove runtime coupling.
 - Obsidian `_cmap` remains a view layer; typed graph analysis belongs to cmap graph.
+- Import graph/test ownership remains a paused historical idea; do not revive it as current roadmap without a new explicit decision.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m14-graph-route.test.ts`

@@ -1,8 +1,14 @@
-import { mkdir, readdir, readFile, rename, stat } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import matter from "gray-matter";
+import { loadContextPolicy } from "../context/policy.js";
 import { fileExists } from "../context/scanner.js";
+import { appendModuleEvidence, appendVerificationEvidence } from "../core/generated-store.js";
+import { loadModuleIndex } from "../core/module-index.js";
 import { CmapCommandError } from "../errors.js";
+import { createBackup, restoreBackup } from "../fs/backup.js";
 import { projectRelative } from "../fs/safe-path.js";
+import { verifyContext } from "./verify.js";
 
 type InboxCandidate = {
   id: string;
@@ -11,6 +17,7 @@ type InboxCandidate = {
   raw: string;
   risk: "high" | "routine";
   type: string;
+  data: Record<string, unknown>;
   mtimeMs: number;
 };
 
@@ -38,9 +45,11 @@ export async function runInboxStatus(cwd: string): Promise<void> {
     "- Re-check backlog: `cmap inbox status`",
     "- Review backlog: `cmap inbox triage`",
     "- Preview promotion: `cmap inbox promote <id> --dry-run`",
+    "- Apply low-risk metadata/evidence: `cmap inbox promote <id> --apply`",
+    "- Reject after review: `cmap inbox reject <id> --reason \"...\"`",
     "- Archive after review: `cmap inbox archive <id>`",
     "- Save agent candidates: `cmap update --agent --from <file> --write-inbox`",
-    "- Promote manually only after review: edit canonical `.context` files with evidence",
+    "- Promote semantic facts manually only after review: edit canonical `.context` files with evidence",
     ""
   ];
 
@@ -72,7 +81,7 @@ export async function runInboxTriage(cwd: string): Promise<void> {
     highRisk > 0
       ? "Review high-risk candidates first with `cmap inbox promote <id> --dry-run`."
       : "Review oldest candidates first with `cmap inbox promote <id> --dry-run`.",
-    "Archive rejected or obsolete candidates with `cmap inbox archive <id>`.",
+    "Reject false candidates with `cmap inbox reject <id> --reason \"...\"`; archive obsolete candidates with `cmap inbox archive <id>`.",
     ""
   ];
   process.stdout.write(lines.join("\n"));
@@ -87,11 +96,39 @@ export async function runInboxArchive(cwd: string, id: string): Promise<void> {
   process.stdout.write(`Archived ${candidate.file} -> ${projectRelative(cwd, archivePath)}\n`);
 }
 
-export async function runInboxPromote(cwd: string, id: string, options: { dryRun?: boolean }): Promise<void> {
-  if (!options.dryRun) {
-    throw new CmapCommandError("inbox promote currently requires --dry-run; canonical promotion remains manual");
+export async function runInboxReject(cwd: string, id: string, options: { reason?: string }): Promise<void> {
+  const reason = stringField(options.reason);
+  if (!reason) {
+    throw new CmapCommandError("inbox reject requires --reason <text>", 2);
   }
   const candidate = await loadInboxCandidate(cwd, id);
+  const archiveRoot = path.join(cwd, ".context", "inbox", "archive");
+  await mkdir(archiveRoot, { recursive: true });
+  const archivePath = await nextArchivePath(archiveRoot, `rejected-${candidate.id}.md`);
+  await writeFile(
+    candidate.absolutePath,
+    [
+      "# Rejected Inbox Candidate",
+      "",
+      `Rejected: ${new Date().toISOString()}`,
+      `Reason: ${reason}`,
+      "",
+      "## Original Candidate",
+      "",
+      candidate.raw
+    ].join("\n"),
+    "utf8"
+  );
+  await rename(candidate.absolutePath, archivePath);
+  process.stdout.write(`Rejected ${candidate.file} -> ${projectRelative(cwd, archivePath)}\n`);
+}
+
+export async function runInboxPromote(cwd: string, id: string, options: { dryRun?: boolean; apply?: boolean }): Promise<void> {
+  const candidate = await loadInboxCandidate(cwd, id);
+  if (options.apply) {
+    await applyInboxCandidate(cwd, candidate);
+    return;
+  }
   const lines = [
     "# Inbox Promote Dry Run",
     "",
@@ -139,6 +176,7 @@ async function loadInboxCandidates(cwd: string): Promise<InboxCandidate[]> {
       absolutePath,
       raw,
       risk: isHighRiskCandidate(raw) ? "high" : "routine",
+      data: matter(raw).data,
       type: candidateType(raw, file),
       mtimeMs: info.mtimeMs
     });
@@ -169,6 +207,10 @@ function isHighRiskCandidate(raw: string): boolean {
 }
 
 function candidateType(raw: string, file: string): string {
+  const parsedType = matter(raw).data.type;
+  if (typeof parsedType === "string" && parsedType.trim()) {
+    return parsedType.trim();
+  }
   const haystack = `${file}\n${raw}`.toLowerCase();
   if (haystack.includes("alias")) {
     return "alias";
@@ -186,6 +228,184 @@ function candidateType(raw: string, file: string): string {
     return "module";
   }
   return "semantic";
+}
+
+async function applyInboxCandidate(cwd: string, candidate: InboxCandidate): Promise<void> {
+  const allowed = new Set(["module.alias.add", "module.path.add", "evidence.merge", "verification.evidence"]);
+  if (!allowed.has(candidate.type)) {
+    throw new CmapCommandError(`Inbox candidate type ${candidate.type} cannot be auto-applied`, 2);
+  }
+
+  const policy = await loadContextPolicy(cwd);
+  const confidence = numberField(candidate.data.confidence) ?? 0;
+  if (confidence < policy.thresholds.evidenceConfidence) {
+    throw new CmapCommandError(`Inbox candidate confidence ${confidence} is below threshold ${policy.thresholds.evidenceConfidence}`, 2);
+  }
+
+  const evidence = stringArrayField(candidate.data.evidence);
+  for (const item of evidence) {
+    if (!(await fileExists(path.join(cwd, item)))) {
+      throw new CmapCommandError(`Evidence file does not exist: ${item}`, 2);
+    }
+  }
+
+  const before = await verifyContext(cwd);
+  const targetFiles = [candidate.absolutePath];
+  const module = await candidateModule(cwd, candidate);
+  if ((candidate.type === "module.alias.add" || candidate.type === "module.path.add") && module) {
+    targetFiles.push(module.absolutePath);
+  }
+  const backupId = await createBackup(cwd, targetFiles);
+
+  if (candidate.type === "module.alias.add") {
+    if (!module) {
+      throw new CmapCommandError("module.alias.add requires module", 2);
+    }
+    await addModuleAlias(module.absolutePath, stringField(candidate.data.alias) ?? stringField(candidate.data.value));
+  } else if (candidate.type === "module.path.add") {
+    if (!module) {
+      throw new CmapCommandError("module.path.add requires module", 2);
+    }
+    await addModulePath(module.absolutePath, stringField(candidate.data.path) ?? stringField(candidate.data.include));
+  } else if (candidate.type === "evidence.merge") {
+    const moduleId = stringField(candidate.data.module) ?? stringField(candidate.data.moduleId);
+    if (!moduleId) {
+      throw new CmapCommandError("evidence.merge requires module", 2);
+    }
+    await appendModuleEvidence(cwd, {
+      moduleId,
+      summary: stringField(candidate.data.summary) ?? firstHeading(candidate.raw) ?? "Inbox evidence merge.",
+      files: evidence,
+      source: "reconcile",
+      confidence
+    }, policy.generatedEvidence.maxEntries);
+  } else if (candidate.type === "verification.evidence") {
+    await appendVerificationEvidence(cwd, {
+      summary: stringField(candidate.data.summary) ?? firstHeading(candidate.raw) ?? "Inbox verification evidence.",
+      files: evidence,
+      source: "reconcile",
+      confidence
+    });
+  }
+
+  const archiveRoot = path.join(cwd, ".context", "inbox", "archive");
+  await mkdir(archiveRoot, { recursive: true });
+  const archivePath = await nextArchivePath(archiveRoot, `${candidate.id}.md`);
+  await rename(candidate.absolutePath, archivePath);
+  const auditPath = await writePromoteAudit(cwd, candidate, backupId, projectRelative(cwd, archivePath));
+  const after = await verifyContext(cwd);
+  const newErrors = findNewErrors(before.issues, after.issues);
+  if (newErrors.length > 0) {
+    await restoreBackup(cwd, backupId);
+    throw new CmapCommandError(
+      [`Post-verify found new errors; rolled back backup ${backupId}.`, ...newErrors.map((message) => `- ${message}`)].join("\n"),
+      2
+    );
+  }
+
+  process.stdout.write(`# Inbox Promote Apply
+
+Applied inbox candidate: ${candidate.id}
+Type: ${candidate.type}
+Backup: ${backupId}
+Audit: ${auditPath}
+Archived: ${projectRelative(cwd, archivePath)}
+Post-verify: no new errors
+`);
+}
+
+async function candidateModule(cwd: string, candidate: InboxCandidate) {
+  const moduleId = stringField(candidate.data.module) ?? stringField(candidate.data.moduleId);
+  if (!moduleId) {
+    return undefined;
+  }
+  const modules = await loadModuleIndex(cwd);
+  return modules.find((module) => module.id === moduleId || module.aliases.includes(moduleId));
+}
+
+async function addModuleAlias(modulePath: string, alias: string | undefined): Promise<void> {
+  if (!alias) {
+    throw new CmapCommandError("module.alias.add requires alias", 2);
+  }
+  const parsed = matter(await readFile(modulePath, "utf8"));
+  const aliases = uniqueStrings([...(Array.isArray(parsed.data.aliases) ? parsed.data.aliases : []), alias]);
+  parsed.data.aliases = aliases;
+  await writeFile(modulePath, matter.stringify(parsed.content, parsed.data), "utf8");
+}
+
+async function addModulePath(modulePath: string, includePath: string | undefined): Promise<void> {
+  if (!includePath) {
+    throw new CmapCommandError("module.path.add requires path", 2);
+  }
+  const parsed = matter(await readFile(modulePath, "utf8"));
+  if (Array.isArray(parsed.data.paths)) {
+    parsed.data.paths = uniqueStrings([...parsed.data.paths, includePath]);
+  } else if (parsed.data.paths && typeof parsed.data.paths === "object") {
+    const paths = parsed.data.paths as Record<string, unknown>;
+    paths.include = uniqueStrings([...(Array.isArray(paths.include) ? paths.include : []), includePath]);
+    parsed.data.paths = paths;
+  } else {
+    parsed.data.paths = [includePath];
+  }
+  await writeFile(modulePath, matter.stringify(parsed.content, parsed.data), "utf8");
+}
+
+async function writePromoteAudit(cwd: string, candidate: InboxCandidate, backupId: string, archivePath: string): Promise<string> {
+  const auditRoot = path.join(cwd, ".context", "audit");
+  await mkdir(auditRoot, { recursive: true });
+  const target = path.join(auditRoot, `inbox-promote-${new Date().toISOString().replace(/[:.]/g, "-").toLowerCase()}.md`);
+  await writeFile(
+    target,
+    [
+      "# Inbox Promote Audit",
+      "",
+      `Candidate: ${candidate.id}`,
+      `Type: ${candidate.type}`,
+      `Backup: ${backupId}`,
+      `Archive: ${archivePath}`,
+      `Created: ${new Date().toISOString()}`,
+      ""
+    ].join("\n"),
+    "utf8"
+  );
+  return projectRelative(cwd, target);
+}
+
+function findNewErrors(
+  before: Array<{ level: "error" | "warning"; message: string }>,
+  after: Array<{ level: "error" | "warning"; message: string }>
+): string[] {
+  const beforeErrors = new Set(before.filter((issue) => issue.level === "error").map((issue) => issue.message));
+  return after
+    .filter((issue) => issue.level === "error")
+    .map((issue) => issue.message)
+    .filter((message) => !beforeErrors.has(message));
+}
+
+function stringField(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+function numberField(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function stringArrayField(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
+  }
+  if (typeof value === "string" && value.trim()) {
+    return [value.trim()];
+  }
+  return [];
+}
+
+function uniqueStrings(values: unknown[]): string[] {
+  return [...new Set(values.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean))];
+}
+
+function firstHeading(raw: string): string | undefined {
+  return raw.split(/\r?\n/).find((line) => line.startsWith("# "))?.replace(/^#\s+/, "").trim();
 }
 
 function countBy(items: string[]): Map<string, number> {

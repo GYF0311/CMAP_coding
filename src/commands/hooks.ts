@@ -7,7 +7,15 @@ import { CmapCommandError } from "../errors.js";
 import { recordRouteUsage } from "../core/generated-stats.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
 import { resolveInsideRoot, projectRelative } from "../fs/safe-path.js";
-import { claudeLifecycleSettings, type HookMode } from "../hooks/templates.js";
+import { claudeLifecycleSettings, codexLifecycleSettings, type HookMode } from "../hooks/templates.js";
+import {
+  normalizeHookPayload,
+  parseHookEventName,
+  parseHookHost,
+  readHookPayload,
+  type HookHost,
+  type NormalizedHookEvent
+} from "../hooks/events.js";
 import { appendEvidenceToModule } from "./evidence.js";
 import { routeTask, type RouteReport } from "./route.js";
 
@@ -27,6 +35,12 @@ type HookRenderOptions = {
   out?: string;
 };
 
+type HookIngestOptions = {
+  host?: string;
+  event?: string;
+  mode?: string;
+};
+
 type HookTestOptions = {
   event: string;
   mode?: string;
@@ -42,7 +56,7 @@ export async function runHookSessionStart(_cwd: string, options: HookOptions): P
 - Read .context/MAP.md for the project map.
 - Read .context/CHECKPOINT.md for the current handoff, then .context/STATUS.md for durable status.
 - Use cmap route "<task>" before editing modules.
-- Treat logs/, ideas/, and pending/ as non-canonical.
+- Treat logs/, ideas/, inbox/, and generated files as non-canonical.
 
 Profile: ${options.profile}
 `);
@@ -145,16 +159,78 @@ Before ending work, consider:
 }
 
 export async function runHookRender(cwd: string, options: HookRenderOptions): Promise<void> {
-  const host = options.host ?? "claude";
+  const host = options.host ?? "codex";
   const mode = parseHookMode(options.mode ?? "assist");
-  if (host !== "claude") {
-    throw new CmapCommandError("hooks render currently supports --host claude");
+  if (host !== "claude" && host !== "codex") {
+    throw new CmapCommandError("hooks render currently supports --host codex or --host claude");
   }
-  const out = options.out ?? ".context/hooks/claude.settings.generated.json";
+  const out = options.out ?? (host === "codex" ? ".codex/hooks.json" : ".context/hooks/claude.settings.generated.json");
   const target = await resolveInsideRoot(cwd, out);
   await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, `${JSON.stringify(claudeLifecycleSettings(mode), null, 2)}\n`, "utf8");
+  const settings = host === "codex" ? codexLifecycleSettings(mode) : claudeLifecycleSettings(mode);
+  await writeFile(target, `${JSON.stringify(settings, null, 2)}\n`, "utf8");
   process.stdout.write(`Rendered hook settings: ${projectRelative(cwd, target)}\n`);
+}
+
+export async function runHookIngest(cwd: string, options: HookIngestOptions): Promise<number> {
+  const host = parseHookHost(options.host);
+  const event = parseHookEventName(options.event);
+  const mode = parseHookMode(options.mode ?? "assist");
+  const payload = normalizeHookPayload({
+    host,
+    event,
+    mode,
+    cwd,
+    raw: await readHookPayload()
+  });
+
+  if (event === "SessionStart") {
+    await writeSessionEvent(cwd, eventLog(payload));
+    writeHookJson(host, event, "Read `.context/MAP.md`, then `.context/CHECKPOINT.md`, before editing.");
+    return 0;
+  }
+
+  if (event === "UserPromptSubmit") {
+    await writeSessionEvent(cwd, eventLog(payload));
+    if ((mode === "assist" || mode === "strict") && payload.prompt) {
+      const route = await routeTask(cwd, payload.prompt, { maxContext: "6", graph: true });
+      await writeSessionBrief(cwd, payload.prompt, route);
+      await recordRouteUsage(cwd, {
+        source: "hook",
+        task: payload.prompt,
+        modules: route.modules.map((module) => module.id),
+        contextModules: route.contextModules.map((module) => module.id)
+      });
+      writeHookJson(host, event, renderRouteAdditionalContext(route));
+      return 0;
+    }
+    writeHookJson(host, event, "Run `cmap route \"<task>\"` before editing project modules.");
+    return 0;
+  }
+
+  if (event === "PreToolUse") {
+    await writeSessionEvent(cwd, eventLog(payload));
+    if (mode === "strict" && isDirectSemanticCanonicalWrite(payload.toolName ?? "unknown", payload.file, payload.command)) {
+      writePreToolDeny(host, "direct semantic canonical writes are blocked; use cmap update/evidence/cp or inbox review.");
+      return 0;
+    }
+    writeHookJson(host, event, undefined, "cmap hook allowed this tool call.");
+    return 0;
+  }
+
+  if (event === "PostToolUse") {
+    await writeSessionEvent(cwd, eventLog(payload));
+    writeHookJson(host, event, `Recorded ${capitalize(host)} PostToolUse for ${payload.toolName ?? "unknown tool"}.`);
+    return 0;
+  }
+
+  if (event === "Stop") {
+    await writeSessionEvent(cwd, eventLog(payload));
+    writeHookJson(host, event, undefined, "cmap stop hook recorded the session closeout.");
+    return 0;
+  }
+
+  throw new CmapCommandError(`Unsupported hook ingest event: ${event}`);
 }
 
 export async function runHookTest(cwd: string, options: HookTestOptions): Promise<number> {
@@ -196,7 +272,7 @@ export async function runHookTest(cwd: string, options: HookTestOptions): Promis
   if (options.event === "PreToolUse") {
     const tool = options.tool ?? "unknown";
     const file = options.file;
-    if (mode === "strict" && isDirectSemanticCanonicalWrite(tool, file)) {
+    if (mode === "strict" && isDirectSemanticCanonicalWrite(tool, file, options.command)) {
       await writeSessionEvent(cwd, { event: options.event, mode, tool, file, command: options.command, prompt: undefined });
       process.stdout.write("Decision: block\nReason: direct semantic canonical writes are blocked; use cmap update/evidence/cp or inbox review.\n");
       return 1;
@@ -259,12 +335,25 @@ async function writeHookEvent(
 
 async function writeSessionEvent(
   cwd: string,
-  input: { event: string; mode: HookMode; tool?: string; file?: string; command?: string; prompt?: string }
+  input: {
+    event: string;
+    mode: HookMode;
+    host?: HookHost;
+    sessionId?: string;
+    turnId?: string;
+    tool?: string;
+    file?: string;
+    command?: string;
+    prompt?: string;
+  }
 ): Promise<void> {
   const logsRoot = path.join(cwd, ".context", "logs");
   await mkdir(logsRoot, { recursive: true });
   const line = JSON.stringify({
     created_at: new Date().toISOString(),
+    host: input.host,
+    session_id: input.sessionId,
+    turn_id: input.turnId,
     event: input.event,
     mode: input.mode,
     tool: input.tool,
@@ -322,16 +411,105 @@ function parseHookMode(value: string): HookMode {
   throw new CmapCommandError(`Invalid hook mode "${value}". Expected observe, assist, or strict.`);
 }
 
-function isDirectSemanticCanonicalWrite(tool: string, file: string | undefined): boolean {
-  if (!["Write", "Edit", "MultiEdit"].includes(tool) || !file) {
+function isDirectSemanticCanonicalWrite(tool: string, file: string | undefined, command: string | undefined): boolean {
+  if (tool === "Bash" && command && isDangerousCanonicalShellWrite(command)) {
+    return true;
+  }
+  if (!["Write", "Edit", "MultiEdit", "apply_patch"].includes(tool) || !file) {
     return false;
   }
+  return isSemanticCanonicalPath(file);
+}
+
+function isSemanticCanonicalPath(file: string): boolean {
   return (
     file === ".context/MAP.md" ||
     file === ".context/DECISIONS.md" ||
     file === ".context/VERIFY.md" ||
     /^\.context\/modules\/[^/]+\.md$/.test(file)
   );
+}
+
+function isDangerousCanonicalShellWrite(command: string): boolean {
+  if (!/(>|sed\s+-i|perl\s+-i|tee\s+|mv\s+|cp\s+)/.test(command)) {
+    return false;
+  }
+  return [".context/MAP.md", ".context/DECISIONS.md", ".context/VERIFY.md"].some((file) => command.includes(file)) ||
+    /\.context\/modules\/[^/\s]+\.md/.test(command);
+}
+
+function eventLog(payload: NormalizedHookEvent): {
+  event: string;
+  mode: HookMode;
+  host: HookHost;
+  sessionId?: string;
+  turnId?: string;
+  tool?: string;
+  file?: string;
+  command?: string;
+  prompt?: string;
+} {
+  return {
+    event: payload.event,
+    mode: payload.mode,
+    host: payload.host,
+    sessionId: payload.sessionId,
+    turnId: payload.turnId,
+    tool: payload.toolName,
+    file: payload.file,
+    command: payload.command,
+    prompt: payload.prompt
+  };
+}
+
+function writeHookJson(host: HookHost, event: string, additionalContext?: string, systemMessage?: string): void {
+  const output: Record<string, unknown> = {};
+  if (systemMessage) {
+    output.systemMessage = systemMessage;
+  }
+  if (additionalContext) {
+    output.hookSpecificOutput = {
+      hookEventName: event,
+      additionalContext
+    };
+  } else if (host === "codex" && (event === "SessionStart" || event === "UserPromptSubmit" || event === "PostToolUse")) {
+    output.hookSpecificOutput = {
+      hookEventName: event
+    };
+  }
+  process.stdout.write(`${JSON.stringify(output)}\n`);
+}
+
+function writePreToolDeny(host: HookHost, reason: string): void {
+  if (host === "codex") {
+    process.stdout.write(`${JSON.stringify({
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny",
+        permissionDecisionReason: reason
+      }
+    })}\n`);
+    return;
+  }
+  process.stdout.write(`${JSON.stringify({ decision: "block", reason })}\n`);
+}
+
+function renderRouteAdditionalContext(route: RouteReport): string {
+  const lines = ["cmap session brief generated. Read first:"];
+  for (const item of route.readFirst.slice(0, 6)) {
+    lines.push(`- ${item}`);
+  }
+  if (route.verifyCommands.length > 0) {
+    lines.push("Suggested verify:");
+    for (const command of route.verifyCommands.slice(0, 4)) {
+      lines.push(`- ${command}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+function capitalize(value: string): string {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 async function readGitChangedFiles(cwd: string): Promise<string[]> {

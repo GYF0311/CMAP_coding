@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:18:31+08:00
+updated_at: 2026-05-13T02:38:30+08:00
 confidence: ai-drafted
 module: context
 paths:
@@ -32,8 +32,8 @@ Create and describe `.context` files and deterministic maintenance policy withou
 - Include `CHECKPOINT.md` as the explicit current handoff template.
 - Create default directory names.
 - Include non-canonical `.context/inbox/` and `.context/out/` directories for candidate facts and generated task outputs.
-- Include generated `.context/index/`, `.context/graph/`, and `.context/stats/` directories for deterministic machine-readable data.
-- Create and load `.context/policy.yml` with safe auto-apply defaults.
+- Include generated `.context/index/`, `.context/graph/`, and `.context/generated/` directories for deterministic machine-readable data.
+- Create and load `.context/policy.yml` with safe policy v2 auto-apply, candidate-only, blocked, and threshold defaults.
 - Infer deterministic verification commands from package scripts.
 - Offer filesystem existence helpers shared by commands.
 
@@ -46,10 +46,10 @@ Create and describe `.context` files and deterministic maintenance policy withou
 - `evidence`
 
 ## Data Flow
-`init` builds `TemplateInput`, templates return relative file paths and content, command writes them under `.context`. Commands that need policy call `loadContextPolicy()`, which merges `.context/policy.yml` with safe defaults.
+`init` builds `TemplateInput`, templates return relative file paths and content, command writes them under `.context`. Commands that need policy call `loadContextPolicy()`, which merges `.context/policy.yml` with safe policy v2 defaults and surfaces unknown keys as validation warnings.
 
 ## State / Storage
-Writes `.context/**` through `init`; reads `.context/policy.yml` through `loadContextPolicy()`.
+Writes `.context/**` through `init`; reads `.context/policy.yml` through `loadContextPolicy()` and `policy validate`.
 
 ## Constraints
 - Templates may contain placeholders but must not assert guessed project facts.
@@ -62,6 +62,8 @@ Writes `.context/**` through `init`; reads `.context/policy.yml` through `loadCo
 ## Tests / Verification
 - `pnpm test tests/integration/m1.test.ts`
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
+- `pnpm dev policy show`
+- `pnpm dev policy validate`
 
 ## When to Update This Doc
 When adding `.context` files/directories, changing template headings, or changing deterministic scan behavior.

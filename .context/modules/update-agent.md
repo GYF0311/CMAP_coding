@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T21:06:51+08:00
+updated_at: 2026-05-13T02:38:30+08:00
 confidence: ai-drafted
 module: update-agent
 paths:
@@ -37,11 +37,12 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - `src/fs/backup.ts`
 
 ## Responsibilities
-- Parse and validate `cmap.map_patch.v1` MapPatch JSON.
+- Parse and validate `cmap.map_patch.v1` and `cmap.map_patch.v2` MapPatch JSON.
 - Classify operations into routine auto-apply, inbox candidate, or reject.
-- Apply only low-risk checkpoint state with explicit task, next step, confidence, and file evidence.
-- Route module semantics, decisions, verification policy, and unknown operations to `.context/inbox/`.
-- Leave inbox backlog visible and governable through `cmap inbox status`, `cmap inbox triage`, `cmap inbox promote --dry-run`, `cmap inbox archive`, and `cmap verify --stale`.
+- Apply only policy-approved checkpoint, generated evidence, verification evidence, and generated stats operations with explicit confidence and evidence.
+- Route module semantics, decisions, verification policy, status updates, and low-risk metadata candidates to `.context/inbox/`.
+- Reject blocked operations such as code writes, shell runs, module delete/rename, and semantic map overwrite.
+- Leave inbox backlog visible and governable through `cmap inbox status`, `cmap inbox triage`, `cmap inbox promote --dry-run|--apply`, `cmap inbox archive`, `cmap verify --stale`, and `cmap verify --freshness`.
 - Create `.context/backups/` records before canonical writes.
 - Write `.context/audit/` records for MapPatch apply runs.
 - Run post-verify and roll back when the update introduces new structural errors.
@@ -53,6 +54,8 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - `src/fs/safe-path.ts` for project-root path safety.
 - `src/fs/backup.ts` for reversible writes.
 - `src/commands/verify.ts` for post-apply structural checks.
+- `src/context/policy.ts` for deterministic policy v2 gates.
+- `src/core/generated-store.ts` and `src/core/generated-stats.ts` for non-canonical generated writes.
 
 ## Used By
 - `cmap update --agent --from <file>`
@@ -62,15 +65,17 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - `cmap finish --agent` as the request-generation step.
 
 ## Data Flow
-AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` validates schema and paths -> routine `checkpoint.write` updates `CHECKPOINT.md` with backup/audit -> high-risk candidates are written to `.context/inbox/`.
+AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` validates schema, confidence, evidence, and paths -> policy-approved routine/generated operations write only allowed stores with backup/audit where needed -> candidate-only semantic or metadata operations are written to `.context/inbox/` -> blocked operations are rejected.
 
 ## State / Storage
 - Reads MapPatch JSON from `--from <file>` or stdin.
 - May write `.context/CHECKPOINT.md` for routine `checkpoint.write`.
+- May append `.context/generated/evidence/modules/*.jsonl` and `.context/generated/evidence/verification.jsonl`.
+- May update `.context/generated/stats/*.json`/`.jsonl`.
 - Writes `.context/audit/update-*.md` for apply runs.
 - Writes `.context/backups/*.json` before canonical writes.
 - Writes `.context/inbox/update-*.md` for high-risk candidates.
-- Reads are handled by `cmap inbox status` and `cmap inbox triage`; `cmap inbox promote --dry-run` previews manual promotion, and `cmap inbox archive` retains reviewed candidates under `.context/inbox/archive/`.
+- Reads are handled by `cmap inbox status` and `cmap inbox triage`; `cmap inbox promote --dry-run|--apply` previews or applies allowed low-risk metadata, and `cmap inbox archive` retains reviewed candidates under `.context/inbox/archive/`.
 
 ## Constraints
 - Does not call a model API.
@@ -78,13 +83,14 @@ AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` vali
 - Does not write code files.
 - Does not auto-write `MAP.md`, `DECISIONS.md`, `VERIFY.md`, or `.context/modules/*.md`.
 - Does not auto-create, rename, delete, or reassign modules.
+- Does not auto-apply semantic module updates, decisions, or verify policy changes.
 - Treats AI confidence as input only; policy still caps what can be applied.
 
 ## Traps
 - `--agent` means “process an external AI proposal”, not “cmap becomes an autonomous coding agent”.
 - Missing file evidence routes a proposal to inbox instead of blocking the whole run.
 - Inbox must remain visible in finish/verify workflows; otherwise semantic candidates can be silently forgotten.
-- `inbox promote --dry-run` is a review workflow, not an approval or write path.
+- `inbox promote --apply` belongs to the evidence/inbox module and remains limited to alias/path/evidence metadata.
 - `rollback` restores the files captured in one backup id; it is not a git reset.
 
 ## Tests / Verification

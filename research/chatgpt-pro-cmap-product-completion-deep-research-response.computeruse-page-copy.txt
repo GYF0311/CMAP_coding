@@ -1,3 +1,7 @@
+Superseded Notice, 2026-05-13
+
+This raw page copy is historical input. Mentions of import graph, test ownership, route v2, or pack v2 are not the current roadmap. Current direction is v0.2 Trust Boundary + Human Review Layer: canonical graph from reviewed module docs, HTML human review, and AI relation candidates routed through inbox.
+
 ChatGPT
 
 
@@ -1257,4 +1261,3 @@ Sourcegraph docs
 
 6.5.sourcegraph.com
 Sourcegraph docs
-

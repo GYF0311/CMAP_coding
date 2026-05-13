@@ -3,50 +3,34 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-12T22:30:52+08:00'
+updated_at: '2026-05-13T21:47:48+08:00'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Land all ChatGPT Pro deep-research recommendations as safe, testable cmap product slices.
+Complete v0.2 Trust Boundary + Human Review Layer implementation and verification.
 
 ## Done Recently
-Collected the ChatGPT Pro cmap product-completion research report locally. Added evidence/stale/inbox maintenance, observe/assist hooks, route context packing, `--max-context`, context-aware route benchmark metrics, inbox governance, policy-backed generated stats foundations, Claude hook lifecycle render/test, graph v0 projections, CI Markdown verify output, benchmark threshold flags, a GitHub Actions cmap workflow, `cmap pack`, assist prompt session briefs, route usage stats, Obsidian export drift check, and refreshed product showcase.
+The roadmap has been reset away from CLI-owned import graph / route v2 / pack v2 and toward trust-boundary clarity, HTML human review, generated/canonical hygiene, freshness, and AI relation candidates. Implementation now includes the read-only HTML view, generated evidence store/migration, explicit Codex workflow, hook ingest, Freshness v2 baseline/review metadata, and candidate-only RelationPatch ingest.
 
 ## Left Off
-Final docs/view-drift slice is implemented and verified locally. `obsidian export --check` detects stale `_cmap` mirrors, local `_cmap/CMAP_coding` has been regenerated, and the product overview HTML reflects pack/hooks/stats/CI/Obsidian check capabilities.
+All five v0.2 slices are implemented in the local worktree. Canonical graph is still derived only from reviewed module docs. Route may warn about pending relation candidates but does not score or include them in `route.modules`, `route.contextModules`, or route benchmark data.
 
 ## Next Steps
-Commit and push the final docs/view-drift slice.
+1. Finish final verification after the checkpoint/status update.
+2. Review whether to keep `.context/graph/*.json` as committed generated projections or regenerate them only in CI/review flows.
+3. Decide a separate cleanup/migration task for legacy `.context/pending` and `.context/stats`; do not delete them in this implementation PR.
+4. Use `freshness mark-reviewed` only after a human/AI semantic review of updated module docs.
 
 ## Changed Files
-- README.md
-- .github/workflows/cmap.yml
-- .context/MAP.md
-- .context/CHECKPOINT.md
-- .context/STATUS.md
-- .context/VERIFY.md
-- .context/modules/benchmark.md
-- .context/modules/cli.md
-- .context/modules/evidence.md
-- .context/modules/hooks-doctor.md
-- .context/modules/pack.md
-- .context/modules/route.md
-- .context/modules/tests.md
-- .context/modules/verify.md
-- docs/superpowers/plans/2026-05-12-cmap-pro-deep-research-completion.md
-- src/cli.ts
-- src/commands/hooks.ts
-- src/commands/pack.ts
-- src/commands/route.ts
-- src/core/generated-stats.ts
-- tests/integration/m9-hooks-assist.test.ts
-- tests/integration/m13-policy-stats.test.ts
-- tests/integration/m16-context-pack.test.ts
+- `.context/CHECKPOINT.md`, `.context/STATUS.md`, `.context/MAP.md`, `.context/VERIFY.md`, module docs, README, PRD, research superseded notices.
+- `src/cli.ts`, command handlers for codex/evidence/freshness/hooks/inbox/pack/relate/route/verify/view.
+- `src/core/freshness.ts`, `src/core/generated-store.ts`, `src/core/relation-patch.ts`, `src/context/relation-schema.ts`, `src/hooks/events.ts`, `src/view/*`.
+- Integration tests for evidence/stale/inbox, hooks ingest, freshness, view export, relation candidates, and legacy pending verification.
 
 ## Risks
-`_cmap/` remains an ignored generated view layer; the repository stores the check command and updated product docs, while the local view can be regenerated any time.
+Legacy `.context/pending` and `.context/stats` still exist and intentionally produce warnings. `verify --stale` reports updated modules that need semantic review; freshness metadata separates baseline from reviewed state so this should be resolved by review, not by generated evidence writes. Codex hook parity remains experimental; the supported Codex path is explicit `cmap codex start/finish/guard`.
 
 ## Last Verified
-2026-05-12: `pnpm test`, `pnpm typecheck`, `pnpm build`, `pnpm dev verify`, `pnpm dev verify --ci --format markdown`, `pnpm dev verify --stale`, `pnpm dev obsidian export && pnpm dev obsidian export --check`, `pnpm smoke`, `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0`, and `git diff --check` passed.
+2026-05-13: `pnpm test` passed 21 files / 111 tests, `pnpm typecheck` passed, `pnpm smoke` passed, `pnpm dev verify` passed with 0 errors and 2 expected legacy warnings, `pnpm dev verify --freshness` passed with the same legacy warnings, `pnpm dev view export --check --out _cmap-view` passed, `pnpm dev obsidian export --check` passed after refreshing `_cmap/`, benchmark route passed 100% Top-1/Top-3/context with 0 bad hits, and `git diff --check` passed.

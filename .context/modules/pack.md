@@ -63,6 +63,8 @@ Read-only unless `--out` is provided, in which case the pack is written to a pro
 ## Constraints
 - Do not scan or embed the whole repository.
 - Do not treat generated evidence or inbox candidates as canonical facts.
+- Do not promote pack v2 priority assembly as current roadmap; the next review surface is `cmap view export`.
+- Generated evidence may be included only when clearly labeled `Generated / Non-canonical`.
 - Budget enforcement is approximate and deterministic; it is not model-tokenizer exact.
 
 ## Traps

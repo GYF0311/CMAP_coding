@@ -78,7 +78,7 @@ TODO(ai-fill)
     expect(result.stdout).toContain("VERIFY.md does not mention package script: build");
   });
 
-  test("warns when pending updates exceed the v0.1 threshold", async () => {
+  test("warns when legacy pending directory still exists", async () => {
     const cwd = await createTempProject("verify-pending-threshold");
     await runCmap(["init", "--auto"], cwd);
     await mkdir(path.join(cwd, ".context", "pending"), { recursive: true });
@@ -89,7 +89,7 @@ TODO(ai-fill)
     const result = await runCmap(["verify"], cwd);
 
     expect(result.code).toBe(0);
-    expect(result.stdout).toContain("Pending: 4 pending updates need review");
+    expect(result.stdout).toContain("Legacy: .context/pending exists with 4 markdown file(s); new candidates should use .context/inbox");
   });
 
   test("reports broken typed module relations", async () => {

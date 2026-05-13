@@ -8,7 +8,7 @@ export async function runAdopt(cwd: string): Promise<void> {
   const signals = await scanAdoptionSignals(cwd);
   const adoption = `---
 cmap_version: 0.1
-context_type: pending
+context_type: candidate
 project: ${path.basename(cwd)}
 source: auto-adopt
 confidence: candidate

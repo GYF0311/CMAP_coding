@@ -1,0 +1,380 @@
+{
+  "adoption": {
+    "doc": ".context/modules/adoption.md",
+    "paths": [
+      "src/commands/adopt.ts",
+      "src/context/adoption-scanner.ts"
+    ],
+    "aliases": [
+      "adopt",
+      "adoption",
+      "existing project",
+      "接管",
+      "候选模块"
+    ]
+  },
+  "benchmark": {
+    "doc": ".context/modules/benchmark.md",
+    "paths": [
+      "src/commands/benchmark.ts",
+      "bench"
+    ],
+    "aliases": [
+      "benchmark",
+      "route benchmark",
+      "bench",
+      "评测",
+      "命中率",
+      "top-k"
+    ]
+  },
+  "brief": {
+    "doc": ".context/modules/brief.md",
+    "paths": [
+      "src/commands/brief.ts"
+    ],
+    "aliases": [
+      "brief",
+      "AI brief",
+      "coding brief",
+      "开工包",
+      "AI 开工包"
+    ]
+  },
+  "cli": {
+    "doc": ".context/modules/cli.md",
+    "paths": [
+      "src/cli.ts",
+      "src/commands"
+    ],
+    "aliases": [
+      "cli",
+      "command",
+      "命令",
+      "version",
+      "init",
+      "install"
+    ]
+  },
+  "context": {
+    "doc": ".context/modules/context.md",
+    "paths": [
+      "src/context"
+    ],
+    "aliases": [
+      "context",
+      "template",
+      "skeleton",
+      ".context",
+      "policy",
+      "模板",
+      "骨架"
+    ]
+  },
+  "cp": {
+    "doc": ".context/modules/cp.md",
+    "paths": [
+      "src/commands/cp.ts",
+      "src/fs"
+    ],
+    "aliases": [
+      "cp",
+      "copy",
+      "move",
+      "delete",
+      "restore",
+      "line block",
+      "行块",
+      "搬运",
+      "备份"
+    ]
+  },
+  "evidence": {
+    "doc": ".context/modules/evidence.md",
+    "paths": [
+      "src/commands/evidence.ts",
+      "src/commands/inbox.ts",
+      "src/commands/freshness.ts",
+      "src/core/generated-store.ts",
+      "src/core/generated-stats.ts",
+      "src/core/freshness.ts"
+    ],
+    "aliases": [
+      "evidence",
+      "generated evidence",
+      "module activity",
+      "stats",
+      "inbox status",
+      "inbox triage",
+      "promote dry-run",
+      "promote apply",
+      "archive",
+      "stale",
+      "freshness",
+      "hooks assist",
+      "证据",
+      "候选池"
+    ]
+  },
+  "finish": {
+    "doc": ".context/modules/finish.md",
+    "paths": [
+      "src/commands/finish.ts",
+      "src/core/module-index.ts"
+    ],
+    "aliases": [
+      "finish",
+      "closeout",
+      "report",
+      "收尾",
+      "上下文收尾",
+      "任务结束",
+      "任务结束前",
+      "更新 context",
+      "context 文件"
+    ]
+  },
+  "graph": {
+    "doc": ".context/modules/graph.md",
+    "paths": [
+      "src/commands/graph.ts",
+      "src/core/context-graph.ts"
+    ],
+    "aliases": [
+      "graph",
+      "context graph",
+      "graph build",
+      "graph explain",
+      "关系图",
+      "图谱"
+    ]
+  },
+  "handoff": {
+    "doc": ".context/modules/handoff.md",
+    "paths": [
+      "src/commands/status.ts",
+      "src/commands/checkpoint.ts"
+    ],
+    "aliases": [
+      "status",
+      "checkpoint",
+      "handoff",
+      "续接",
+      "主线",
+      "上下文"
+    ]
+  },
+  "hooks-doctor": {
+    "doc": ".context/modules/hooks-doctor.md",
+    "paths": [
+      "src/commands/hooks.ts",
+      "src/commands/codex.ts",
+      "src/hooks",
+      "src/commands/doctor.ts",
+      "src/commands/install.ts"
+    ],
+    "aliases": [
+      "hooks",
+      "doctor",
+      "reminder",
+      "maintain",
+      "observe",
+      "assist",
+      "strict",
+      "lifecycle",
+      "诊断"
+    ]
+  },
+  "host": {
+    "doc": ".context/modules/host.md",
+    "paths": [
+      "src/host",
+      "src/commands/install.ts"
+    ],
+    "aliases": [
+      "install",
+      "AGENTS",
+      "CLAUDE",
+      "host",
+      "入口"
+    ]
+  },
+  "memory-lite": {
+    "doc": ".context/modules/memory-lite.md",
+    "paths": [
+      "src/commands/log.ts",
+      "src/commands/idea.ts"
+    ],
+    "aliases": [
+      "log",
+      "idea",
+      "工作日志",
+      "灵感",
+      "inbox"
+    ]
+  },
+  "module-docs": {
+    "doc": ".context/modules/module-docs.md",
+    "paths": [
+      "src/commands/add-module.ts"
+    ],
+    "aliases": [
+      "add-module",
+      "module doc",
+      "module template",
+      "模块文档"
+    ]
+  },
+  "obsidian-adapter": {
+    "doc": ".context/modules/obsidian-adapter.md",
+    "paths": [
+      "src/commands/obsidian.ts"
+    ],
+    "aliases": [
+      "obsidian",
+      "Obsidian",
+      "graph",
+      "图谱",
+      "关系图谱",
+      "可视化",
+      "export"
+    ]
+  },
+  "pack": {
+    "doc": ".context/modules/pack.md",
+    "paths": [
+      "src/commands/pack.ts"
+    ],
+    "aliases": [
+      "pack",
+      "context pack",
+      "token budget",
+      "AI context pack",
+      "上下文包",
+      "阅读包",
+      "token 预算"
+    ]
+  },
+  "reconcile-adapter": {
+    "doc": ".context/modules/reconcile-adapter.md",
+    "paths": [
+      "src/commands/reconcile.ts"
+    ],
+    "aliases": [
+      "reconcile",
+      "adapter",
+      "GSD adapter",
+      "gsd-v1",
+      "gsd-v2",
+      "dry-run",
+      "候选事实",
+      "外部产物"
+    ]
+  },
+  "relation-candidates": {
+    "doc": ".context/modules/relation-candidates.md",
+    "paths": [
+      "src/commands/relate.ts",
+      "src/core/relation-patch.ts",
+      "src/context/relation-schema.ts"
+    ],
+    "aliases": [
+      "relate",
+      "relation candidate",
+      "RelationPatch",
+      "relation workflow",
+      "关系候选",
+      "关系补丁"
+    ]
+  },
+  "route": {
+    "doc": ".context/modules/route.md",
+    "paths": [
+      "src/commands/route.ts",
+      "src/core/module-index.ts"
+    ],
+    "aliases": [
+      "route",
+      "aliases",
+      "routing",
+      "路由",
+      "模块定位"
+    ]
+  },
+  "showcase": {
+    "doc": ".context/modules/showcase.md",
+    "paths": [
+      "docs/cmap-product-overview.html"
+    ],
+    "aliases": [
+      "showcase",
+      "product overview",
+      "HTML",
+      "介绍页",
+      "产品介绍",
+      "思维导图"
+    ]
+  },
+  "tests": {
+    "doc": ".context/modules/tests.md",
+    "paths": [
+      "tests",
+      "scripts/smoke-test.mjs"
+    ],
+    "aliases": [
+      "test",
+      "vitest",
+      "smoke",
+      "自测",
+      "集成测试",
+      "行为测试",
+      "red green"
+    ]
+  },
+  "update-agent": {
+    "doc": ".context/modules/update-agent.md",
+    "paths": [
+      "src/commands/update.ts",
+      "src/core/map-patch.ts",
+      "src/fs/backup.ts"
+    ],
+    "aliases": [
+      "update",
+      "MapPatch",
+      "agent update",
+      "自主维护",
+      "自动维护",
+      "rollback",
+      "inbox"
+    ]
+  },
+  "verify": {
+    "doc": ".context/modules/verify.md",
+    "paths": [
+      "src/commands/verify.ts"
+    ],
+    "aliases": [
+      "verify",
+      "check",
+      "drift",
+      "stale",
+      "校验",
+      "检查",
+      "placeholder"
+    ]
+  },
+  "view": {
+    "doc": ".context/modules/view.md",
+    "paths": [
+      "src/view",
+      "src/commands/view.ts",
+      "tests/integration/m19-view-export.test.ts"
+    ],
+    "aliases": [
+      "view",
+      "dashboard",
+      "HTML review",
+      "human review"
+    ]
+  }
+}

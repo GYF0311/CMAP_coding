@@ -1,0 +1,1 @@
+{"version":1,"id":"evidence-2026-05-12t09-43-47-009z","moduleId":"evidence","createdAt":"2026-05-12T09:43:47.009Z","source":"manual","summary":"Implemented generated evidence append command for the v0.2 maintenance slice.","files":["src/commands/evidence.ts"],"commands":["pnpm test tests/integration/m8-evidence-stale-inbox.test.ts"],"confidence":1,"canonical":false}

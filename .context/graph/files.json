@@ -1,0 +1,244 @@
+{
+  "src/commands/adopt.ts": {
+    "modules": [
+      "adoption"
+    ]
+  },
+  "src/context/adoption-scanner.ts": {
+    "modules": [
+      "adoption"
+    ]
+  },
+  "src/commands/benchmark.ts": {
+    "modules": [
+      "benchmark"
+    ]
+  },
+  "bench": {
+    "modules": [
+      "benchmark"
+    ]
+  },
+  "src/commands/brief.ts": {
+    "modules": [
+      "brief"
+    ]
+  },
+  "src/cli.ts": {
+    "modules": [
+      "cli"
+    ]
+  },
+  "src/commands": {
+    "modules": [
+      "cli"
+    ]
+  },
+  "src/context": {
+    "modules": [
+      "context"
+    ]
+  },
+  "src/commands/cp.ts": {
+    "modules": [
+      "cp"
+    ]
+  },
+  "src/fs": {
+    "modules": [
+      "cp"
+    ]
+  },
+  "src/commands/evidence.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/commands/inbox.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/commands/freshness.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/core/generated-store.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/core/generated-stats.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/core/freshness.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/commands/finish.ts": {
+    "modules": [
+      "finish"
+    ]
+  },
+  "src/core/module-index.ts": {
+    "modules": [
+      "finish",
+      "route"
+    ]
+  },
+  "src/commands/graph.ts": {
+    "modules": [
+      "graph"
+    ]
+  },
+  "src/core/context-graph.ts": {
+    "modules": [
+      "graph"
+    ]
+  },
+  "src/commands/status.ts": {
+    "modules": [
+      "handoff"
+    ]
+  },
+  "src/commands/checkpoint.ts": {
+    "modules": [
+      "handoff"
+    ]
+  },
+  "src/commands/hooks.ts": {
+    "modules": [
+      "hooks-doctor"
+    ]
+  },
+  "src/commands/codex.ts": {
+    "modules": [
+      "hooks-doctor"
+    ]
+  },
+  "src/hooks": {
+    "modules": [
+      "hooks-doctor"
+    ]
+  },
+  "src/commands/doctor.ts": {
+    "modules": [
+      "hooks-doctor"
+    ]
+  },
+  "src/commands/install.ts": {
+    "modules": [
+      "hooks-doctor",
+      "host"
+    ]
+  },
+  "src/host": {
+    "modules": [
+      "host"
+    ]
+  },
+  "src/commands/log.ts": {
+    "modules": [
+      "memory-lite"
+    ]
+  },
+  "src/commands/idea.ts": {
+    "modules": [
+      "memory-lite"
+    ]
+  },
+  "src/commands/add-module.ts": {
+    "modules": [
+      "module-docs"
+    ]
+  },
+  "src/commands/obsidian.ts": {
+    "modules": [
+      "obsidian-adapter"
+    ]
+  },
+  "src/commands/pack.ts": {
+    "modules": [
+      "pack"
+    ]
+  },
+  "src/commands/reconcile.ts": {
+    "modules": [
+      "reconcile-adapter"
+    ]
+  },
+  "src/commands/relate.ts": {
+    "modules": [
+      "relation-candidates"
+    ]
+  },
+  "src/core/relation-patch.ts": {
+    "modules": [
+      "relation-candidates"
+    ]
+  },
+  "src/context/relation-schema.ts": {
+    "modules": [
+      "relation-candidates"
+    ]
+  },
+  "src/commands/route.ts": {
+    "modules": [
+      "route"
+    ]
+  },
+  "docs/cmap-product-overview.html": {
+    "modules": [
+      "showcase"
+    ]
+  },
+  "tests": {
+    "modules": [
+      "tests"
+    ]
+  },
+  "scripts/smoke-test.mjs": {
+    "modules": [
+      "tests"
+    ]
+  },
+  "src/commands/update.ts": {
+    "modules": [
+      "update-agent"
+    ]
+  },
+  "src/core/map-patch.ts": {
+    "modules": [
+      "update-agent"
+    ]
+  },
+  "src/fs/backup.ts": {
+    "modules": [
+      "update-agent"
+    ]
+  },
+  "src/commands/verify.ts": {
+    "modules": [
+      "verify"
+    ]
+  },
+  "src/view": {
+    "modules": [
+      "view"
+    ]
+  },
+  "src/commands/view.ts": {
+    "modules": [
+      "view"
+    ]
+  },
+  "tests/integration/m19-view-export.test.ts": {
+    "modules": [
+      "view"
+    ]
+  }
+}

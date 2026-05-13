@@ -21,6 +21,8 @@ aliases:
 ## Purpose
 Explain cmap's current product shape as a user-facing, interactive overview that can be opened locally or handed to an external model for review.
 
+Roadmap note: `docs/cmap-product-overview.html` is an explanatory product artifact. The next planned HTML review layer is `cmap view export`, which should render the live project map as a read-only dashboard without becoming a canonical fact source.
+
 ## Code Paths
 - `docs/cmap-product-overview.html`
 
@@ -50,6 +52,7 @@ The overview is a static generated artifact in `docs/`. It does not write projec
 - The HTML overview is a view, not the source of truth.
 - Product claims should be refreshed when `.context` module responsibilities or workflow status changes.
 - External model feedback is advisory until reviewed and promoted into canonical `.context` files.
+- Future `cmap view export` output must also stay read-only and non-canonical.
 
 ## Traps
 - Do not let the showcase page drift into a second product map.

@@ -1,6 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileExists } from "../context/scanner.js";
+import { listModuleEvidence } from "../core/generated-store.js";
 import { moduleById, loadModuleIndex } from "../core/module-index.js";
 import { CmapCommandError } from "../errors.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
@@ -37,6 +38,7 @@ export async function runPack(cwd: string, task: string, options: PackOptions): 
   const selectedModules = route.contextModules
     .map((candidate) => lookup.get(candidate.id))
     .filter((module): module is NonNullable<typeof module> => Boolean(module));
+  const generatedEvidence = await generatedEvidenceSummary(cwd, selectedModules.map((module) => module.id));
   const rendered = redactSensitiveValues(renderPack({
     task,
     tokenBudget,
@@ -47,7 +49,8 @@ export async function runPack(cwd: string, task: string, options: PackOptions): 
     status,
     decisions,
     verify,
-    inbox
+    inbox,
+    generatedEvidence
   }));
   const packed = enforceCharBudget(rendered, maxChars);
 
@@ -73,6 +76,7 @@ function renderPack(input: {
   decisions: string;
   verify: string;
   inbox: string;
+  generatedEvidence: string;
 }): string {
   const lines = [
     "# cmap Context Pack",
@@ -120,6 +124,9 @@ function renderPack(input: {
   lines.push("", "## Decisions", "");
   lines.push(excerptMarkdown(input.decisions) || "_No decisions found._");
 
+  lines.push("", "## Generated Evidence (Non-canonical)", "");
+  lines.push(input.generatedEvidence);
+
   lines.push("", "## Verify Commands", "");
   if (input.route.verifyCommands.length > 0) {
     for (const command of input.route.verifyCommands) {
@@ -145,6 +152,19 @@ function renderPack(input: {
   );
 
   return lines.join("\n");
+}
+
+async function generatedEvidenceSummary(cwd: string, moduleIds: string[]): Promise<string> {
+  const lines: string[] = [];
+  for (const moduleId of moduleIds) {
+    const entries = (await listModuleEvidence(cwd, moduleId))
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .slice(0, 3);
+    for (const entry of entries) {
+      lines.push(`- ${moduleId}: ${entry.summary} (${entry.files.slice(0, 3).join(", ") || "no files"})`);
+    }
+  }
+  return lines.length > 0 ? lines.join("\n") : "- No generated evidence for routed modules.";
 }
 
 function parseTokenBudget(value: string | undefined): number {

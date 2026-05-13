@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { loadContextPolicy } from "../context/policy.js";
 import { fileExists } from "../context/scanner.js";
+import { generatedStatsPath } from "./generated-store.js";
 
 type ModuleActivity = {
   evidence_count: number;
@@ -41,9 +42,9 @@ export async function recordModuleActivity(
   if (!policy.autoApply.statsUpdate) {
     return;
   }
-  const statsRoot = path.join(cwd, ".context", "stats");
+  const statsRoot = path.join(cwd, ".context", "generated", "stats");
   await mkdir(statsRoot, { recursive: true });
-  const statsPath = path.join(statsRoot, "module-activity.json");
+  const statsPath = generatedStatsPath(cwd, "module-activity.json");
   const now = input.at ?? new Date().toISOString();
   const stats = await readModuleActivityStats(statsPath);
   const current = stats.modules[input.moduleId] ?? {
@@ -74,9 +75,9 @@ export async function recordRouteUsage(
   if (!policy.autoApply.statsUpdate) {
     return;
   }
-  const statsRoot = path.join(cwd, ".context", "stats");
+  const statsRoot = path.join(cwd, ".context", "generated", "stats");
   await mkdir(statsRoot, { recursive: true });
-  const statsPath = path.join(statsRoot, "route-usage.json");
+  const statsPath = generatedStatsPath(cwd, "route-usage.json");
   const now = input.at ?? new Date().toISOString();
   const stats = await readRouteUsageStats(statsPath);
   stats.total += 1;

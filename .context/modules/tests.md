@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T22:17:54+08:00
+updated_at: 2026-05-13T02:38:30+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -39,6 +39,8 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m14-graph-route.test.ts`
 - `tests/integration/m15-ci-benchmark.test.ts`
 - `tests/integration/m16-context-pack.test.ts`
+- `tests/integration/m17-hooks-ingest-codex.test.ts`
+- `tests/integration/m18-freshness-inbox-promote.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `scripts/smoke-test.mjs`
@@ -51,14 +53,16 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert brief/export commands write task-local or view-layer artifacts without changing canonical facts.
 - Assert Obsidian export check detects stale view-layer mirrors without writing.
 - Assert coverage, pull dry-run, and benchmark commands surface candidate issues without canonical writes.
-- Assert MapPatch routine apply, generated evidence, inbox status/triage/promote/archive, and stale verify behavior.
+- Assert MapPatch v1/v2 routine apply, generated evidence/verification evidence, policy blocking, inbox status/triage/promote/archive, and stale verify behavior.
 - Assert observe/assist/strict hook profiles write only non-canonical hook logs/session events, bounded generated evidence, or guard decisions.
 - Assert assist UserPromptSubmit writes a generated session brief and route usage stats.
+- Assert Codex hook render/ingest reads stdin payloads, writes generated session briefs/logs, returns Codex-compatible JSON, and denies direct semantic canonical writes in strict PreToolUse.
 - Assert route context pack behavior separates direct matches from related context and surfaces module-owned verification commands.
 - Assert route/brief context size controls bound selected context modules and derived verification commands.
 - Assert route benchmark fixtures can measure context-pack hits separately from direct module hits.
 - Assert policy defaults, generated module activity stats, and policy-backed inbox thresholds.
 - Assert route usage stats are written when policy allows stats updates.
+- Assert freshness snapshot/review warnings, low-risk inbox promote apply backup/audit/archive behavior, and explicit inbox reject archive behavior.
 - Assert graph projections, graph explanation, and graph-mode route output.
 - Assert CI Markdown verify output and benchmark threshold failure behavior.
 - Assert context pack budget enforcement, route-neighborhood selection, and secret-looking value redaction.
@@ -98,6 +102,8 @@ Temporary directories under the system temp path.
 - `pnpm test tests/integration/m14-graph-route.test.ts`
 - `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 - `pnpm test tests/integration/m16-context-pack.test.ts`
+- `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts`
+- `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
 - `pnpm smoke`
 
 ## When to Update This Doc

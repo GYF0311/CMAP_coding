@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T22:17:54+08:00
+updated_at: 2026-05-13T02:38:30+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -28,6 +28,8 @@ relations:
     - finish
     - update-agent
     - evidence
+    - view
+    - relation-candidates
     - hooks-doctor
     - verify
 ---
@@ -53,10 +55,15 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `benchmark route` as a public evaluation command.
 - Register `benchmark route` quality threshold flags while keeping metric evaluation in `benchmark`.
 - Register `reconcile` as a dry-run external artifact adapter command.
-- Register `update --agent` and `update rollback` while keeping MapPatch policy out of `cli.ts`.
-- Register `evidence append` and `inbox status/triage/promote/archive` while keeping generated evidence and inbox governance policy in command modules.
-- Register hook observe/assist/strict profile options plus `hooks render` and `hooks test` while keeping hook behavior in `hooks-doctor`.
-- Register `verify --stale` as a deterministic warning mode.
+- Register `update --agent` and `update rollback` while keeping MapPatch v2 policy out of `cli.ts`.
+- Register `policy show/validate` while keeping deterministic policy loading and validation in command modules.
+- Register `evidence append/list/migrate` and `freshness snapshot/diff/mark-reviewed` while keeping generated-store and freshness policy in command modules.
+- Register `inbox status/triage/promote/reject/archive` while keeping candidate governance, explicit rejection, and low-risk apply policy in command modules.
+- Register `view export/open` while keeping HTML collection/render/check behavior in `view`.
+- Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
+- Register `codex start/finish/guard` as explicit Codex workflow commands without relying on strict hook parity.
+- Register hook observe/assist/strict profile options plus `hooks render`, `hooks ingest`, and `hooks test` while keeping hook behavior in `hooks-doctor`.
+- Register `verify --stale` and `verify --freshness` as deterministic warning modes.
 - Convert expected CLI errors into exit code 2.
 - Preserve command-specific exit codes such as `verify` returning 1 on structural errors.
 
@@ -72,6 +79,8 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `reconcile-adapter` for external workflow candidate reports.
 - `update-agent` for MapPatch intake and routine context maintenance.
 - `evidence` for generated evidence and inbox visibility commands.
+- `view` for the HTML project-map review dashboard.
+- `relation-candidates` for AI relation candidate workflow commands.
 - `hooks-doctor` for hook lifecycle command behavior.
 
 ## Used By
@@ -95,6 +104,10 @@ No persistent state except files written by command modules.
 - `pnpm test tests/integration/m1.test.ts`
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
+- `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts`
+- `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m19-view-export.test.ts`
+- `pnpm test tests/integration/m20-relation-candidates.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
 - `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 - `pnpm test tests/integration/m16-context-pack.test.ts`

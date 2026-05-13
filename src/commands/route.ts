@@ -1,3 +1,6 @@
+import { readdir } from "node:fs/promises";
+import path from "node:path";
+import { fileExists } from "../context/scanner.js";
 import type { ContextModule } from "../core/module-index.js";
 import { loadModuleIndex } from "../core/module-index.js";
 import { recordRouteUsage } from "../core/generated-stats.js";
@@ -43,6 +46,7 @@ export type RouteReport = {
   readFirst: string[];
   verifyCommands: string[];
   graphMode: boolean;
+  warnings: string[];
 };
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
@@ -80,7 +84,8 @@ export async function routeTask(cwd: string, task: string, options: RouteOptions
     lowConfidence: strong.length === 0,
     readFirst: buildReadFirst(contextModules),
     verifyCommands,
-    graphMode: Boolean(options.graph)
+    graphMode: Boolean(options.graph),
+    warnings: await relationCandidateWarnings(cwd)
   };
 }
 
@@ -184,6 +189,13 @@ function formatRouteReport(report: RouteReport): string {
     lines.push("", "Suggested verify:");
     for (const command of report.verifyCommands.slice(0, 8)) {
       lines.push(`- ${command}`);
+    }
+  }
+
+  if (report.warnings.length > 0) {
+    lines.push("", "Warnings:");
+    for (const warning of report.warnings) {
+      lines.push(`- ${warning}`);
     }
   }
 
@@ -337,7 +349,8 @@ function toJsonReport(report: RouteReport): object {
     lowConfidence: report.lowConfidence,
     readFirst: report.readFirst,
     verifyCommands: report.verifyCommands,
-    graphMode: report.graphMode
+    graphMode: report.graphMode,
+    warnings: report.warnings
   };
 }
 
@@ -356,4 +369,20 @@ function evidence(module: ModuleCandidate | ContextModuleCandidate): string[] {
     values.push(`related via ${module.relation.type} from ${module.relation.from}`);
   }
   return values;
+}
+
+async function relationCandidateWarnings(cwd: string): Promise<string[]> {
+  const root = path.join(cwd, ".context", "inbox", "relations");
+  if (!(await fileExists(root))) {
+    return [];
+  }
+  const entries = (await readdir(root))
+    .filter((entry) => /^relation-.+\.(json|md)$/.test(entry))
+    .sort();
+  if (entries.length === 0) {
+    return [];
+  }
+  const files = entries.slice(0, 5).map((entry) => `.context/inbox/relations/${entry}`).join(", ");
+  const suffix = entries.length > 5 ? `, +${entries.length - 5} more` : "";
+  return [`Pending relation candidates exist (${entries.length}): ${files}${suffix}. Route does not consume unpromoted candidates.`];
 }

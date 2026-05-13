@@ -12,7 +12,7 @@ This project uses cmap: a shared project map for humans and AI coding agents.
 
 ## Rules
 - Do not read every \`.context\` file by default. Read by route.
-- Do not treat \`logs/\`, \`ideas/\`, or \`pending/\` as canonical facts.
+- Do not treat \`logs/\`, \`ideas/\`, \`inbox/\`, or generated files as canonical facts.
 - Only \`MAP.md\`, \`CHECKPOINT.md\`, \`STATUS.md\`, \`DECISIONS.md\`, \`VERIFY.md\`, and \`modules/*.md\` are trusted project memory.
 - If code changes module responsibilities, dependencies, data flow, or verification, update \`.context\`.
 - If context is getting full, run \`cmap checkpoint write --task "..." --next "..."\`.

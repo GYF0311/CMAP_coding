@@ -1,0 +1,67 @@
+import { z } from "zod";
+
+export const viewDataSchemaId = "cmap.view_data.v1";
+
+export const CmapViewDataSchema = z.object({
+  schema: z.literal(viewDataSchemaId),
+  generatedAt: z.string(),
+  sourceCommit: z.string().optional(),
+  projectRootName: z.string(),
+  project: z.object({
+    id: z.string(),
+    name: z.string()
+  }),
+  summary: z.object({
+    moduleCount: z.number().int().nonnegative(),
+    evidenceCount: z.number().int().nonnegative(),
+    candidateCount: z.number().int().nonnegative(),
+    warningCount: z.number().int().nonnegative()
+  }),
+  modules: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    docPath: z.string(),
+    status: z.string(),
+    layer: z.string(),
+    risk: z.string(),
+    aliases: z.array(z.string()),
+    paths: z.array(z.string()),
+    relations: z.array(z.object({
+      type: z.string(),
+      target: z.string()
+    })),
+    freshness: z.object({
+      state: z.string(),
+      lastReviewedAt: z.string(),
+      newestGeneratedEvidenceAt: z.string(),
+      pendingInboxCandidates: z.array(z.string())
+    })
+  })),
+  evidence: z.array(z.object({
+    moduleId: z.string(),
+    createdAt: z.string(),
+    source: z.string(),
+    summary: z.string(),
+    files: z.array(z.string()),
+    commands: z.array(z.string())
+  })),
+  candidates: z.array(z.object({
+    id: z.string(),
+    file: z.string(),
+    type: z.string(),
+    risk: z.string(),
+    moduleId: z.string(),
+    summary: z.string()
+  })),
+  relationCandidates: z.array(z.object({
+    id: z.string(),
+    file: z.string(),
+    from: z.string(),
+    to: z.string(),
+    relation: z.string(),
+    summary: z.string()
+  })),
+  warnings: z.array(z.string())
+});
+
+export type CmapViewData = z.infer<typeof CmapViewDataSchema>;

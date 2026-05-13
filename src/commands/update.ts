@@ -34,11 +34,15 @@ export async function runUpdate(cwd: string, options: UpdateOptions): Promise<vo
     const result = await applyRoutineMapPatch(cwd, patch, evaluations);
     const after = await verifyContext(cwd);
     const newErrors = findNewErrors(before.issues, after.issues);
-    if (newErrors.length > 0 && result.backupId) {
-      await restoreBackup(cwd, result.backupId);
+    if (newErrors.length > 0) {
+      if (result.backupId) {
+        await restoreBackup(cwd, result.backupId);
+      }
       throw new CmapCommandError(
         [
-          `Post-verify found new errors; rolled back backup ${result.backupId}.`,
+          result.backupId
+            ? `Post-verify found new errors; rolled back backup ${result.backupId}.`
+            : "Post-verify found new errors; no backup was created for generated-only operations.",
           ...newErrors.map((message) => `- ${message}`)
         ].join("\n")
       );

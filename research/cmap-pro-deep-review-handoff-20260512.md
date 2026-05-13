@@ -1,5 +1,9 @@
 # cmap Pro 深度文审交接报告
 
+> Superseded Notice, 2026-05-13
+>
+> This handoff is historical input for external review. Mentions of import graph, test ownership, route v2, or pack v2 are not the current roadmap. Current direction is v0.2 Trust Boundary + Human Review Layer: canonical graph from reviewed module docs, HTML human review, and AI relation candidates routed through inbox.
+
 生成时间：2026-05-12 14:45 CST  
 项目路径：`/Users/gaoyifan/Desktop/CMAP_coding`  
 当前提交：`a635d874373a53d893ecd5340b05afd480e8632e`  
@@ -751,4 +755,3 @@ v0.5 mature product
 13. 是否建议继续当前方向
 
 请务必保持“能落地”，不要只做产品愿景。
-

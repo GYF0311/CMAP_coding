@@ -5,24 +5,29 @@ import { runAdopt } from "./commands/adopt.js";
 import { runBenchmarkRoute } from "./commands/benchmark.js";
 import { runBrief } from "./commands/brief.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
+import { runCodexFinish, runCodexGuard, runCodexStart } from "./commands/codex.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
+import { runFreshnessDiff, runFreshnessMarkReviewed, runFreshnessSnapshot } from "./commands/freshness.js";
 import { runGraphBuild, runGraphExplain } from "./commands/graph.js";
-import { runEvidenceAppend } from "./commands/evidence.js";
-import { runHookRender, runHookSessionStart, runHookStop, runHookTest } from "./commands/hooks.js";
-import { runInboxArchive, runInboxPromote, runInboxStatus, runInboxTriage } from "./commands/inbox.js";
+import { runEvidenceAppend, runEvidenceList, runEvidenceMigrate } from "./commands/evidence.js";
+import { runHookIngest, runHookRender, runHookSessionStart, runHookStop, runHookTest } from "./commands/hooks.js";
+import { runInboxArchive, runInboxPromote, runInboxReject, runInboxStatus, runInboxTriage } from "./commands/inbox.js";
 import { runIdeaAdd } from "./commands/idea.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
 import { runLogAdd } from "./commands/log.js";
 import { runObsidianExport, runObsidianOpen, runObsidianPull } from "./commands/obsidian.js";
 import { runPack } from "./commands/pack.js";
+import { runPolicyShow, runPolicyValidate } from "./commands/policy.js";
 import { runReconcile } from "./commands/reconcile.js";
+import { runRelateIngest, runRelatePromote, runRelateRequest } from "./commands/relate.js";
 import { runRoute } from "./commands/route.js";
 import { runStatus } from "./commands/status.js";
 import { runUpdate, runUpdateRollback } from "./commands/update.js";
 import { runVerify } from "./commands/verify.js";
+import { runViewExport, runViewOpen } from "./commands/view.js";
 import { CmapCommandError } from "./errors.js";
 import { readPackageVersion } from "./version.js";
 
@@ -63,9 +68,10 @@ program
   .option("--changed-files <csv>", "Changed files to check, comma-separated")
   .option("--coverage", "Check map coverage signals")
   .option("--stale", "Warn when module docs appear older than owned files or inbox has pending candidates")
+  .option("--freshness", "Warn when freshness review metadata is older than code, generated evidence, or inbox candidates")
   .option("--ci", "Render CI-friendly report")
   .option("--format <format>", "Output format: text, json, or markdown", "text")
-  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; ci?: boolean; format?: string }) => {
+  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; freshness?: boolean; ci?: boolean; format?: string }) => {
     const code = await runVerify(process.cwd(), options);
     process.exitCode = code;
   });
@@ -94,6 +100,27 @@ graph
   .argument("<module>", "Module id")
   .action(async (module: string) => {
     await runGraphExplain(process.cwd(), module);
+  });
+
+const freshness = program.command("freshness").description("Maintain generated freshness review metadata");
+freshness
+  .command("snapshot")
+  .description("Write .context/generated/freshness.json")
+  .action(async () => {
+    await runFreshnessSnapshot(process.cwd());
+  });
+freshness
+  .command("diff")
+  .description("Compare current files to the generated freshness snapshot")
+  .action(async () => {
+    await runFreshnessDiff(process.cwd());
+  });
+freshness
+  .command("mark-reviewed")
+  .requiredOption("--module <id>", "Module id")
+  .option("--evidence <text>", "Review evidence summary")
+  .action(async (options: { module?: string; evidence?: string }) => {
+    await runFreshnessMarkReviewed(process.cwd(), options);
   });
 
 program
@@ -233,6 +260,20 @@ evidence
   .action(async (options: { module: string; file: string; summary: string; command?: string }) => {
     await runEvidenceAppend(process.cwd(), options);
   });
+evidence
+  .command("list")
+  .option("--module <id>", "Module id or alias")
+  .action(async (options: { module?: string }) => {
+    await runEvidenceList(process.cwd(), options);
+  });
+evidence
+  .command("migrate")
+  .option("--from-module-docs", "Move legacy generated evidence blocks out of module docs")
+  .option("--dry-run", "Preview migration without editing files")
+  .option("--apply", "Apply migration and remove legacy generated blocks")
+  .action(async (options: { fromModuleDocs?: boolean; dryRun?: boolean; apply?: boolean }) => {
+    await runEvidenceMigrate(process.cwd(), options);
+  });
 
 const inbox = program.command("inbox").description("Inspect candidate context updates");
 inbox
@@ -254,12 +295,34 @@ inbox
     await runInboxArchive(process.cwd(), id);
   });
 inbox
+  .command("reject")
+  .description("Reject an inbox candidate and archive it with a reason")
+  .argument("<id>", "Candidate id, usually the filename without .md")
+  .requiredOption("--reason <text>", "Reason this candidate should not be promoted")
+  .action(async (id: string, options: { reason?: string }) => {
+    await runInboxReject(process.cwd(), id, options);
+  });
+inbox
   .command("promote")
   .description("Preview how a candidate could be promoted after review")
   .argument("<id>", "Candidate id, usually the filename without .md")
   .option("--dry-run", "Preview only; do not edit canonical context")
-  .action(async (id: string, options: { dryRun?: boolean }) => {
+  .option("--apply", "Apply allowed low-risk candidate types with backup/audit/verify")
+  .action(async (id: string, options: { dryRun?: boolean; apply?: boolean }) => {
     await runInboxPromote(process.cwd(), id, options);
+  });
+
+const policy = program.command("policy").description("Inspect deterministic cmap maintenance policy");
+policy
+  .command("show")
+  .action(async () => {
+    await runPolicyShow(process.cwd());
+  });
+policy
+  .command("validate")
+  .action(async () => {
+    const code = await runPolicyValidate(process.cwd());
+    process.exitCode = code;
   });
 
 program
@@ -308,11 +371,21 @@ hooks
   });
 hooks
   .command("render")
-  .option("--host <host>", "Hook host to render for", "claude")
+  .option("--host <host>", "Hook host to render for", "codex")
   .option("--mode <mode>", "observe, assist, or strict", "assist")
-  .option("--out <path>", "Project-relative output path", ".context/hooks/claude.settings.generated.json")
+  .option("--out <path>", "Project-relative output path")
   .action(async (options: { host?: string; mode?: string; out?: string }) => {
     await runHookRender(process.cwd(), options);
+  });
+hooks
+  .command("ingest")
+  .description("Ingest a real host hook JSON payload from stdin")
+  .option("--host <host>", "Hook host: codex, claude, or generic", "codex")
+  .requiredOption("--event <event>", "SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, or Stop")
+  .option("--mode <mode>", "observe, assist, or strict", "assist")
+  .action(async (options: { host?: string; event: string; mode?: string }) => {
+    const code = await runHookIngest(process.cwd(), options);
+    process.exitCode = code;
   });
 hooks
   .command("test")
@@ -324,6 +397,28 @@ hooks
   .option("--prompt <text>", "Simulated user prompt")
   .action(async (options: { event: string; mode?: string; tool?: string; file?: string; command?: string; prompt?: string }) => {
     const code = await runHookTest(process.cwd(), options);
+    process.exitCode = code;
+  });
+
+const codex = program.command("codex").description("Run explicit Codex workflows without relying on hook parity");
+codex
+  .command("start")
+  .argument("<task>", "Task to route and start")
+  .action(async (task: string) => {
+    await runCodexStart(process.cwd(), task);
+  });
+codex
+  .command("finish")
+  .requiredOption("--task <text>", "Task summary")
+  .option("--verified <text>", "Verification evidence")
+  .action(async (options: { task?: string; verified?: string }) => {
+    await runCodexFinish(process.cwd(), options);
+  });
+codex
+  .command("guard")
+  .option("--changed", "Include changed-file coverage checks")
+  .action(async (options: { changed?: boolean }) => {
+    const code = await runCodexGuard(process.cwd(), options);
     process.exitCode = code;
   });
 
@@ -353,6 +448,54 @@ obsidian
   .option("--write-inbox", "Write the dry-run report to .context/inbox/")
   .action(async (options: { from?: string; dryRun?: boolean; writeInbox?: boolean }) => {
     await runObsidianPull(process.cwd(), options);
+  });
+
+const view = program.command("view").description("Export a standalone HTML project map review dashboard");
+view
+  .command("export")
+  .option("--out <path>", "Output directory or HTML file path; defaults to _cmap-view/")
+  .option("--single-file", "Write one standalone HTML file")
+  .option("--include-generated", "Include generated evidence")
+  .option("--include-inbox", "Include inbox candidates")
+  .option("--include-freshness", "Include generated freshness data")
+  .option("--check", "Check whether the view export is up to date without writing files")
+  .action(async (options: { out?: string; singleFile?: boolean; includeGenerated?: boolean; includeInbox?: boolean; includeFreshness?: boolean; check?: boolean }) => {
+    const code = await runViewExport(process.cwd(), options);
+    process.exitCode = code;
+  });
+view
+  .command("open")
+  .option("--out <path>", "Output directory or HTML file path; defaults to _cmap-view/")
+  .action(async (options: { out?: string }) => {
+    await runViewOpen(process.cwd(), options);
+  });
+
+const relate = program.command("relate").description("Manage AI-authored relation candidates");
+relate
+  .command("request")
+  .option("--task <text>", "Task summary for the relation request")
+  .option("--changed <csv>", "Changed files to seed the request")
+  .option("--from <module>", "Example source module")
+  .option("--to <module>", "Example target module")
+  .option("--relation <type>", "Example relation type", "depends_on")
+  .option("--out <path>", "Write request markdown to this path")
+  .action(async (options: { task?: string; changed?: string; from?: string; to?: string; relation?: string; out?: string }) => {
+    await runRelateRequest(process.cwd(), options);
+  });
+relate
+  .command("ingest")
+  .requiredOption("--from <path>", "RelationPatch JSON file")
+  .option("--dry-run", "Preview validation without writing inbox files")
+  .option("--write-inbox", "Write accepted candidates into .context/inbox/relations")
+  .action(async (options: { from?: string; dryRun?: boolean; writeInbox?: boolean }) => {
+    await runRelateIngest(process.cwd(), options);
+  });
+relate
+  .command("promote")
+  .argument("<id>", "Relation candidate id")
+  .option("--dry-run", "Preview only; relation candidates are candidate-only in v0.2")
+  .action(async (id: string, options: { dryRun?: boolean }) => {
+    await runRelatePromote(process.cwd(), id, options);
   });
 
 const benchmark = program.command("benchmark").description("Run cmap behavior benchmarks");

@@ -1,5 +1,9 @@
 # ChatGPT Pro Deep Research Response: cmap 产品完成度文审
 
+> Superseded Notice, 2026-05-13
+>
+> This external model response is historical input. Mentions of import graph, test ownership, route v2, or pack v2 are not the current roadmap. Current direction is v0.2 Trust Boundary + Human Review Layer: canonical graph from reviewed module docs, HTML human review, and AI relation candidates routed through inbox.
+
 Source conversation: https://chatgpt.com/c/6a02e5e1-88d8-83ea-a8d1-8bfcecb06f6d
 Captured at: 2026-05-12T09:09:37.405Z
 Capture method: Computer Use page selection copy (Chrome Cmd+A/Cmd+C)

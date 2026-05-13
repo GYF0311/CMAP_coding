@@ -1743,23 +1743,28 @@ Treatment：README + `.context` + AGENTS/CLAUDE + cmap CLI。
 - hooks reminder stable。
 - hooks maintain experimental。
 
-### v0.2
+### v0.2：Trust Boundary + Human Review Layer
 
-- `log compact`。
-- `idea list / park / reject / promote`。
-- `memory promote`。
-- `reconcile`。
-- route confidence improvement。
-- cheap model doc maintainer, but only generating suggestions for AI review。
-- hooks maintain promoted to stable if dogfood proves safe。
+v0.2 的判断标准从“让 CLI 更会分析代码”改为“让 AI 的理解可审阅、可验证、可回滚，并且不污染 canonical facts”。
+
+- PR-A Roadmap Reset：暂停旧 import graph / route v2 / pack v2 路线，把 graph 明确定义为 canonical module relations projection。
+- PR-B `cmap view export` MVP：生成只读 HTML 项目地图审阅台，展示 canonical modules、relations、verify、checkpoint，并在缺 generated/freshness/relation 数据时降级为 `Not available`。
+- PR-C Trust-Boundary Hygiene + Lifecycle Ingest + Codex Workflow：收敛 pending/inbox、stats/generated、evidence/generated；Claude hook ingest supported，Codex hook ingest experimental，Codex start/finish/guard 是正式主路径。
+- PR-C2 Freshness v2：以 `.context/generated/freshness.json` 和 generated evidence 作为新鲜度数据源，区分 `baseline` 与 `reviewed`。
+- PR-D AI Relation Candidate Workflow：AI 读代码提出 relation/alias/path candidates；CLI 校验、审计、写 inbox；route 只提示 pending candidates，不消费 unpromoted candidates。
+
+v0.2 不做：
+
+- CLI import graph / test ownership graph。
+- route v2 复杂 scoring。
+- pack v2 priority assembly。
+- 浏览器内 apply/promote。
+- 自动把候选关系写入 canonical graph。
 
 ### v0.3
 
-- optional visual map。
-- monorepo support。
-- split-index。
-- pack for subagent handoff。
-- CI verify mode。
+- 根据 v0.2 dogfood 结果决定是否扩展 monorepo、split-index、pack handoff 或 CI 发布体验。
+- 只有在 HTML review 与 relation candidate 工作流稳定后，才重新评估轻量代码索引是否值得进入 research/proposal。
 - optional ecosystem integrations。
 
 长期不做或不作为核心：

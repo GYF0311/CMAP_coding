@@ -1,0 +1,602 @@
+[
+  {
+    "from": "benchmark",
+    "to": "route",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/benchmark.md relations.depends_on includes route"
+    ]
+  },
+  {
+    "from": "benchmark",
+    "to": "tests",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/benchmark.md relations.depends_on includes tests"
+    ]
+  },
+  {
+    "from": "brief",
+    "to": "handoff",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/brief.md relations.depends_on includes handoff"
+    ]
+  },
+  {
+    "from": "brief",
+    "to": "module-docs",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/brief.md relations.depends_on includes module-docs"
+    ]
+  },
+  {
+    "from": "brief",
+    "to": "route",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/brief.md relations.depends_on includes route"
+    ]
+  },
+  {
+    "from": "brief",
+    "to": "verify",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/brief.md relations.depends_on includes verify"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "benchmark",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes benchmark"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "brief",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes brief"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "evidence",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes evidence"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "finish",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes finish"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "graph",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes graph"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "hooks-doctor",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes hooks-doctor"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "obsidian-adapter",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes obsidian-adapter"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "pack",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes pack"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "reconcile-adapter",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes reconcile-adapter"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "relation-candidates",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes relation-candidates"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "route",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes route"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "update-agent",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes update-agent"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "verify",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes verify"
+    ]
+  },
+  {
+    "from": "cli",
+    "to": "view",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes view"
+    ]
+  },
+  {
+    "from": "evidence",
+    "to": "context",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/evidence.md relations.depends_on includes context"
+    ]
+  },
+  {
+    "from": "evidence",
+    "to": "update-agent",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/evidence.md relations.depends_on includes update-agent"
+    ]
+  },
+  {
+    "from": "evidence",
+    "to": "verify",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/evidence.md relations.depends_on includes verify"
+    ]
+  },
+  {
+    "from": "finish",
+    "to": "handoff",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/finish.md relations.depends_on includes handoff"
+    ]
+  },
+  {
+    "from": "finish",
+    "to": "module-docs",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/finish.md relations.depends_on includes module-docs"
+    ]
+  },
+  {
+    "from": "finish",
+    "to": "update-agent",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/finish.md relations.depends_on includes update-agent"
+    ]
+  },
+  {
+    "from": "finish",
+    "to": "verify",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/finish.md relations.depends_on includes verify"
+    ]
+  },
+  {
+    "from": "graph",
+    "to": "context",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/graph.md relations.depends_on includes context"
+    ]
+  },
+  {
+    "from": "graph",
+    "to": "route",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/graph.md relations.depends_on includes route"
+    ]
+  },
+  {
+    "from": "hooks-doctor",
+    "to": "evidence",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/hooks-doctor.md relations.depends_on includes evidence"
+    ]
+  },
+  {
+    "from": "obsidian-adapter",
+    "to": "context",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/obsidian-adapter.md relations.depends_on includes context"
+    ]
+  },
+  {
+    "from": "obsidian-adapter",
+    "to": "module-docs",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/obsidian-adapter.md relations.depends_on includes module-docs"
+    ]
+  },
+  {
+    "from": "obsidian-adapter",
+    "to": "route",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/obsidian-adapter.md relations.depends_on includes route"
+    ]
+  },
+  {
+    "from": "obsidian-adapter",
+    "to": "brief",
+    "type": "used_by",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/obsidian-adapter.md relations.used_by includes brief"
+    ]
+  },
+  {
+    "from": "pack",
+    "to": "graph",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/pack.md relations.depends_on includes graph"
+    ]
+  },
+  {
+    "from": "pack",
+    "to": "handoff",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/pack.md relations.depends_on includes handoff"
+    ]
+  },
+  {
+    "from": "pack",
+    "to": "route",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/pack.md relations.depends_on includes route"
+    ]
+  },
+  {
+    "from": "pack",
+    "to": "verify",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/pack.md relations.depends_on includes verify"
+    ]
+  },
+  {
+    "from": "pack",
+    "to": "evidence",
+    "type": "observes",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/pack.md relations.observes includes evidence"
+    ]
+  },
+  {
+    "from": "pack",
+    "to": "update-agent",
+    "type": "observes",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/pack.md relations.observes includes update-agent"
+    ]
+  },
+  {
+    "from": "reconcile-adapter",
+    "to": "module-docs",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/reconcile-adapter.md relations.depends_on includes module-docs"
+    ]
+  },
+  {
+    "from": "reconcile-adapter",
+    "to": "verify",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/reconcile-adapter.md relations.depends_on includes verify"
+    ]
+  },
+  {
+    "from": "relation-candidates",
+    "to": "context",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/relation-candidates.md relations.depends_on includes context"
+    ]
+  },
+  {
+    "from": "relation-candidates",
+    "to": "evidence",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/relation-candidates.md relations.depends_on includes evidence"
+    ]
+  },
+  {
+    "from": "relation-candidates",
+    "to": "route",
+    "type": "used_by",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/relation-candidates.md relations.used_by includes route"
+    ]
+  },
+  {
+    "from": "relation-candidates",
+    "to": "view",
+    "type": "used_by",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/relation-candidates.md relations.used_by includes view"
+    ]
+  },
+  {
+    "from": "route",
+    "to": "module-docs",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/route.md relations.depends_on includes module-docs"
+    ]
+  },
+  {
+    "from": "route",
+    "to": "brief",
+    "type": "used_by",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/route.md relations.used_by includes brief"
+    ]
+  },
+  {
+    "from": "route",
+    "to": "obsidian-adapter",
+    "type": "used_by",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/route.md relations.used_by includes obsidian-adapter"
+    ]
+  },
+  {
+    "from": "route",
+    "to": "relation-candidates",
+    "type": "used_by",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/route.md relations.used_by includes relation-candidates"
+    ]
+  },
+  {
+    "from": "update-agent",
+    "to": "cp",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/update-agent.md relations.depends_on includes cp"
+    ]
+  },
+  {
+    "from": "update-agent",
+    "to": "evidence",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/update-agent.md relations.depends_on includes evidence"
+    ]
+  },
+  {
+    "from": "update-agent",
+    "to": "finish",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/update-agent.md relations.depends_on includes finish"
+    ]
+  },
+  {
+    "from": "update-agent",
+    "to": "handoff",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/update-agent.md relations.depends_on includes handoff"
+    ]
+  },
+  {
+    "from": "update-agent",
+    "to": "verify",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/update-agent.md relations.depends_on includes verify"
+    ]
+  },
+  {
+    "from": "verify",
+    "to": "evidence",
+    "type": "observes",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/verify.md relations.observes includes evidence"
+    ]
+  },
+  {
+    "from": "verify",
+    "to": "update-agent",
+    "type": "observes",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/verify.md relations.observes includes update-agent"
+    ]
+  },
+  {
+    "from": "view",
+    "to": "context",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/view.md relations.depends_on includes context"
+    ]
+  },
+  {
+    "from": "view",
+    "to": "evidence",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/view.md relations.depends_on includes evidence"
+    ]
+  },
+  {
+    "from": "view",
+    "to": "relation-candidates",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/view.md relations.depends_on includes relation-candidates"
+    ]
+  }
+]

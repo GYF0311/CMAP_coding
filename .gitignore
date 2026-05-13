@@ -4,6 +4,12 @@ coverage/
 .DS_Store
 .obsidian/
 .context/out/
+.context/stats/
+.context/backups/
+.context/audit/
+.context/generated/stats/
+.context/generated/freshness.json
 _cmap/
+_cmap-view/
 .playwright-mcp/
 cmap-product-overview-*.png
