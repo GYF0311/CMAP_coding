@@ -4,7 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
-import { loadContextPolicy } from "../context/policy.js";
+import { loadContextPolicy, validateContextPolicy } from "../context/policy.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
 import { freshnessWarnings } from "../core/freshness.js";
 import { hasLegacyModuleDocEvidence } from "../core/generated-store.js";
@@ -17,6 +17,7 @@ type VerifyOptions = {
   coverage?: boolean;
   stale?: boolean;
   freshness?: boolean;
+  policy?: boolean;
   ci?: boolean;
   format?: string;
 };
@@ -100,6 +101,9 @@ export async function verifyContext(cwd: string, options: VerifyOptions = {}): P
   }
   if (options.freshness) {
     await checkFreshness(cwd, report);
+  }
+  if (options.policy) {
+    await checkPolicy(cwd, report);
   }
   if (options.changed || options.coverage) {
     await checkChangedCoverage(cwd, modules, options, report);
@@ -455,6 +459,17 @@ async function checkFreshness(cwd: string, report: VerifyReport): Promise<void> 
   report.ok.push("Freshness: generated freshness index checked");
   for (const warning of warnings) {
     report.issues.push({ level: "warning", message: warning.message });
+  }
+}
+
+async function checkPolicy(cwd: string, report: VerifyReport): Promise<void> {
+  const result = await validateContextPolicy(cwd);
+  report.ok.push("Policy: checked .context/policy.yml");
+  for (const error of result.errors) {
+    report.issues.push({ level: "error", message: error });
+  }
+  for (const warning of result.warnings) {
+    report.issues.push({ level: "warning", message: warning });
   }
 }
 

@@ -50,6 +50,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Warn under `--freshness` when a module has pending inbox candidates that need review.
 - Warn under `--freshness` when no generated freshness snapshot exists, so users know to run `cmap freshness snapshot`.
 - Classify pending freshness candidates as relation, high-risk, or routine when possible.
+- Validate `.context/policy.yml` under `--policy`, surfacing unknown keys and unsupported versions as warnings and invalid value types as errors.
 - Render stable CI-friendly Markdown output with `--ci --format markdown`.
 - Return exit code 1 only for errors.
 
@@ -65,6 +66,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - `cmap verify`
 - `cmap verify --stale`
 - `cmap verify --freshness`
+- `cmap verify --policy`
 - Future `finish` and hook reminders.
 
 ## Data Flow
@@ -86,10 +88,12 @@ Read-only.
 - `pnpm dev verify`
 - `pnpm dev verify --stale`
 - `pnpm dev verify --freshness`
+- `pnpm dev verify --policy`
 - `pnpm dev verify --coverage --changed-files src/commands/verify.ts`
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m22-freshness-policy.test.ts`
 - `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 
 ## When to Update This Doc

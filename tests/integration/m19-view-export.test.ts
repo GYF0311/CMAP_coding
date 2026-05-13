@@ -214,6 +214,40 @@ confidence: 0.9
     expect(fullData?.modules[0].freshness.state).toBe("baseline");
   });
 
+  test("renders review controls, filters, copy commands, and module detail hooks", async () => {
+    const cwd = await createViewProject("m19-interactions");
+    await mkdir(path.join(cwd, ".context/inbox"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context/inbox/high-risk-view.md"),
+      `---
+type: module.semantic.update
+risk: high
+module: view
+confidence: 0.9
+---
+# Semantic candidate
+`,
+      "utf8"
+    );
+    await runCmap(["freshness", "snapshot"], cwd);
+
+    await runViewExport(cwd, {
+      out: ".context/out/view.html",
+      includeInbox: true,
+      includeFreshness: true
+    });
+
+    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
+    expect(html).toContain("id=\"view-search\"");
+    expect(html).toContain("id=\"filter-high-risk\"");
+    expect(html).toContain("data-copy-command=\"cmap inbox promote high-risk-view --dry-run\"");
+    expect(html).toContain("data-open-module=\"view\"");
+    expect(html).toContain("module-dialog");
+    expect(html).toContain("navigator.clipboard.writeText");
+    expect(html).not.toContain("innerHTML");
+    expect(html).not.toContain("eval(");
+  });
+
   test("overview and verification data are parsed into the view contract", async () => {
     const cwd = await createViewProject("m19-overview");
     await writeFile(

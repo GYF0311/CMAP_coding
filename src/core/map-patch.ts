@@ -12,6 +12,12 @@ import {
   appendModuleEvidence,
   appendVerificationEvidence
 } from "./generated-store.js";
+import {
+  type CandidateDraft,
+  type CandidateWriteResult,
+  type CmapCandidateType,
+  writeCandidateDrafts
+} from "./candidate-store.js";
 import { loadModuleIndex } from "./module-index.js";
 
 const schemaVersions = ["cmap.map_patch.v1", "cmap.mappatch.v1", "cmap.map_patch.v2"] as const;
@@ -73,6 +79,7 @@ export type MapPatchApplyResult = {
   backupId?: string;
   auditPath?: string;
   inboxPath?: string;
+  structuredCandidates?: CandidateWriteResult;
 };
 
 export function parseMapPatch(raw: string): MapPatch {
@@ -166,9 +173,10 @@ export async function applyRoutineMapPatch(
     }
   }
 
-  const inboxPath = evaluations.some((evaluation) => evaluation.action === "inbox")
-    ? await writeInboxReport(cwd, patch, evaluations)
+  const inboxArtifacts = evaluations.some((evaluation) => evaluation.action === "inbox")
+    ? await writeInboxArtifacts(cwd, patch, evaluations)
     : undefined;
+  const inboxPath = inboxArtifacts?.legacyPath;
   const auditPath = await writeAudit(cwd, patch, evaluations, backupId, inboxPath);
 
   return {
@@ -176,7 +184,8 @@ export async function applyRoutineMapPatch(
     appliedCount: routine.length,
     backupId,
     auditPath,
-    inboxPath
+    inboxPath,
+    structuredCandidates: inboxArtifacts?.structuredCandidates
   };
 }
 
@@ -185,7 +194,12 @@ export async function writeMapPatchInbox(
   patch: MapPatch,
   evaluations: EvaluatedMapPatchOperation[]
 ): Promise<string> {
-  return writeInboxReport(cwd, patch, evaluations);
+  const artifacts = await writeInboxArtifacts(cwd, patch, evaluations);
+  return [
+    artifacts.legacyPath,
+    `Structured candidates written: ${artifacts.structuredCandidates.written.length}`,
+    `Structured duplicate candidates skipped: ${artifacts.structuredCandidates.duplicates.length}`
+  ].join("\n");
 }
 
 export function renderMapPatchDryRun(patch: MapPatch, evaluations: EvaluatedMapPatchOperation[]): string {
@@ -598,12 +612,77 @@ ${stringField(fields.do_not_redo ?? fields.doNotRedo) ?? "None recorded."}
   await writeFile(checkpointPath, ensureTrailingNewline(matter.stringify(body, data)), "utf8");
 }
 
-async function writeInboxReport(cwd: string, patch: MapPatch, evaluations: EvaluatedMapPatchOperation[]): Promise<string> {
+async function writeInboxArtifacts(
+  cwd: string,
+  patch: MapPatch,
+  evaluations: EvaluatedMapPatchOperation[]
+): Promise<{ legacyPath: string; structuredCandidates: CandidateWriteResult }> {
   const inboxRoot = path.join(cwd, ".context", "inbox");
   await mkdir(inboxRoot, { recursive: true });
   const target = path.join(inboxRoot, `update-${timeStamp()}.md`);
   await writeFile(target, renderInboxReport(patch, evaluations), "utf8");
-  return projectRelative(cwd, target);
+  const structuredCandidates = await writeCandidateDrafts(cwd, mapPatchCandidateDrafts(evaluations));
+  return { legacyPath: projectRelative(cwd, target), structuredCandidates };
+}
+
+function mapPatchCandidateDrafts(evaluations: EvaluatedMapPatchOperation[]): CandidateDraft[] {
+  const drafts: CandidateDraft[] = [];
+  for (const evaluation of evaluations) {
+    if (evaluation.action !== "inbox") {
+      continue;
+    }
+    const type = candidateTypeForOperation(evaluation.operation);
+    if (!type) {
+      continue;
+    }
+    drafts.push({
+      source: "mappatch",
+      type,
+      target: candidateTarget(evaluation.operation, evaluation.target),
+      risk: evaluation.operation.risk ?? "routine",
+      confidence: evaluation.operation.confidence,
+      summary: evaluation.operation.summary ?? stringField(evaluation.operation.fields?.summary) ?? evaluation.reason,
+      evidence: evaluation.operation.evidence ?? [],
+      fields: {
+        ...(evaluation.operation.fields ?? {}),
+        op: evaluation.operation.op,
+        target: evaluation.target,
+        reason: evaluation.reason,
+        missingEvidence: evaluation.missingEvidence
+      }
+    });
+  }
+  return drafts;
+}
+
+function candidateTypeForOperation(operation: MapPatchOperation): CmapCandidateType | undefined {
+  if (operation.op === "module.alias.add") {
+    return "module.alias.add";
+  }
+  if (operation.op === "module.path.add") {
+    return "module.path.add";
+  }
+  if (operation.op === "evidence.append") {
+    return "evidence.merge";
+  }
+  if (operation.op === "verification.evidence" || operation.op === "verification.record") {
+    return "verification.evidence";
+  }
+  if (operation.op === "module.semantic.update" || operation.op === "module.update" || operation.op.startsWith("candidate.module")) {
+    return "module.semantic.update";
+  }
+  if (operation.op === "decision.record" || operation.op.startsWith("candidate.decision")) {
+    return "decision.record";
+  }
+  if (operation.op === "verify.policy.update") {
+    return "verify.policy.update";
+  }
+  return undefined;
+}
+
+function candidateTarget(operation: MapPatchOperation, evaluationTarget: string): string {
+  const fields = operation.fields ?? {};
+  return stringField(fields.module) ?? stringField(fields.moduleId) ?? stringField(fields.target) ?? evaluationTarget;
 }
 
 async function writeAudit(

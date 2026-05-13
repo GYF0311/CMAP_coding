@@ -57,7 +57,11 @@ export const CmapViewDataSchema = z.object({
       lastReviewedAt: z.string(),
       newestGeneratedEvidenceAt: z.string(),
       pendingInboxCandidates: z.array(z.string())
-    })
+    }),
+    suggestedCommands: z.array(z.object({
+      label: z.string(),
+      command: z.string()
+    })).default([])
   })),
   evidence: z.array(z.object({
     moduleId: z.string(),
@@ -73,7 +77,11 @@ export const CmapViewDataSchema = z.object({
     type: z.string(),
     risk: z.string(),
     moduleId: z.string(),
-    summary: z.string()
+    summary: z.string(),
+    suggestedCommands: z.array(z.object({
+      label: z.string(),
+      command: z.string()
+    })).default([])
   })),
   relationCandidates: z.array(z.object({
     id: z.string(),
@@ -81,7 +89,11 @@ export const CmapViewDataSchema = z.object({
     from: z.string(),
     to: z.string(),
     relation: z.string(),
-    summary: z.string()
+    summary: z.string(),
+    suggestedCommands: z.array(z.object({
+      label: z.string(),
+      command: z.string()
+    })).default([])
   })),
   warnings: z.array(z.string())
 });

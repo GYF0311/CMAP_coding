@@ -1,6 +1,20 @@
 {
   "name": "cmap",
   "version": "0.1.0",
+  "description": "Repo-local project memory map CLI for AI coding",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GYF0311/CMAP_coding.git"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
   "bin": {
     "cmap": "dist/cli.js"
@@ -10,20 +24,21 @@
     "test": "vitest run",
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
-    "smoke": "pnpm build && node scripts/smoke-test.mjs"
+    "smoke": "pnpm build && node scripts/smoke-test.mjs",
+    "prepack": "pnpm build && pnpm test && pnpm typecheck && pnpm smoke"
   },
   "dependencies": {
-    "commander": "latest",
-    "fast-glob": "latest",
-    "gray-matter": "latest",
-    "zod": "latest"
+    "commander": "14.0.3",
+    "fast-glob": "3.3.3",
+    "gray-matter": "4.0.3",
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/node": "latest",
-    "tsup": "latest",
-    "tsx": "latest",
-    "typescript": "latest",
-    "vitest": "latest"
+    "@types/node": "25.6.2",
+    "tsup": "8.5.1",
+    "tsx": "4.21.0",
+    "typescript": "6.0.3",
+    "vitest": "4.1.5"
   },
   "packageManager": "pnpm@10.32.1"
 }

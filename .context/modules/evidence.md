@@ -10,6 +10,7 @@ paths:
   - src/commands/evidence.ts
   - src/commands/inbox.ts
   - src/commands/freshness.ts
+  - src/core/candidate-store.ts
   - src/core/generated-store.ts
   - src/core/generated-stats.ts
   - src/core/freshness.ts
@@ -42,6 +43,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 ## Code Paths
 - `src/commands/evidence.ts`
 - `src/commands/inbox.ts`
+- `src/core/candidate-store.ts`
 
 ## Responsibilities
 - Append bounded generated evidence to `.context/generated/evidence/modules/<module>.jsonl`.
@@ -50,14 +52,16 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Record deterministic route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
 - Maintain `.context/generated/freshness.json` snapshots and freshness review markers.
 - Treat the first freshness snapshot as a baseline, not a human semantic review; `mark-reviewed` is the explicit review marker.
+- Render freshness review material with stale reasons, read-first files, and suggested `mark-reviewed` commands without modifying module docs.
 - Surface missing snapshot, frontmatter semantic drift, generated evidence drift, high-risk/routine inbox candidates, and relation candidate subdirectory signals through `verify --freshness`.
 - Require explicit module id or alias, evidence file, and summary before writing evidence.
 - Verify evidence files exist inside the project root.
 - Keep generated evidence non-canonical and separate from reviewed module semantics.
-- Print `.context/inbox/` candidate counts through `cmap inbox status`.
-- Group inbox candidates by risk and type through `cmap inbox triage`.
+- Read unified inbox candidates from legacy `.context/inbox/*.md`, structured `.context/inbox/candidates/*.json`, and relation `.context/inbox/relations/*.json`.
+- Print unified candidate counts plus legacy Markdown warnings through `cmap inbox status`.
+- Group unified inbox candidates by risk and type through `cmap inbox triage`.
 - Preview candidate promotion guidance through `cmap inbox promote <id> --dry-run` without editing canonical context.
-- Apply only low-risk alias/path/evidence candidates through `cmap inbox promote <id> --apply` with backup, audit, verify, and archive.
+- Apply only low-risk alias/path/evidence candidates from legacy or structured candidate stores through `cmap inbox promote <id> --apply` with backup, audit, verify, and archive.
 - Reject false candidates through `cmap inbox reject <id> --reason "..."` while retaining the original candidate in archive.
 - Move reviewed candidates into `.context/inbox/archive/` through `cmap inbox archive <id>` without deleting data.
 - Count simple high-risk inbox markers so semantic backlog remains visible.
@@ -80,6 +84,8 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `cmap freshness snapshot`
 - `cmap freshness diff`
 - `cmap freshness mark-reviewed --module <id> --evidence "..."`
+- `cmap freshness review --module <id>`
+- `cmap freshness review --all --out .context/out/freshness-review.md`
 - `cmap inbox status`
 - `cmap inbox triage`
 - `cmap inbox promote <id> --dry-run`
@@ -94,7 +100,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `cmap hooks ingest --host codex --event UserPromptSubmit --mode assist`
 
 ## Data Flow
-User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry. External AI/update/reconcile outputs write candidate Markdown into `.context/inbox/`; inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
+User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry. External AI/update/reconcile outputs write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
 
 ## State / Storage
 - Writes `.context/generated/evidence/modules/*.jsonl`.
@@ -102,7 +108,8 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - Writes `.context/generated/stats/module-activity.json` when `stats.update` is enabled.
 - Writes `.context/generated/stats/route-usage.json` when `stats.update` is enabled.
 - Writes `.context/generated/freshness.json` when snapshotting freshness.
-- Reads `.context/inbox/*.md` for backlog counts.
+- Reads `.context/inbox/*.md` legacy candidates, `.context/inbox/candidates/*.json` structured candidates, and `.context/inbox/relations/*.json` relation candidates for backlog counts.
+- Writes reviewed structured candidates and their Markdown companions into `.context/inbox/archive/`.
 - Writes `.context/audit/inbox-promote-*.md` and `.context/backups/*.json` before low-risk promotion writes.
 - Moves reviewed top-level inbox candidates into `.context/inbox/archive/`.
 - May update only allowed module frontmatter metadata (`aliases`, `paths.include`, `paths.exclude`) during low-risk promotion.
@@ -128,11 +135,14 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m21-candidate-store.test.ts`
 - `pnpm dev evidence append --module route --file src/commands/route.ts --summary "Route inspected"`
 - `pnpm dev evidence list --module route`
 - `pnpm dev evidence migrate --from-module-docs --dry-run`
 - `pnpm dev freshness snapshot`
 - `pnpm dev freshness diff`
+- `pnpm dev freshness review --module route`
+- `pnpm dev freshness review --all --out .context/out/freshness-review.md`
 - `pnpm dev inbox status`
 - `pnpm dev inbox triage`
 - `pnpm dev inbox promote <id> --dry-run`

@@ -57,11 +57,12 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Register `update --agent` and `update rollback` while keeping MapPatch v2 policy out of `cli.ts`.
 - Register `policy show/validate` while keeping deterministic policy loading and validation in command modules.
-- Register `evidence append/list/migrate` and `freshness snapshot/diff/mark-reviewed` while keeping generated-store and freshness policy in command modules.
+- Register `evidence append/list/migrate` and `freshness snapshot/diff/mark-reviewed/review` while keeping generated-store and freshness policy in command modules.
 - Register `inbox status/triage/promote/reject/archive` while keeping candidate governance, explicit rejection, and low-risk apply policy in command modules.
 - Register `view export/open` while keeping HTML collection/render/check behavior in `view`.
 - Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
-- Register `codex start/finish/guard` as explicit Codex workflow commands without relying on strict hook parity.
+- Register `codex start/finish/guard/handoff` as explicit Codex workflow commands without relying on strict hook parity.
+- Register `verify --policy` and `doctor --release` without embedding policy or package checks in `cli.ts`.
 - Register hook observe/assist/strict profile options plus `hooks render`, `hooks ingest`, and `hooks test` while keeping hook behavior in `hooks-doctor`.
 - Register `verify --stale` and `verify --freshness` as deterministic warning modes.
 - Convert expected CLI errors into exit code 2.
@@ -108,6 +109,9 @@ No persistent state except files written by command modules.
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
 - `pnpm test tests/integration/m19-view-export.test.ts`
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`
+- `pnpm test tests/integration/m21-candidate-store.test.ts`
+- `pnpm test tests/integration/m22-freshness-policy.test.ts`
+- `pnpm test tests/integration/m23-release-hygiene.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
 - `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 - `pnpm test tests/integration/m16-context-pack.test.ts`

@@ -5,11 +5,11 @@ import { runAdopt } from "./commands/adopt.js";
 import { runBenchmarkRoute } from "./commands/benchmark.js";
 import { runBrief } from "./commands/brief.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
-import { runCodexFinish, runCodexGuard, runCodexStart } from "./commands/codex.js";
+import { runCodexFinish, runCodexGuard, runCodexHandoff, runCodexStart } from "./commands/codex.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
-import { runFreshnessDiff, runFreshnessMarkReviewed, runFreshnessSnapshot } from "./commands/freshness.js";
+import { runFreshnessDiff, runFreshnessMarkReviewed, runFreshnessReview, runFreshnessSnapshot } from "./commands/freshness.js";
 import { runGraphBuild, runGraphExplain } from "./commands/graph.js";
 import { runEvidenceAppend, runEvidenceList, runEvidenceMigrate } from "./commands/evidence.js";
 import { runHookIngest, runHookRender, runHookSessionStart, runHookStop, runHookTest } from "./commands/hooks.js";
@@ -69,9 +69,10 @@ program
   .option("--coverage", "Check map coverage signals")
   .option("--stale", "Warn when module docs appear older than owned files or inbox has pending candidates")
   .option("--freshness", "Warn when freshness review metadata is older than code, generated evidence, or inbox candidates")
+  .option("--policy", "Validate .context/policy.yml and include policy warnings/errors")
   .option("--ci", "Render CI-friendly report")
   .option("--format <format>", "Output format: text, json, or markdown", "text")
-  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; freshness?: boolean; ci?: boolean; format?: string }) => {
+  .action(async (options: { changed?: boolean; changedFiles?: string; coverage?: boolean; stale?: boolean; freshness?: boolean; policy?: boolean; ci?: boolean; format?: string }) => {
     const code = await runVerify(process.cwd(), options);
     process.exitCode = code;
   });
@@ -121,6 +122,15 @@ freshness
   .option("--evidence <text>", "Review evidence summary")
   .action(async (options: { module?: string; evidence?: string }) => {
     await runFreshnessMarkReviewed(process.cwd(), options);
+  });
+freshness
+  .command("review")
+  .description("Render freshness review material for stale modules")
+  .option("--module <id>", "Module id")
+  .option("--all", "Render review material for all modules")
+  .option("--out <path>", "Write review markdown to a project-relative file")
+  .action(async (options: { module?: string; all?: boolean; out?: string }) => {
+    await runFreshnessReview(process.cwd(), options);
   });
 
 program
@@ -404,14 +414,17 @@ const codex = program.command("codex").description("Run explicit Codex workflows
 codex
   .command("start")
   .argument("<task>", "Task to route and start")
-  .action(async (task: string) => {
-    await runCodexStart(process.cwd(), task);
+  .option("--write-brief", "Write .context/out/brief.md")
+  .option("--write-pack", "Write .context/out/pack.md")
+  .action(async (task: string, options: { writeBrief?: boolean; writePack?: boolean }) => {
+    await runCodexStart(process.cwd(), task, options);
   });
 codex
   .command("finish")
   .requiredOption("--task <text>", "Task summary")
   .option("--verified <text>", "Verification evidence")
-  .action(async (options: { task?: string; verified?: string }) => {
+  .option("--apply-routine", "Apply the newest routine MapPatch request after finish")
+  .action(async (options: { task?: string; verified?: string; applyRoutine?: boolean }) => {
     await runCodexFinish(process.cwd(), options);
   });
 codex
@@ -420,6 +433,12 @@ codex
   .action(async (options: { changed?: boolean }) => {
     const code = await runCodexGuard(process.cwd(), options);
     process.exitCode = code;
+  });
+codex
+  .command("handoff")
+  .description("Write a Codex handoff bundle from checkpoint, status, and inbox")
+  .action(async () => {
+    await runCodexHandoff(process.cwd());
   });
 
 const obsidian = program.command("obsidian").description("Export and open Obsidian-friendly cmap views");
@@ -526,8 +545,10 @@ program
 program
   .command("doctor")
   .description("Diagnose cmap context, entrypoints, and hook templates")
-  .action(async () => {
-    await runDoctor(process.cwd());
+  .option("--release", "Check package metadata and release readiness without publishing")
+  .action(async (options: { release?: boolean }) => {
+    const code = await runDoctor(process.cwd(), options);
+    process.exitCode = code;
   });
 
 program

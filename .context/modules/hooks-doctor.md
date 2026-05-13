@@ -53,7 +53,10 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `hooks ingest --host codex --event UserPromptSubmit --mode assist` writes `.context/out/session-brief.md`, updates generated route usage stats, and returns Codex `additionalContext`.
 - `hooks ingest --host codex --event PreToolUse --mode strict` blocks direct semantic canonical context writes with Codex `permissionDecision: "deny"`.
 - `hooks ingest --host codex --event PostToolUse|Stop` records real tool/session events without mutating canonical context.
-- `codex start|finish|guard` provides the supported explicit Codex workflow while Codex hooks remain experimental/generic.
+- `codex start|finish|guard|handoff` provides the supported explicit Codex workflow while Codex hooks remain experimental/generic.
+- `codex start --write-brief --write-pack` can generate `.context/out/brief.md` and `.context/out/pack.md` alongside the startup handoff.
+- `codex finish --apply-routine` may apply the newest routine MapPatch request while keeping semantic candidates in inbox.
+- `codex handoff` writes a local `.context/out/codex-handoff.md` bundle from checkpoint, status, inbox, and next commands.
 - `hooks test --event PreToolUse --mode strict` blocks direct writes to semantic canonical context files.
 - `doctor` checks `.context`, entrypoint parity, and hook template presence.
 
@@ -71,8 +74,11 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `cmap hooks ingest --host codex --event UserPromptSubmit --mode assist`
 - `cmap hooks ingest --host codex --event PreToolUse --mode strict`
 - `cmap codex start "<task>"`
+- `cmap codex start "<task>" --write-brief --write-pack`
 - `cmap codex finish --task "..."`
+- `cmap codex finish --task "..." --apply-routine`
 - `cmap codex guard --changed`
+- `cmap codex handoff`
 - `cmap hooks render --host claude --mode assist`
 - `cmap hooks test --event PostToolUse --mode observe`
 - `cmap hooks test --event UserPromptSubmit --mode assist --prompt "..."`
@@ -91,6 +97,7 @@ Install options -> hook JSON templates. Render options -> project-local lifecycl
 - Writes `.context/logs/hooks.jsonl` for observe/assist stop events.
 - Writes `.context/logs/session-events.jsonl` for simulated and real ingested lifecycle events.
 - Writes `.context/out/session-brief.md` for assist prompt events.
+- Writes `.context/out/codex-start.md`, `.context/out/brief.md`, `.context/out/pack.md`, and `.context/out/codex-handoff.md` for explicit Codex workflow commands.
 - Writes `.context/generated/stats/route-usage.json` for assist prompt events when policy allows stats updates.
 - Assist mode may append generated evidence under `.context/generated/evidence/modules/*.jsonl`.
 

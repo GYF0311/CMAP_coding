@@ -31,6 +31,22 @@ export type FreshnessWarning = {
   message: string;
 };
 
+export type FreshnessReviewOptions = {
+  moduleId?: string;
+  all?: boolean;
+};
+
+export type FreshnessReviewModule = {
+  moduleId: string;
+  reasons: string[];
+  readFirst: string[];
+  suggestedCommand: string;
+};
+
+export type FreshnessReview = {
+  modules: FreshnessReviewModule[];
+};
+
 export function freshnessPath(cwd: string): string {
   return path.join(generatedRoot(cwd), "freshness.json");
 }
@@ -78,10 +94,63 @@ export async function markModuleReviewed(
     throw new Error(`Unknown module: ${moduleId}`);
   }
   module.reviewState = "reviewed";
-  module.lastSemanticReviewedAt = new Date().toISOString();
+  module.lastSemanticReviewedAt = reviewedAtFor(module);
   module.reviewEvidence = evidence?.trim() || undefined;
   await writeFreshnessIndex(cwd, index);
   return index;
+}
+
+export async function buildFreshnessReview(cwd: string, options: FreshnessReviewOptions): Promise<FreshnessReview> {
+  const modules = await loadModuleIndex(cwd);
+  const moduleIds = new Set(modules.map((module) => module.id));
+  if (options.moduleId && !moduleIds.has(options.moduleId)) {
+    throw new Error(`Unknown module: ${options.moduleId}`);
+  }
+
+  const warnings = await freshnessWarnings(cwd);
+  const warningsByModule = new Map<string, string[]>();
+  for (const warning of warnings) {
+    const bucket = warningsByModule.get(warning.moduleId) ?? [];
+    bucket.push(warning.message);
+    warningsByModule.set(warning.moduleId, bucket);
+  }
+
+  const index = await buildFreshnessIndex(cwd, await readFreshnessIndex(cwd));
+  const selected = options.all ? modules : modules.filter((module) => module.id === options.moduleId);
+  const reviewModules = await Promise.all(selected.map(async (module) => {
+    const freshnessModule = index.modules[module.id];
+    const generatedEvidencePath = await generatedEvidencePathForModule(cwd, module.id);
+    const readFirst = [
+      module.docPath,
+      ...Object.keys(freshnessModule?.ownedFiles ?? {}),
+      generatedEvidencePath,
+      ...(freshnessModule?.pendingInboxCandidates ?? [])
+    ].filter((item): item is string => Boolean(item));
+    return {
+      moduleId: module.id,
+      reasons: (warningsByModule.get(module.id) ?? []).map(formatFreshnessReason),
+      readFirst: [...new Set(readFirst)],
+      suggestedCommand: `cmap freshness mark-reviewed --module ${module.id} --evidence "Reviewed ${module.id} after freshness review"`
+    };
+  }));
+  return {
+    modules: reviewModules
+  };
+}
+
+export function renderFreshnessReviewMarkdown(review: FreshnessReview): string {
+  const lines: string[] = [];
+  if (review.modules.length !== 1) {
+    lines.push("# Freshness Review", "");
+  }
+  for (const module of review.modules) {
+    lines.push(`# Freshness Review: ${module.moduleId}`, "", "## Why stale");
+    lines.push(...markdownList(module.reasons.length > 0 ? module.reasons : ["No freshness warnings currently detected."]));
+    lines.push("", "## Read first");
+    lines.push(...markdownList(module.readFirst.length > 0 ? module.readFirst : ["Not available"]));
+    lines.push("", "## Suggested command", module.suggestedCommand, "");
+  }
+  return `${lines.join("\n").trimEnd()}\n`;
 }
 
 export async function freshnessWarnings(cwd: string): Promise<FreshnessWarning[]> {
@@ -262,4 +331,26 @@ async function maybeRead(cwd: string, relative: string): Promise<string | undefi
 
 function sha256(value: Buffer | string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function reviewedAtFor(module: FreshnessModule): string {
+  const times = [
+    Date.now(),
+    ...Object.values(module.ownedFiles).map((info) => info.mtimeMs),
+    module.newestGeneratedEvidenceAt ? Date.parse(module.newestGeneratedEvidenceAt) : 0
+  ];
+  return new Date(Math.max(...times.filter((time) => Number.isFinite(time)))).toISOString();
+}
+
+async function generatedEvidencePathForModule(cwd: string, moduleId: string): Promise<string | undefined> {
+  const relative = `.context/generated/evidence/modules/${moduleId}.jsonl`;
+  return (await fileExists(path.join(cwd, relative))) ? relative : undefined;
+}
+
+function formatFreshnessReason(message: string): string {
+  return message.replace(/^Freshness:\s*/, "").replace(/^module\s+([^\s]+)\s+may be stale;\s+/, "");
+}
+
+function markdownList(items: string[]): string[] {
+  return items.map((item) => `- ${item}`);
 }

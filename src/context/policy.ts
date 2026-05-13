@@ -115,7 +115,7 @@ export async function validateContextPolicy(cwd: string): Promise<PolicyValidati
       }
       continue;
     }
-    assignPolicyValue(policy, section, match[1].trim(), parseScalar(match[2].trim()), warnings);
+    assignPolicyValue(policy, section, match[1].trim(), parseScalar(match[2].trim()), warnings, errors);
   }
   if (seenTopLevel.size === 0 && raw.trim()) {
     warnings.push("policy file has no recognized sections");
@@ -181,9 +181,14 @@ function assignPolicyValue(
   section: string,
   key: string,
   value: string | number | boolean,
-  warnings: string[]
+  warnings: string[],
+  errors: string[]
 ): void {
-  if (section === "auto_apply" && typeof value === "boolean") {
+  if (section === "auto_apply") {
+    if (typeof value !== "boolean") {
+      errors.push(`invalid policy type auto_apply.${key}: expected boolean`);
+      return;
+    }
     const mapped = autoApplyKey(key);
     if (mapped) {
       policy.autoApply[mapped] = value;
@@ -192,7 +197,11 @@ function assignPolicyValue(
     warnings.push(`unknown policy key auto_apply.${key}`);
     return;
   }
-  if (section === "candidate_only" && typeof value === "boolean") {
+  if (section === "candidate_only") {
+    if (typeof value !== "boolean") {
+      errors.push(`invalid policy type candidate_only.${key}: expected boolean`);
+      return;
+    }
     if (key in policy.candidateOnly) {
       policy.candidateOnly[key] = value;
     } else {
@@ -200,7 +209,11 @@ function assignPolicyValue(
     }
     return;
   }
-  if (section === "blocked" && typeof value === "boolean") {
+  if (section === "blocked") {
+    if (typeof value !== "boolean") {
+      errors.push(`invalid policy type blocked.${key}: expected boolean`);
+      return;
+    }
     if (key in policy.blocked) {
       policy.blocked[key] = value;
     } else {
@@ -208,7 +221,11 @@ function assignPolicyValue(
     }
     return;
   }
-  if (section === "thresholds" && typeof value === "number") {
+  if (section === "thresholds") {
+    if (typeof value !== "number") {
+      errors.push(`invalid policy type thresholds.${key}: expected number`);
+      return;
+    }
     if (key === "routine_confidence") {
       policy.thresholds.routineConfidence = value;
       return;
@@ -235,7 +252,11 @@ function assignPolicyValue(
     warnings.push(`unknown policy key thresholds.${key}`);
     return;
   }
-  if (section === "inbox" && typeof value === "number") {
+  if (section === "inbox") {
+    if (typeof value !== "number") {
+      errors.push(`invalid policy type inbox.${key}: expected number`);
+      return;
+    }
     if (key === "max_pending") {
       policy.inbox.maxPending = value;
       policy.thresholds.maxInboxPending = value;
@@ -249,7 +270,11 @@ function assignPolicyValue(
     warnings.push(`unknown policy key inbox.${key}`);
     return;
   }
-  if (section === "generated_evidence" && typeof value === "number") {
+  if (section === "generated_evidence") {
+    if (typeof value !== "number") {
+      errors.push(`invalid policy type generated_evidence.${key}: expected number`);
+      return;
+    }
     if (key === "max_entries") {
       policy.generatedEvidence.maxEntries = value;
       policy.thresholds.generatedEvidenceMaxEntries = value;

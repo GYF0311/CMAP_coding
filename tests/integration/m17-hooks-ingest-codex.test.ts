@@ -65,6 +65,31 @@ describe("M17 Codex-first hook ingest", () => {
     expect(brief).toContain("does not depend on Codex hook parity");
   });
 
+  test("codex start can write brief and pack artifacts for one-command startup context", async () => {
+    const cwd = await createCodexHookProject("m17-codex-start-artifacts");
+
+    const result = await runCmap(["codex", "start", "route 模块定位", "--write-brief", "--write-pack"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("Wrote .context/out/brief.md");
+    expect(result.stdout).toContain("Wrote .context/out/pack.md");
+    expect(await expectFile(path.join(cwd, ".context/out/brief.md"))).toContain("# AI Coding Brief");
+    expect(await expectFile(path.join(cwd, ".context/out/pack.md"))).toContain("# cmap Context Pack");
+  });
+
+  test("codex handoff writes checkpoint status and inbox snapshot", async () => {
+    const cwd = await createCodexHookProject("m17-codex-handoff");
+
+    const result = await runCmap(["codex", "handoff"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("# cmap Codex Handoff");
+    expect(result.stdout).toContain("Suggested Next Commands");
+    const handoff = await expectFile(path.join(cwd, ".context/out/codex-handoff.md"));
+    expect(handoff).toContain("# cmap Codex Handoff");
+    expect(handoff).toContain("cmap codex guard --changed");
+  });
+
   test("hooks render writes Codex lifecycle settings that call hooks ingest", async () => {
     const cwd = await createCodexHookProject("m17-render-codex");
 

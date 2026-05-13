@@ -31,12 +31,15 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 - Marks relation candidates as Candidate / Non-canonical and never offers browser-side apply/promote.
 - Missing support layers must degrade to warnings and "Not available", not hard failures.
 - `--check` compares normalized full HTML, not only embedded JSON, so renderer/template drift is caught while volatile `generatedAt` is ignored.
+- Provides local-only review controls: search, stale/candidate/high-risk/generated filters, copy-command buttons, and a module detail dialog.
+- Suggested commands remain copy-only; the browser view never applies or promotes candidates.
 
 ## Safety
 - Escape all rendered text.
 - Redact obvious token/secret/password/API key strings before HTML output.
 - Do not load CDN assets, execute eval, or read owned source-code bodies for display.
 - Keep the initial dashboard static and local-only.
+- Use DOM text APIs and data attributes for interactivity; do not inject unsanitized HTML.
 
 ## Verification
 - `pnpm test tests/integration/m19-view-export.test.ts`

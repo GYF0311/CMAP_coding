@@ -82,7 +82,11 @@ function toModuleView(module: ContextModule, freshness: FreshnessIndex | undefin
       lastReviewedAt: freshnessModule?.lastSemanticReviewedAt ?? "Not available",
       newestGeneratedEvidenceAt: freshnessModule?.newestGeneratedEvidenceAt ?? "Not available",
       pendingInboxCandidates: freshnessModule?.pendingInboxCandidates ?? []
-    }
+    },
+    suggestedCommands: [
+      { label: "Review module", command: `cmap freshness review --module ${module.id}` },
+      { label: "Mark reviewed", command: `cmap freshness mark-reviewed --module ${module.id} --evidence "Reviewed ${module.id}"` }
+    ]
   };
 }
 
@@ -152,7 +156,10 @@ async function collectInboxCandidates(
       type,
       risk: stringField(data.risk) || "Not available",
       moduleId: stringField(data.module) || stringField(data.moduleId) || "Not available",
-      summary: firstSummary(parsed.content)
+      summary: firstSummary(parsed.content),
+      suggestedCommands: [
+        { label: "Dry run", command: `cmap inbox promote ${path.basename(file, ".md")} --dry-run` }
+      ]
     };
     candidates.push(base);
     if (type.includes("relation")) {
@@ -162,7 +169,10 @@ async function collectInboxCandidates(
         from: stringField(data.from) || stringField(data.source) || base.moduleId,
         to: stringField(data.to) || stringField(data.target) || "Not available",
         relation: stringField(data.relation) || type,
-        summary: base.summary
+        summary: base.summary,
+        suggestedCommands: [
+          { label: "Dry run", command: `cmap relate promote ${base.id} --dry-run` }
+        ]
       });
     }
   }
@@ -198,7 +208,10 @@ async function collectRelationCandidateFiles(cwd: string, warnings: string[]): P
         from: stringField(parsed.from) || "Not available",
         to: stringField(parsed.to) || "Not available",
         relation: stringField(parsed.relation) || stringField(parsed.operation) || "relation.candidate.add",
-        summary: stringField(parsed.summary) || "Candidate / Non-canonical"
+        summary: stringField(parsed.summary) || "Candidate / Non-canonical",
+        suggestedCommands: [
+          { label: "Dry run", command: `cmap relate promote ${stringField(parsed.id) || path.basename(entry, ".json")} --dry-run` }
+        ]
       });
     } catch {
       warnings.push(`Relation candidate unreadable: .context/inbox/relations/${entry}`);

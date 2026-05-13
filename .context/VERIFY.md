@@ -18,10 +18,13 @@ confidence: ai-drafted
 | cmap CI report | `pnpm dev verify --ci --format markdown` | exit 0 and stable Markdown report | in CI or before push |
 | cmap stale verify | `pnpm dev verify --stale` | exit 0 or warnings understood | after generated evidence, inbox, or module-path changes |
 | cmap freshness verify | `pnpm dev verify --freshness` | exit 0 or warnings understood | after source/module/evidence review changes |
+| cmap policy verify | `pnpm dev verify --policy` | exit 0 or warnings understood | after policy or verify changes |
 | HTML view export | `pnpm dev view export --out _cmap-view` | exit 0 and writes read-only dashboard | after view/data contract changes |
 | HTML view check | `pnpm dev view export --check --out _cmap-view` | exit 0 when normalized HTML is up to date | after `.context`, view, or renderer edits |
 | Obsidian view check | `pnpm dev obsidian export --check` | exit 0 when local `_cmap` view is up to date | after `.context` module or core context edits |
 | route benchmark thresholds | `pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0` | exit 0 when quality gates pass | in CI or before route changes ship |
+| release doctor | `pnpm dev doctor --release` | exit 0 and no release hygiene errors | before packaging or release handoff |
+| package dry run | `pnpm pack --dry-run` | exit 0 and package contents are expected | before release handoff |
 | smoke | `pnpm smoke` | exit 0 | before release or handoff |
 
 ## Module-specific Checks
@@ -42,9 +45,12 @@ confidence: ai-drafted
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
 | finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report with context update and checkpoint close/write reminders; does not modify trusted memory. |
 | update-agent | `pnpm test tests/integration/m7-update-agent.test.ts` | MapPatch v1/v2 dry-run is read-only; `--apply-routine` writes only policy-approved checkpoint/generated state, backup, audit, and inbox candidates. |
+| unified candidate store | `pnpm test tests/integration/m21-candidate-store.test.ts` | MapPatch candidate writes JSON+Markdown drafts, duplicate fingerprints are skipped, and low-risk candidates can be promoted through inbox apply. |
 | evidence | `pnpm test tests/integration/m13-policy-stats.test.ts` | Generated evidence writes `.context/generated/evidence/**` and policy-backed module activity stats; inbox thresholds remain deterministic. |
 | freshness | `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts` | Freshness snapshots, semantic review markers, generated evidence drift, low-risk inbox promote apply, and explicit reject archive are covered. |
+| freshness review and policy verify | `pnpm test tests/integration/m22-freshness-policy.test.ts` | Freshness review files explain stale reasons and suggested mark-reviewed commands; `verify --policy` reports policy schema warnings/errors. |
 | HTML view | `pnpm test tests/integration/m19-view-export.test.ts` | View include flags, Overview/Verification parsing, normalized HTML check, escaping/redaction, and size caps are covered. |
+| HTML view interactions | `pnpm test tests/integration/m19-view-export.test.ts` | Search, stale/high-risk/generated filters, copy-command buttons, and module detail dialog hooks render without unsafe `innerHTML` or `eval`. |
 | obsidian-adapter | `pnpm dev obsidian export --out _cmap/CMAP_coding` | Writes Obsidian-friendly notes with Properties and relation wikilinks; generated files remain view-layer artifacts. |
 | obsidian export check | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | `obsidian export --check` detects stale or missing view-layer files without writing. |
 | obsidian pull | `pnpm dev obsidian pull --from _cmap/CMAP_coding` | Reports candidate note edits only; no canonical `.context` writes unless `--write-inbox`. |
@@ -56,6 +62,7 @@ confidence: ai-drafted
 | module-docs | `pnpm test tests/integration/m4m5.test.ts` | add-module writes candidate docs and leaves MAP unchanged. |
 | hooks-doctor | `pnpm test tests/integration/m9-hooks-assist.test.ts` | observe writes hook logs/session events only; assist writes bounded generated evidence for mapped changed files; render/test covers Claude lifecycle settings and strict guard decisions. |
 | hooks Codex ingest | `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts` | Codex render writes `.codex/hooks.json`; ingest reads stdin payloads, writes generated briefs/logs, returns Codex JSON, and denies strict canonical semantic writes. |
+| Codex workflow UX | `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts` | `codex start --write-brief --write-pack`, `codex finish --apply-routine`, and `codex handoff` preserve candidate-only semantic boundaries. |
 | hooks assist session brief | `pnpm test tests/integration/m9-hooks-assist.test.ts` | Assist `UserPromptSubmit` writes `.context/out/session-brief.md` and generated route usage stats. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
 | verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
@@ -74,6 +81,7 @@ confidence: ai-drafted
 | graph build and route graph mode | `pnpm test tests/integration/m14-graph-route.test.ts` | Generated graph projections, graph explanation, and graph-mode route JSON are covered. |
 | CI report and benchmark thresholds | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | CI Markdown verify output and route threshold failures are covered. |
 | context pack | `pnpm test tests/integration/m16-context-pack.test.ts` | Context pack budget/redaction and graph-neighborhood selection are covered. |
+| release hygiene | `pnpm test tests/integration/m23-release-hygiene.test.ts` | `doctor --release` validates package metadata, README/LICENSE, dist, CI presence, and dependency version hygiene. |
 
 ## Optional Commands
 - `node dist/cli.js version` after `pnpm build`.

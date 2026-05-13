@@ -9,6 +9,7 @@ module: update-agent
 paths:
   - src/commands/update.ts
   - src/core/map-patch.ts
+  - src/core/candidate-store.ts
   - src/fs/backup.ts
 aliases:
   - update
@@ -34,6 +35,7 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 ## Code Paths
 - `src/commands/update.ts`
 - `src/core/map-patch.ts`
+- `src/core/candidate-store.ts`
 - `src/fs/backup.ts`
 
 ## Responsibilities
@@ -43,6 +45,8 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - Validate `evidence.append` module ids and `fields.files` before writing generated evidence; unknown modules or missing evidence files route to inbox.
 - Allow command-only `verification.evidence`, while validating any provided file evidence through project-root safe paths.
 - Route module semantics, decisions, verification policy, status updates, and low-risk metadata candidates to `.context/inbox/`.
+- For MapPatch operations routed to inbox, write structured `cmap.candidate.v1` JSON+Markdown pairs under `.context/inbox/candidates/` while retaining legacy `update-*.md` reports for compatibility.
+- Deduplicate structured MapPatch candidates by stable fingerprint so repeated agent proposals do not spam inbox.
 - Reject blocked operations such as code writes, shell runs, module delete/rename, and semantic map overwrite.
 - Leave inbox backlog visible and governable through `cmap inbox status`, `cmap inbox triage`, `cmap inbox promote --dry-run|--apply`, `cmap inbox archive`, `cmap verify --stale`, and `cmap verify --freshness`.
 - Create `.context/backups/` records before canonical writes.
@@ -67,7 +71,7 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - `cmap finish --agent` as the request-generation step.
 
 ## Data Flow
-AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` validates schema, confidence, evidence, and paths -> policy-approved routine/generated operations write only allowed stores with backup/audit where needed -> candidate-only semantic or metadata operations are written to `.context/inbox/` -> blocked operations are rejected.
+AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` validates schema, confidence, evidence, and paths -> policy-approved routine/generated operations write only allowed stores with backup/audit where needed -> candidate-only semantic or metadata operations are written as structured `cmap.candidate.v1` JSON+Markdown under `.context/inbox/candidates/` plus a legacy compatibility report under `.context/inbox/update-*.md` -> blocked operations are rejected.
 
 ## State / Storage
 - Reads MapPatch JSON from `--from <file>` or stdin.
@@ -76,7 +80,8 @@ AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` vali
 - May update `.context/generated/stats/*.json`/`.jsonl`.
 - Writes `.context/audit/update-*.md` for apply runs.
 - Writes `.context/backups/*.json` before canonical writes.
-- Writes `.context/inbox/update-*.md` for high-risk candidates.
+- Writes `.context/inbox/update-*.md` for legacy high-risk candidate reports.
+- Writes `.context/inbox/candidates/candidate-<timestamp>-<hash>.json|md` for structured MapPatch candidates.
 - Reads are handled by `cmap inbox status` and `cmap inbox triage`; `cmap inbox promote --dry-run|--apply` previews or applies allowed low-risk metadata, and `cmap inbox archive` retains reviewed candidates under `.context/inbox/archive/`.
 
 ## Constraints
@@ -97,6 +102,7 @@ AI or host writes MapPatch JSON -> `update` reads file/stdin -> `map-patch` vali
 
 ## Tests / Verification
 - `pnpm test tests/integration/m7-update-agent.test.ts`
+- `pnpm test tests/integration/m21-candidate-store.test.ts`
 - `pnpm dev update --agent --from <patch.json>`
 - `pnpm dev update --agent --from <patch.json> --apply-routine`
 - `pnpm dev verify`

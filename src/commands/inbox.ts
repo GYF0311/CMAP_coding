@@ -3,6 +3,7 @@ import path from "node:path";
 import matter from "gray-matter";
 import { loadContextPolicy } from "../context/policy.js";
 import { fileExists } from "../context/scanner.js";
+import { type CmapCandidate, parseCmapCandidate } from "../core/candidate-store.js";
 import { appendModuleEvidence, appendVerificationEvidence } from "../core/generated-store.js";
 import { loadModuleIndex } from "../core/module-index.js";
 import { CmapCommandError } from "../errors.js";
@@ -15,31 +16,28 @@ type InboxCandidate = {
   file: string;
   absolutePath: string;
   raw: string;
-  risk: "high" | "routine";
+  risk: string;
   type: string;
   data: Record<string, unknown>;
   mtimeMs: number;
+  sourceKind: "legacy" | "candidate" | "relation";
+  paths: string[];
 };
 
 export async function runInboxStatus(cwd: string): Promise<void> {
-  const inboxRoot = path.join(cwd, ".context", "inbox");
-  const files = await listInboxFiles(inboxRoot);
-  let highRisk = 0;
-
-  for (const file of files) {
-    const raw = await readFile(path.join(inboxRoot, file), "utf8");
-    if (isHighRiskCandidate(raw)) {
-      highRisk += 1;
-    }
-  }
+  const candidates = await loadInboxCandidates(cwd);
+  const highRisk = candidates.filter((candidate) => candidate.risk === "high" || isHighRiskCandidate(candidate.raw)).length;
+  const legacy = candidates.filter((candidate) => candidate.sourceKind === "legacy").length;
 
   const lines = [
     "# Inbox Status",
     "",
-    `Total candidates: ${files.length}`,
+    `Total candidates: ${candidates.length}`,
     `High-risk candidates: ${highRisk}`,
+    `Legacy markdown candidates: ${legacy}`,
     "",
     "Inbox files are candidate input only; they are not canonical `.context` facts.",
+    legacy > 0 ? "Warning: legacy top-level inbox markdown is supported, but new agent candidates should use `.context/inbox/candidates/*.json`." : undefined,
     "",
     "Suggested commands:",
     "- Re-check backlog: `cmap inbox status`",
@@ -51,7 +49,7 @@ export async function runInboxStatus(cwd: string): Promise<void> {
     "- Save agent candidates: `cmap update --agent --from <file> --write-inbox`",
     "- Promote semantic facts manually only after review: edit canonical `.context` files with evidence",
     ""
-  ];
+  ].filter((line): line is string => line !== undefined);
 
   process.stdout.write(lines.join("\n"));
 }
@@ -59,6 +57,7 @@ export async function runInboxStatus(cwd: string): Promise<void> {
 export async function runInboxTriage(cwd: string): Promise<void> {
   const candidates = await loadInboxCandidates(cwd);
   const highRisk = candidates.filter((candidate) => candidate.risk === "high").length;
+  const legacy = candidates.filter((candidate) => candidate.sourceKind === "legacy").length;
   const byType = countBy(candidates.map((candidate) => candidate.type));
   const oldest = candidates.slice().sort((a, b) => a.mtimeMs - b.mtimeMs)[0];
   const lines = [
@@ -66,7 +65,9 @@ export async function runInboxTriage(cwd: string): Promise<void> {
     "",
     `Pending candidates: ${candidates.length}`,
     `High-risk candidates: ${highRisk}`,
+    `Legacy markdown candidates: ${legacy}`,
     `Oldest candidate: ${oldest ? `${oldest.id} (${oldest.file})` : "none"}`,
+    legacy > 0 ? "Warning: legacy top-level inbox markdown is supported, but new agent candidates should use `.context/inbox/candidates/*.json`." : undefined,
     "",
     "## By Type",
     "",
@@ -83,7 +84,7 @@ export async function runInboxTriage(cwd: string): Promise<void> {
       : "Review oldest candidates first with `cmap inbox promote <id> --dry-run`.",
     "Reject false candidates with `cmap inbox reject <id> --reason \"...\"`; archive obsolete candidates with `cmap inbox archive <id>`.",
     ""
-  ];
+  ].filter((line): line is string => line !== undefined);
   process.stdout.write(lines.join("\n"));
 }
 
@@ -91,9 +92,8 @@ export async function runInboxArchive(cwd: string, id: string): Promise<void> {
   const candidate = await loadInboxCandidate(cwd, id);
   const archiveRoot = path.join(cwd, ".context", "inbox", "archive");
   await mkdir(archiveRoot, { recursive: true });
-  const archivePath = await nextArchivePath(archiveRoot, `${candidate.id}.md`);
-  await rename(candidate.absolutePath, archivePath);
-  process.stdout.write(`Archived ${candidate.file} -> ${projectRelative(cwd, archivePath)}\n`);
+  const archivePaths = await moveCandidateFiles(cwd, candidate, archiveRoot);
+  process.stdout.write(`Archived ${candidate.file} -> ${archivePaths.join(", ")}\n`);
 }
 
 export async function runInboxReject(cwd: string, id: string, options: { reason?: string }): Promise<void> {
@@ -104,23 +104,44 @@ export async function runInboxReject(cwd: string, id: string, options: { reason?
   const candidate = await loadInboxCandidate(cwd, id);
   const archiveRoot = path.join(cwd, ".context", "inbox", "archive");
   await mkdir(archiveRoot, { recursive: true });
-  const archivePath = await nextArchivePath(archiveRoot, `rejected-${candidate.id}.md`);
+  if (candidate.sourceKind === "legacy") {
+    const archivePath = await nextArchivePath(archiveRoot, `rejected-${candidate.id}.md`);
+    await writeFile(
+      candidate.absolutePath,
+      [
+        "# Rejected Inbox Candidate",
+        "",
+        `Rejected: ${new Date().toISOString()}`,
+        `Reason: ${reason}`,
+        "",
+        "## Original Candidate",
+        "",
+        candidate.raw
+      ].join("\n"),
+      "utf8"
+    );
+    await rename(candidate.absolutePath, archivePath);
+    process.stdout.write(`Rejected ${candidate.file} -> ${projectRelative(cwd, archivePath)}\n`);
+    return;
+  }
+
+  const archivePaths = await moveCandidateFiles(cwd, candidate, archiveRoot, "rejected-");
+  const notePath = await nextArchivePath(archiveRoot, `rejected-${candidate.id}-review.md`);
   await writeFile(
-    candidate.absolutePath,
+    notePath,
     [
       "# Rejected Inbox Candidate",
       "",
       `Rejected: ${new Date().toISOString()}`,
       `Reason: ${reason}`,
       "",
-      "## Original Candidate",
-      "",
-      candidate.raw
+      "## Archived Files",
+      ...archivePaths.map((item) => `- ${item}`),
+      ""
     ].join("\n"),
     "utf8"
   );
-  await rename(candidate.absolutePath, archivePath);
-  process.stdout.write(`Rejected ${candidate.file} -> ${projectRelative(cwd, archivePath)}\n`);
+  process.stdout.write(`Rejected ${candidate.file} -> ${archivePaths.join(", ")}\n`);
 }
 
 export async function runInboxPromote(cwd: string, id: string, options: { dryRun?: boolean; apply?: boolean }): Promise<void> {
@@ -164,9 +185,8 @@ async function listInboxFiles(inboxRoot: string): Promise<string[]> {
 
 async function loadInboxCandidates(cwd: string): Promise<InboxCandidate[]> {
   const inboxRoot = path.join(cwd, ".context", "inbox");
-  const files = await listInboxFiles(inboxRoot);
   const candidates: InboxCandidate[] = [];
-  for (const file of files) {
+  for (const file of await listInboxFiles(inboxRoot)) {
     const absolutePath = path.join(inboxRoot, file);
     const raw = await readFile(absolutePath, "utf8");
     const info = await stat(absolutePath);
@@ -178,7 +198,83 @@ async function loadInboxCandidates(cwd: string): Promise<InboxCandidate[]> {
       risk: isHighRiskCandidate(raw) ? "high" : "routine",
       data: matter(raw).data,
       type: candidateType(raw, file),
-      mtimeMs: info.mtimeMs
+      mtimeMs: info.mtimeMs,
+      sourceKind: "legacy",
+      paths: [absolutePath]
+    });
+  }
+  candidates.push(...await loadStructuredCandidates(cwd));
+  candidates.push(...await loadRelationCandidates(cwd));
+  return candidates;
+}
+
+async function loadStructuredCandidates(cwd: string): Promise<InboxCandidate[]> {
+  const root = path.join(cwd, ".context", "inbox", "candidates");
+  if (!(await fileExists(root))) {
+    return [];
+  }
+  const candidates: InboxCandidate[] = [];
+  for (const entry of await readdir(root)) {
+    if (!entry.endsWith(".json")) {
+      continue;
+    }
+    const absolutePath = path.join(root, entry);
+    const raw = await readFile(absolutePath, "utf8");
+    const parsed = parseCmapCandidate(raw);
+    if (!parsed) {
+      continue;
+    }
+    const markdownPath = path.join(root, `${parsed.id}.md`);
+    const info = await stat(absolutePath);
+    candidates.push({
+      id: parsed.id,
+      file: projectRelative(cwd, absolutePath),
+      absolutePath,
+      raw,
+      risk: parsed.risk,
+      type: parsed.type,
+      data: structuredCandidateData(parsed),
+      mtimeMs: info.mtimeMs,
+      sourceKind: "candidate",
+      paths: await fileExists(markdownPath) ? [absolutePath, markdownPath] : [absolutePath]
+    });
+  }
+  return candidates;
+}
+
+async function loadRelationCandidates(cwd: string): Promise<InboxCandidate[]> {
+  const root = path.join(cwd, ".context", "inbox", "relations");
+  if (!(await fileExists(root))) {
+    return [];
+  }
+  const candidates: InboxCandidate[] = [];
+  for (const entry of await readdir(root)) {
+    if (!entry.endsWith(".json")) {
+      continue;
+    }
+    const absolutePath = path.join(root, entry);
+    const raw = await readFile(absolutePath, "utf8");
+    let parsed: Record<string, unknown>;
+    try {
+      const value = JSON.parse(raw) as unknown;
+      parsed = isRecord(value) ? value : {};
+    } catch {
+      continue;
+    }
+    const id = stringField(parsed.id) ?? path.basename(entry, ".json");
+    const markdownPath = path.join(root, `${id}.md`);
+    const info = await stat(absolutePath);
+    candidates.push({
+      id,
+      file: projectRelative(cwd, absolutePath),
+      absolutePath,
+      raw,
+      risk: stringField(parsed.risk) ?? "medium",
+      type: stringField(parsed.operation) ?? "relation.candidate.add",
+      data: parsed,
+      mtimeMs: info.mtimeMs,
+      sourceKind: "relation",
+      paths: await fileExists(markdownPath) ? [absolutePath, markdownPath] : [absolutePath]
     });
   }
   return candidates;
@@ -195,7 +291,7 @@ async function loadInboxCandidate(cwd: string, id: string): Promise<InboxCandida
 }
 
 function normalizeCandidateId(id: string): string {
-  const normalized = id.endsWith(".md") ? id.slice(0, -3) : id;
+  const normalized = id.replace(/\.(md|json)$/i, "");
   if (!/^[a-zA-Z0-9._-]+$/.test(normalized)) {
     throw new CmapCommandError("Inbox candidate id must be a filename id, not a path");
   }
@@ -250,7 +346,7 @@ async function applyInboxCandidate(cwd: string, candidate: InboxCandidate): Prom
   }
 
   const before = await verifyContext(cwd);
-  const targetFiles = [candidate.absolutePath];
+  const targetFiles = [...candidate.paths];
   const module = await candidateModule(cwd, candidate);
   if ((candidate.type === "module.alias.add" || candidate.type === "module.path.add") && module) {
     targetFiles.push(module.absolutePath);
@@ -290,9 +386,8 @@ async function applyInboxCandidate(cwd: string, candidate: InboxCandidate): Prom
 
   const archiveRoot = path.join(cwd, ".context", "inbox", "archive");
   await mkdir(archiveRoot, { recursive: true });
-  const archivePath = await nextArchivePath(archiveRoot, `${candidate.id}.md`);
-  await rename(candidate.absolutePath, archivePath);
-  const auditPath = await writePromoteAudit(cwd, candidate, backupId, projectRelative(cwd, archivePath));
+  const archivePaths = await moveCandidateFiles(cwd, candidate, archiveRoot);
+  const auditPath = await writePromoteAudit(cwd, candidate, backupId, archivePaths.join(", "));
   const after = await verifyContext(cwd);
   const newErrors = findNewErrors(before.issues, after.issues);
   if (newErrors.length > 0) {
@@ -309,18 +404,64 @@ Applied inbox candidate: ${candidate.id}
 Type: ${candidate.type}
 Backup: ${backupId}
 Audit: ${auditPath}
-Archived: ${projectRelative(cwd, archivePath)}
+Archived: ${archivePaths.join(", ")}
 Post-verify: no new errors
 `);
 }
 
 async function candidateModule(cwd: string, candidate: InboxCandidate) {
-  const moduleId = stringField(candidate.data.module) ?? stringField(candidate.data.moduleId);
+  const moduleId = stringField(candidate.data.module) ?? stringField(candidate.data.moduleId) ?? candidateModuleFallback(candidate);
   if (!moduleId) {
     return undefined;
   }
   const modules = await loadModuleIndex(cwd);
   return modules.find((module) => module.id === moduleId || module.aliases.includes(moduleId));
+}
+
+function candidateModuleFallback(candidate: InboxCandidate): string | undefined {
+  if (candidate.sourceKind !== "candidate") {
+    return undefined;
+  }
+  if (candidate.type === "module.alias.add" || candidate.type === "module.path.add" || candidate.type === "evidence.merge") {
+    return stringField(candidate.data.target);
+  }
+  return undefined;
+}
+
+function structuredCandidateData(candidate: CmapCandidate): Record<string, unknown> {
+  return {
+    ...candidate.fields,
+    schema: candidate.schema,
+    id: candidate.id,
+    fingerprint: candidate.fingerprint,
+    source: candidate.source,
+    type: candidate.type,
+    target: candidate.target,
+    module: stringField(candidate.fields.module) ?? stringField(candidate.fields.moduleId) ?? candidate.target,
+    risk: candidate.risk,
+    confidence: candidate.confidence,
+    summary: candidate.summary,
+    evidence: candidate.evidence,
+    canonical: candidate.canonical
+  };
+}
+
+async function moveCandidateFiles(
+  cwd: string,
+  candidate: InboxCandidate,
+  archiveRoot: string,
+  prefix = ""
+): Promise<string[]> {
+  const archived: string[] = [];
+  for (const source of candidate.paths) {
+    if (!(await fileExists(source))) {
+      continue;
+    }
+    const archivePath = await nextArchivePath(archiveRoot, `${prefix}${path.basename(source)}`);
+    await rename(source, archivePath);
+    archived.push(projectRelative(cwd, archivePath));
+  }
+  return archived;
 }
 
 async function addModuleAlias(modulePath: string, alias: string | undefined): Promise<void> {
@@ -406,6 +547,10 @@ function uniqueStrings(values: unknown[]): string[] {
 
 function firstHeading(raw: string): string | undefined {
   return raw.split(/\r?\n/).find((line) => line.startsWith("# "))?.replace(/^#\s+/, "").trim();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function countBy(items: string[]): Map<string, number> {
