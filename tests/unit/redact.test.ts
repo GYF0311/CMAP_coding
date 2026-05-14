@@ -4,24 +4,24 @@ import type { CmapViewData } from "../../src/view/schema.js";
 
 function withSummary(summary: string): CmapViewData {
   return {
-    schemaVersion: "cmap.view.v1",
+    schema: "cmap.view_data.v1",
     generatedAt: "2026-05-14T00:00:00Z",
-    project: { name: "test", purpose: "unit-test", techStack: [], entryPoints: [] },
+    projectRootName: "test",
     included: { generated: false, inbox: false, freshness: false },
-    overview: { current: { summary, nextStep: "" }, lastVerified: "" },
-    verify: { ok: true, errors: [], warnings: [], stats: {} },
+    project: { id: "test", name: "test" },
+    overview: { currentTask: summary, lastVerified: "" },
+    verify: { requiredCommands: [], manualChecks: [] },
+    summary: { moduleCount: 0, evidenceCount: 0, candidateCount: 0, warningCount: 0 },
     modules: [],
-    relations: [],
-    relationCandidates: [],
     evidence: [],
     candidates: [],
-    freshness: { snapshotAt: "", modules: [] },
+    relationCandidates: [],
     warnings: []
-  } as unknown as CmapViewData;
+  };
 }
 
 function extractSummary(redacted: CmapViewData): string {
-  return redacted.overview.current.summary;
+  return redacted.overview.currentTask ?? "";
 }
 
 describe("view redaction", () => {

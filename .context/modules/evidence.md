@@ -14,6 +14,7 @@ paths:
   - src/core/generated-store.ts
   - src/core/generated-stats.ts
   - src/core/freshness.ts
+  - src/fs/safe-path.ts
 aliases:
   - evidence
   - generated evidence
@@ -44,6 +45,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `src/commands/evidence.ts`
 - `src/commands/inbox.ts`
 - `src/core/candidate-store.ts`
+- `src/fs/safe-path.ts`
 
 ## Responsibilities
 - Append bounded generated evidence to `.context/generated/evidence/modules/<module>.jsonl`.
@@ -61,7 +63,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Print unified candidate counts plus legacy Markdown warnings through `cmap inbox status`.
 - Group unified inbox candidates by risk and type through `cmap inbox triage`.
 - Preview candidate promotion guidance through `cmap inbox promote <id> --dry-run` without editing canonical context.
-- Apply only low-risk alias/path/evidence candidates from legacy or structured candidate stores through `cmap inbox promote <id> --apply` with backup, audit, verify, and archive.
+- Apply only low-risk alias/path/evidence candidates from legacy or structured candidate stores through `cmap inbox promote <id> --apply` with project-root evidence path validation, backup, audit, verify, and archive.
 - Reject false candidates through `cmap inbox reject <id> --reason "..."` while retaining the original candidate in archive.
 - Move reviewed candidates into `.context/inbox/archive/` through `cmap inbox archive <id>` without deleting data.
 - Count simple high-risk inbox markers so semantic backlog remains visible.
@@ -135,6 +137,7 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m24-inbox-path-escape.test.ts`
 - `pnpm test tests/integration/m21-candidate-store.test.ts`
 - `pnpm dev evidence append --module route --file src/commands/route.ts --summary "Route inspected"`
 - `pnpm dev evidence list --module route`
