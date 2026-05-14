@@ -1,55 +1,43 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-13T23:13:51+08:00'
+updated_at: '2026-05-14T15:24:18.474Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-P0 v0.2 hardening and P1 v0.3 usability/release hygiene are implemented, verified, and ready for commit/push.
+P0 onboarding: non-destructive install, skill export, and bootstrap
 
 ## Current Hypothesis
-Current mainline should stay on Trust Boundary + Human Review Layer: AI proposes candidates, CLI validates/audits/routes them, and HTML/Obsidian views remain read-only review layers. Do not revive import graph / route v2 / pack v2 as the current roadmap.
+cmap should use AGENTS/CLAUDE as non-destructive lowest-compatible entrypoints, skill export as a project-local IDE reference pack, and bootstrap as the one-command onboarding flow.
 
 ## Changed Files
-- .context/CHECKPOINT.md
-- .context/modules/cli.md
-- .context/modules/evidence.md
-- .context/modules/hooks-doctor.md
-- .context/modules/update-agent.md
-- .context/modules/verify.md
-- .context/modules/view.md
-- LICENSE
-- package.json
-- pnpm-lock.yaml
+- src/commands/install.ts
+- src/host/entrypoint-template.ts
+- src/host/merge-entrypoint.ts
+- src/commands/skill.ts
+- src/skill/templates.ts
+- src/commands/bootstrap.ts
 - src/cli.ts
-- src/commands/codex.ts
-- src/commands/doctor.ts
-- src/commands/freshness.ts
-- src/commands/inbox.ts
-- src/commands/verify.ts
-- src/context/policy.ts
-- src/core/candidate-store.ts
-- src/core/freshness.ts
-- src/core/map-patch.ts
-- src/view/collect.ts
-- src/view/render.ts
-- src/view/schema.ts
-- tests/integration/m17-hooks-ingest-codex.test.ts
-- tests/integration/m19-view-export.test.ts
-- tests/integration/m21-candidate-store.test.ts
-- tests/integration/m22-freshness-policy.test.ts
-- tests/integration/m23-release-hygiene.test.ts
+- tests/integration/m27-install-merge.test.ts
+- tests/integration/m28-skill-bootstrap.test.ts
+- README.md
+- .context/MAP.md
+- .context/VERIFY.md
+- .context/modules/host.md
+- .context/modules/cli.md
+- .context/modules/skill.md
+- .context/modules/tests.md
 
 ## Verified
-pnpm test; pnpm typecheck; pnpm smoke; pnpm dev verify; pnpm dev verify --stale; pnpm dev verify --freshness; pnpm dev verify --policy; pnpm dev verify --ci --format markdown; pnpm dev obsidian export --check; pnpm dev view export --out _cmap-view; pnpm dev view export --check --out _cmap-view; pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0; pnpm dev doctor --release; pnpm pack --dry-run; git diff --check
+pnpm test; pnpm typecheck; pnpm build; pnpm smoke; pnpm dev verify; pnpm dev verify --ci --format markdown; pnpm dev verify --changed; git diff --check
 
 ## Failed / Pending
-Expected warnings remain: legacy .context/pending exists, legacy .context/stats exists, and local generated freshness metadata reports stale modules from recent implementation work. These are warning-only and are intentionally not cleaned or deleted in this task.
+verify --changed has warning-only legacy .context/pending/.context/stats messages and unmapped documentation-file warnings; errors 0.
 
 ## Next Step
-Commit the completed P1 node and push main. Future work can start from P1 dogfood usage rather than another roadmap rewrite.
+Review diff, then commit and push this onboarding slice if accepted.
 
 ## Do Not Redo
-Do not reintroduce CLI import graph, route v2 scoring, or pack v2 priority work as the current roadmap unless a future research proposal explicitly supersedes this checkpoint.
+Do not return to overwrite-style install. Keep Skill as a reference/discovery layer, not a replacement for .context or AGENTS/CLAUDE.

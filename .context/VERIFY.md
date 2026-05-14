@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: verify
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-13T02:38:30+08:00
+updated_at: 2026-05-14T23:20:00+08:00
 confidence: ai-drafted
 ---
 # Verification
@@ -35,7 +35,9 @@ confidence: ai-drafted
 | verify | `pnpm dev verify` | Errors are real structural problems; warnings are actionable. |
 | verify coverage | `pnpm dev verify --coverage --changed-files src/commands/verify.ts` | Reports changed-file module coverage and relation validity. |
 | verify CI report | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | `verify --ci --format markdown` emits a stable CI report. |
-| host | `pnpm dev install --host both` in a temp project | `AGENTS.md` and `CLAUDE.md` stay short and identical. |
+| host | `pnpm dev install --host both` in a temp project | Existing host rules are preserved outside the cmap marker block. |
+| host install | `pnpm test tests/integration/m27-install-merge.test.ts` | Install merge preserves original host entrypoints and supports preview/force/backup modes. |
+| skill/bootstrap | `pnpm test tests/integration/m28-skill-bootstrap.test.ts` | Skill export/check and bootstrap onboarding behave non-destructively. |
 | route | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Direct matches stay separate from graph-related context; `--max-context` bounds selected context and derived verify commands. |
 | route usage stats | `pnpm test tests/integration/m13-policy-stats.test.ts` | Route commands write generated route usage stats when policy allows `stats.update`. |
 | graph | `pnpm test tests/integration/m14-graph-route.test.ts` | `graph build`, `graph explain`, and `route --graph` are covered. |
@@ -65,6 +67,8 @@ confidence: ai-drafted
 | Codex workflow UX | `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts` | `codex start --write-brief --write-pack`, `codex finish --apply-routine`, and `codex handoff` preserve candidate-only semantic boundaries. |
 | hooks assist session brief | `pnpm test tests/integration/m9-hooks-assist.test.ts` | Assist `UserPromptSubmit` writes `.context/out/session-brief.md` and generated route usage stats. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
+| install | `pnpm test tests/integration/m27-install-merge.test.ts` | Host entrypoints preserve original content and marker merge stays idempotent. |
+| skill/bootstrap | `pnpm test tests/integration/m28-skill-bootstrap.test.ts` | Skill export is checkable and bootstrap writes start-here. |
 | verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
 | verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |
 | brief and Obsidian export | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | Brief output, Obsidian module notes, relation wikilinks, and URI printing are covered. |
@@ -88,7 +92,8 @@ confidence: ai-drafted
 
 ## Manual Verification
 - Inspect generated `.context/MAP.md` from `init` and confirm it contains placeholders, not guessed modules.
-- Inspect generated `AGENTS.md`/`CLAUDE.md` and confirm they are short entrypoints, not full PRD copies.
+- Inspect generated `AGENTS.md`/`CLAUDE.md` and confirm default install preserves existing rules outside the cmap marker block.
+- Inspect `.cmap/skills/cmap/` and confirm skill files describe commands/boundaries while pointing back to `.context` as canonical.
 - For any command that rewrites files, inspect whether it creates a backup or only appends to non-canonical logs/ideas.
 - Inspect `.context/hooks/*.json` and confirm templates call selected hook profiles without writing canonical semantics.
 - For `cmap update --agent --apply-routine`, inspect `.context/audit/`, `.context/backups/`, and `.context/inbox/` and confirm semantic operations were not written into canonical files.

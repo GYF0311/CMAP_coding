@@ -43,6 +43,8 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m18-freshness-inbox-promote.test.ts`
 - `tests/integration/m24-inbox-path-escape.test.ts`
 - `tests/integration/m25-view-structured-candidates.test.ts`
+- `tests/integration/m27-install-merge.test.ts`
+- `tests/integration/m28-skill-bootstrap.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `tests/unit/redact.test.ts`
@@ -72,6 +74,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert context pack budget enforcement, route-neighborhood selection, and secret-looking value redaction.
 - Assert HTML view redaction covers auth headers, cloud SDK credential fields, and PEM private key blocks without over-redacting innocent identifiers.
 - Assert `view export --include-inbox` surfaces structured `cmap.candidate.v1` files from `.context/inbox/candidates/*.json`.
+- Assert install marker merge preserves existing entrypoints, skill export/check writes stable packs, and bootstrap wires `.context`, host entrypoints, skill output, and start-here guidance.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On
@@ -112,6 +115,8 @@ Temporary directories under the system temp path.
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
 - `pnpm test tests/integration/m24-inbox-path-escape.test.ts`
 - `pnpm test tests/integration/m25-view-structured-candidates.test.ts`
+- `pnpm test tests/integration/m27-install-merge.test.ts`
+- `pnpm test tests/integration/m28-skill-bootstrap.test.ts`
 - `pnpm test tests/unit/redact.test.ts`
 - `pnpm smoke`
 

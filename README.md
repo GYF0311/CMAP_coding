@@ -40,8 +40,7 @@ pnpm dev --help
 New project:
 
 ```bash
-cmap init --auto
-cmap install --host both
+cmap bootstrap --host both --lang zh-CN
 cmap verify
 ```
 
@@ -50,6 +49,7 @@ Existing project:
 ```bash
 cmap adopt
 cmap install --host both
+cmap skill export --host generic
 cmap verify
 ```
 
@@ -88,6 +88,9 @@ cmap obsidian export
 cmap obsidian export --check
 cmap view export --out _cmap-view
 cmap view export --check --out _cmap-view
+cmap skill export --host codex
+cmap skill export --check
+cmap bootstrap --host both --lang zh-CN
 cmap relate request --task "多人对话页面消息发不出去" --changed src/commands/route.ts --out .context/out/relation-request.md
 cmap relate ingest --from .context/out/relation-patch.json --dry-run
 cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
@@ -100,8 +103,14 @@ cmap reconcile --adapter gsd-v1 --from .planning
 |---|---|
 | `cmap version` | Print version. |
 | `cmap init --auto` | Create `.context` skeleton for a new project. |
+| `cmap bootstrap --host claude\|codex\|both --lang en\|zh-CN` | Initialize `.context` if needed, merge host entrypoints, export skill instructions, and write `.context/out/start-here.md`. |
 | `cmap adopt` | Create adoption workspace and candidate signals for an existing project. |
-| `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
+| `cmap install --host claude\|codex\|both` | Merge short cmap marker blocks into host entrypoints without overwriting existing rules. |
+| `cmap install --host both --mode print` | Print the cmap marker block without writing files. |
+| `cmap install --host both --force` | Explicitly overwrite host entrypoints with standalone cmap entrypoints. |
+| `cmap install --host both --backup` | Back up existing entrypoints under `.context/backups/install-*` before writing. |
+| `cmap skill export --host generic\|codex\|claude --lang en\|zh-CN` | Export a project-local skill/reference pack under `.cmap/skills/cmap/`. |
+| `cmap skill export --check` | Fail when the exported skill pack is missing or stale. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
 | `cmap install --host both --hooks assist` | Write hook templates that can record generated evidence from changed files. |
 | `cmap hooks render --host codex --mode observe\|assist\|strict` | Render Codex lifecycle settings to `.codex/hooks.json` without editing global host config. |
@@ -177,6 +186,9 @@ cmap CLI does not generate trusted project semantics.
 - `pack` only includes routed graph-neighborhood context; it does not scan or embed the whole repository.
 - `pack --budget` uses a deterministic approximate token budget and redacts obvious secret-looking values before output.
 - AI or users write project purpose, module responsibilities, decisions, and current state.
+- `AGENTS.md` / `CLAUDE.md` are lowest-compatible entrypoints; default install only updates the cmap marker block and preserves host-owned content.
+- `.cmap/skills/cmap/` is an IDE/reference layer, not a replacement for `.context` or host entrypoints.
+- `.context/out/start-here.md` is generated onboarding guidance, not canonical memory.
 - `update --agent` can process AI-authored MapPatch JSON; routine checkpoint/generated evidence/stats operations can auto-apply with policy gates, while module semantics and decisions go to `.context/inbox/`.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
 - `.context/policy.yml` controls bounded routine/generated maintenance defaults such as stats updates and inbox thresholds; semantic and decision auto-writes remain disabled.
