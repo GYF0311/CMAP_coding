@@ -41,8 +41,11 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m16-context-pack.test.ts`
 - `tests/integration/m17-hooks-ingest-codex.test.ts`
 - `tests/integration/m18-freshness-inbox-promote.test.ts`
+- `tests/integration/m24-inbox-path-escape.test.ts`
+- `tests/integration/m25-view-structured-candidates.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
+- `tests/unit/redact.test.ts`
 - `scripts/smoke-test.mjs`
 
 ## Responsibilities
@@ -63,9 +66,12 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert policy defaults, generated module activity stats, and policy-backed inbox thresholds.
 - Assert route usage stats are written when policy allows stats updates.
 - Assert freshness snapshot/review warnings, low-risk inbox promote apply backup/audit/archive behavior, and explicit inbox reject archive behavior.
+- Assert inbox promotion rejects evidence paths that escape the project root.
 - Assert graph projections, graph explanation, and graph-mode route output.
 - Assert CI Markdown verify output and benchmark threshold failure behavior.
 - Assert context pack budget enforcement, route-neighborhood selection, and secret-looking value redaction.
+- Assert HTML view redaction covers auth headers, cloud SDK credential fields, and PEM private key blocks without over-redacting innocent identifiers.
+- Assert `view export --include-inbox` surfaces structured `cmap.candidate.v1` files from `.context/inbox/candidates/*.json`.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On
@@ -104,6 +110,9 @@ Temporary directories under the system temp path.
 - `pnpm test tests/integration/m16-context-pack.test.ts`
 - `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m24-inbox-path-escape.test.ts`
+- `pnpm test tests/integration/m25-view-structured-candidates.test.ts`
+- `pnpm test tests/unit/redact.test.ts`
 - `pnpm smoke`
 
 ## When to Update This Doc

@@ -8,7 +8,7 @@ import { appendModuleEvidence, appendVerificationEvidence } from "../core/genera
 import { loadModuleIndex } from "../core/module-index.js";
 import { CmapCommandError } from "../errors.js";
 import { createBackup, restoreBackup } from "../fs/backup.js";
-import { projectRelative } from "../fs/safe-path.js";
+import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 import { verifyContext } from "./verify.js";
 
 type InboxCandidate = {
@@ -340,7 +340,10 @@ async function applyInboxCandidate(cwd: string, candidate: InboxCandidate): Prom
 
   const evidence = stringArrayField(candidate.data.evidence);
   for (const item of evidence) {
-    if (!(await fileExists(path.join(cwd, item)))) {
+    // Reject path-escape (e.g. "../outside") and symlinks pointing outside repo.
+    // Aligns with relation-patch.ts / map-patch.ts / pack.ts which already use resolveInsideRoot.
+    const resolved = await resolveInsideRoot(cwd, item);
+    if (!(await fileExists(resolved))) {
       throw new CmapCommandError(`Evidence file does not exist: ${item}`, 2);
     }
   }

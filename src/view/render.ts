@@ -205,8 +205,15 @@ export function redactViewData(data: CmapViewData): CmapViewData {
 
 function redact(value: string): string {
   return value
-    .replace(/\b(api[_-]?key|token|secret|password)(\s*[:=]\s*)(["']?)[^\s"'`<>&]+/gi, "$1$2[REDACTED]")
-    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{16,}/g, "Bearer [REDACTED]");
+    // Common credential field names (key=val or key: val); covers cloud SDK env-var idioms.
+    .replace(
+      /\b(api[_-]?key|token|secret|password|authorization|client[_-]?secret|access[_-]?key|access[_-]?token|refresh[_-]?token|private[_-]?key|x[_-]api[_-]key)(\s*[:=]\s*)(["']?)[^\s"'`<>&]+/gi,
+      "$1$2[REDACTED]"
+    )
+    // HTTP Bearer header
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/=-]{16,}/g, "Bearer [REDACTED]")
+    // PEM private key blocks (covers RSA, OPENSSH, EC, DSA, ENCRYPTED variants)
+    .replace(/-----BEGIN[^-\n]+PRIVATE KEY-----[\s\S]*?-----END[^-\n]+PRIVATE KEY-----/g, "[REDACTED PRIVATE KEY]");
 }
 
 function escapeHtml(value: string): string {
