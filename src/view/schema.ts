@@ -4,6 +4,7 @@ export const viewDataSchemaId = "cmap.view_data.v1";
 
 export const CmapViewDataSchema = z.object({
   schema: z.literal(viewDataSchemaId),
+  locale: z.enum(["en", "zh-CN"]).default("en"),
   generatedAt: z.string(),
   sourceCommit: z.string().optional(),
   projectRootName: z.string(),
@@ -48,9 +49,13 @@ export const CmapViewDataSchema = z.object({
     risk: z.string(),
     aliases: z.array(z.string()),
     paths: z.array(z.string()),
+    description: z.string().optional(),
     relations: z.array(z.object({
       type: z.string(),
-      target: z.string()
+      target: z.string(),
+      why: z.string().optional(),
+      produces: z.string().optional(),
+      impact: z.string().optional()
     })),
     freshness: z.object({
       state: z.string(),

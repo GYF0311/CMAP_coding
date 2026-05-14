@@ -24,6 +24,12 @@ aliases:
 relations:
   depends_on:
     - auth
+relation_explanations:
+  depends_on:
+    auth:
+      why: Chat sends need authenticated sessions.
+      produces: Authenticated chat delivery.
+      impact: Auth changes can affect chat routing.
 confidence: ai-drafted
 ---
 # Module: chat

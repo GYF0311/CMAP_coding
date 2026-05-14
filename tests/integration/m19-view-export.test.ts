@@ -248,6 +248,128 @@ confidence: 0.9
     expect(html).not.toContain("eval(");
   });
 
+  test("view export --lang zh-CN renders Chinese UI and embeds locale", async () => {
+    const cwd = await createViewProject("m19-zh-ui");
+
+    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
+    expect(html).toContain("<html lang=\"zh-CN\">");
+    expect(html).toContain("项目概览");
+    expect(html).toContain("已确认模块关系");
+    expect(html).toContain("验证方式");
+    expect(data?.locale).toBe("zh-CN");
+  });
+
+  test("zh-CN view prefers translated module mirror content with English fallback", async () => {
+    const cwd = await createViewProject("m19-zh-mirror");
+    await mkdir(path.join(cwd, ".context/i18n/zh-CN/modules"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context/i18n/zh-CN/modules/view.md"),
+      `---
+context_type: module
+module: view
+source_path: .context/modules/view.md
+i18n_locale: zh-CN
+---
+# 模块：view
+
+## 目的
+把项目地图渲染成中文审阅页。<script>alert("x")</script>
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
+    expect(html).toContain("把项目地图渲染成中文审阅页。");
+    expect(html).not.toContain("<script>alert(\"x\")</script>");
+    expect(data?.modules[0].description).toBe("把项目地图渲染成中文审阅页。<script>alert(\"x\")</script>");
+  });
+
+  test("zh-CN view reads the Translation section produced by i18n scaffold", async () => {
+    const cwd = await createViewProject("m19-zh-scaffold");
+    await runCmap(["i18n", "export", "--lang", "zh-CN"], cwd);
+    const mirrorPath = path.join(cwd, ".context", "i18n", "zh-CN", "modules", "view.md");
+    const scaffold = await readFile(mirrorPath, "utf8");
+    await writeFile(
+      mirrorPath,
+      scaffold.replace("## Translation\nTODO(ai-translate)", "## Translation\n这是 scaffold 中填写的中文翻译。"),
+      "utf8"
+    );
+
+    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
+    expect(data?.modules[0].description).toBe("这是 scaffold 中填写的中文翻译。");
+  });
+
+  test("renders relation explanations without changing the canonical relations schema", async () => {
+    const cwd = await createViewProject("m19-relation-explanations");
+    await writeFile(
+      path.join(cwd, ".context/modules/view.md"),
+      `---
+context_type: module
+module: view
+name: View
+paths:
+  - src/view
+relations:
+  depends_on:
+    - evidence
+relation_explanations:
+  depends_on:
+    evidence:
+      why: view 页面要展示证据。
+      produces: 生成证据区块。
+      impact: evidence schema 变化会影响 view 渲染。
+confidence: ai-drafted
+---
+# Module: view
+
+## Purpose
+Render a human review dashboard.
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
+    expect(data?.modules[0].relations[0]).toMatchObject({
+      type: "depends_on",
+      target: "evidence",
+      why: "view 页面要展示证据。",
+      produces: "生成证据区块。",
+      impact: "evidence schema 变化会影响 view 渲染。"
+    });
+    expect(html).toContain("为什么关联");
+    expect(html).toContain("view 页面要展示证据。");
+    expect(html).toContain("生成证据区块。");
+    expect(html).toContain("evidence schema 变化会影响 view 渲染。");
+  });
+
+  test("view export --check compares the selected language output", async () => {
+    const cwd = await createViewProject("m19-check-lang");
+    const output = ".context/out/view.html";
+
+    await runCmap(["view", "export", "--lang", "zh-CN", "--out", output], cwd);
+    const zhClean = await runCmap(["view", "export", "--lang", "zh-CN", "--out", output, "--check"], cwd);
+    const enStale = await runCmap(["view", "export", "--lang", "en", "--out", output, "--check"], cwd);
+
+    expect(zhClean).toMatchObject({ code: 0 });
+    expect(enStale.code).toBe(1);
+    expect(enStale.stdout).toContain("View output is stale.");
+  });
+
   test("overview and verification data are parsed into the view contract", async () => {
     const cwd = await createViewProject("m19-overview");
     await writeFile(

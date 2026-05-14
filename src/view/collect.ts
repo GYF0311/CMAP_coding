@@ -9,6 +9,7 @@ import { generatedRoot, listModuleEvidence, type ModuleEvidence } from "../core/
 import { readFreshnessIndex, type FreshnessIndex } from "../core/freshness.js";
 import { loadModuleIndex, loadProjectInfo, type ContextModule } from "../core/module-index.js";
 import { projectRelative } from "../fs/safe-path.js";
+import type { Locale } from "../i18n/locale.js";
 import { type CmapViewData, viewDataSchemaId } from "./schema.js";
 
 const MAX_EVIDENCE = 50;
@@ -23,11 +24,14 @@ export type CollectViewOptions = {
   includeInbox?: boolean;
   includeFreshness?: boolean;
   generatedAt?: string;
+  locale?: Locale;
 };
 
 export async function collectViewData(cwd: string, options: CollectViewOptions = {}): Promise<CmapViewData> {
   const warnings: string[] = [];
   const [project, modules] = await Promise.all([loadProjectInfo(cwd), loadModuleIndex(cwd)]);
+  const locale = options.locale ?? "en";
+  const localizedDescriptions = await collectLocalizedModuleDescriptions(cwd, modules, locale);
   const included = {
     generated: Boolean(options.includeGenerated),
     inbox: Boolean(options.includeInbox),
@@ -42,6 +46,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
 
   return {
     schema: viewDataSchemaId,
+    locale,
     generatedAt: options.generatedAt ?? new Date().toISOString(),
     sourceCommit: await maybeSourceCommit(cwd),
     projectRootName: path.basename(cwd),
@@ -58,7 +63,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
       candidateCount: candidates.length + relationCandidates.length,
       warningCount: warnings.length
     },
-    modules: modules.map((module) => toModuleView(module, freshness)),
+    modules: modules.map((module) => toModuleView(module, freshness, localizedDescriptions.get(module.id))),
     evidence,
     candidates,
     relationCandidates,
@@ -66,7 +71,11 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
   };
 }
 
-function toModuleView(module: ContextModule, freshness: FreshnessIndex | undefined): CmapViewData["modules"][number] {
+function toModuleView(
+  module: ContextModule,
+  freshness: FreshnessIndex | undefined,
+  localizedDescription: string | undefined
+): CmapViewData["modules"][number] {
   const freshnessModule = freshness?.modules[module.id];
   return {
     id: module.id,
@@ -77,7 +86,12 @@ function toModuleView(module: ContextModule, freshness: FreshnessIndex | undefin
     risk: module.risk ?? "Not available",
     aliases: module.aliases,
     paths: module.pathsInclude,
-    relations: Object.entries(module.relations).flatMap(([type, targets]) => targets.map((target) => ({ type, target }))),
+    description: localizedDescription ?? extractModuleDescription(module.body),
+    relations: Object.entries(module.relations).flatMap(([type, targets]) => targets.map((target) => ({
+      type,
+      target,
+      ...module.relationExplanations[type]?.[target]
+    }))),
     freshness: {
       state: freshnessModule?.reviewState ?? "Not available",
       lastReviewedAt: freshnessModule?.lastSemanticReviewedAt ?? "Not available",
@@ -89,6 +103,76 @@ function toModuleView(module: ContextModule, freshness: FreshnessIndex | undefin
       { label: "Mark reviewed", command: `cmap freshness mark-reviewed --module ${module.id} --evidence "Reviewed ${module.id}"` }
     ]
   };
+}
+
+async function collectLocalizedModuleDescriptions(
+  cwd: string,
+  modules: ContextModule[],
+  locale: Locale
+): Promise<Map<string, string>> {
+  const descriptions = new Map<string, string>();
+  if (locale === "en") {
+    return descriptions;
+  }
+  for (const module of modules) {
+    if (!isSafeModuleMirrorStem(module.id)) {
+      continue;
+    }
+    const target = path.join(cwd, ".context", "i18n", locale, "modules", `${module.id}.md`);
+    if (!(await fileExists(target))) {
+      continue;
+    }
+    const parsed = matter(await readFile(target, "utf8"));
+    const description = extractModuleDescription(parsed.content);
+    if (description) {
+      descriptions.set(module.id, description);
+    }
+  }
+  return descriptions;
+}
+
+function extractModuleDescription(body: string): string | undefined {
+  const sections = parseMarkdownSections(body);
+  const preferred = sections.get("translation") ?? sections.get("purpose") ?? sections.get("目的") ?? sections.get("作用");
+  const summary = firstNonEmptyParagraph(preferred ?? body);
+  return summary === "TODO(ai-translate)" ? undefined : summary;
+}
+
+function isSafeModuleMirrorStem(value: string): boolean {
+  return Boolean(value) && !value.includes("/") && !value.includes("\\") && value !== "." && value !== "..";
+}
+
+function parseMarkdownSections(body: string): Map<string, string> {
+  const sections = new Map<string, string>();
+  let current: string | undefined;
+  let buffer: string[] = [];
+  for (const line of body.split(/\r?\n/)) {
+    const match = line.match(/^##\s+(.+?)\s*$/);
+    if (match) {
+      if (current) {
+        sections.set(current.toLocaleLowerCase(), buffer.join("\n"));
+      }
+      current = match[1].trim();
+      buffer = [];
+      continue;
+    }
+    if (current) {
+      buffer.push(line);
+    }
+  }
+  if (current) {
+    sections.set(current.toLocaleLowerCase(), buffer.join("\n"));
+  }
+  return sections;
+}
+
+function firstNonEmptyParagraph(value: string): string | undefined {
+  return value
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
+    .filter(Boolean)
+    .filter((paragraph) => !paragraph.startsWith("#"))
+    .filter((paragraph) => paragraph !== "TODO(ai-translate)")[0];
 }
 
 async function maybeReadFreshness(cwd: string, warnings: string[]): Promise<FreshnessIndex | undefined> {

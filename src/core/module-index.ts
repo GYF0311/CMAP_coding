@@ -17,6 +17,13 @@ export type ContextModule = {
   risk?: string;
   status?: string;
   relations: Record<string, string[]>;
+  relationExplanations: Record<string, Record<string, RelationExplanation>>;
+};
+
+export type RelationExplanation = {
+  why?: string;
+  produces?: string;
+  impact?: string;
 };
 
 export type ProjectInfo = {
@@ -84,7 +91,8 @@ export async function loadModuleIndex(cwd: string): Promise<ContextModule[]> {
       layer: normalizeOptionalString(parsed.data.layer),
       risk: normalizeOptionalString(parsed.data.risk),
       status: normalizeOptionalString(parsed.data.status),
-      relations: normalizeRelations(parsed.data.relations)
+      relations: normalizeRelations(parsed.data.relations),
+      relationExplanations: normalizeRelationExplanations(parsed.data.relation_explanations)
     });
   }
 
@@ -160,6 +168,38 @@ function normalizeRelations(value: unknown): Record<string, string[]> {
     const values = normalizeStringArray(raw);
     if (values.length > 0) {
       normalized[key] = values;
+    }
+  }
+  return normalized;
+}
+
+function normalizeRelationExplanations(value: unknown): Record<string, Record<string, RelationExplanation>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  const normalized: Record<string, Record<string, RelationExplanation>> = {};
+  for (const [type, rawTargets] of Object.entries(value as Record<string, unknown>)) {
+    if (!rawTargets || typeof rawTargets !== "object" || Array.isArray(rawTargets)) {
+      continue;
+    }
+    const targets: Record<string, RelationExplanation> = {};
+    for (const [target, rawExplanation] of Object.entries(rawTargets as Record<string, unknown>)) {
+      if (!rawExplanation || typeof rawExplanation !== "object" || Array.isArray(rawExplanation)) {
+        continue;
+      }
+      const record = rawExplanation as Record<string, unknown>;
+      const explanation = {
+        why: normalizeOptionalString(record.why),
+        produces: normalizeOptionalString(record.produces),
+        impact: normalizeOptionalString(record.impact)
+      };
+      if (explanation.why || explanation.produces || explanation.impact) {
+        targets[target] = explanation;
+      }
+    }
+    if (Object.keys(targets).length > 0) {
+      normalized[type] = targets;
     }
   }
   return normalized;

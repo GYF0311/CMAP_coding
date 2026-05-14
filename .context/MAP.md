@@ -35,6 +35,7 @@ confidence: ai-drafted
 |---|---|---|---|---|
 | cli | command registration, option parsing, exit-code boundary | `src/cli.ts`, `src/commands` | `.context/modules/cli.md` | cli, command, 命令, version, init, install |
 | context | `.context` templates, deterministic policy v2 loading, and project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
+| i18n | localized reading-layer scaffold and project locale config without changing canonical facts | `src/i18n`, `src/commands/i18n.ts`, `src/commands/config.ts` | `.context/modules/i18n.md` | i18n, config, locale, zh-CN, 中文地图, 本地化 |
 | verify | deterministic L0 structure checks, freshness/stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
 | host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
 | route | direct module routing, generated route usage stats, and bounded reviewed-relation context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
@@ -62,6 +63,7 @@ confidence: ai-drafted
 | User Words | Module | Read First |
 |---|---|---|
 | 初始化、骨架、模板、.context、policy、init | context | `.context/MAP.md`, `.context/modules/context.md`, `src/context/templates.ts`, `src/context/policy.ts` |
+| 中文地图、本地化、locale、i18n、config、翻译镜像 | i18n | `.context/modules/i18n.md`, `src/commands/i18n.ts`, `src/i18n` |
 | 命令、参数、退出码、version、install | cli | `.context/modules/cli.md`, `src/cli.ts` |
 | 校验、漂移、TODO、missing file、verify | verify | `.context/modules/verify.md`, `src/commands/verify.ts` |
 | AGENTS、CLAUDE、宿主入口、host | host | `.context/modules/host.md`, `src/host/entrypoint-template.ts` |
@@ -89,6 +91,7 @@ confidence: ai-drafted
 ## Module Relationships
 - `cli` dispatches to command modules and owns process exit behavior.
 - `context` provides templates, deterministic policy v2 defaults/loading, and project signal scanning used by `init`.
+- `i18n` mirrors reviewed `.context` files into `.context/i18n/<locale>/` scaffolds, writes translation rules, and stores default locale config without changing canonical facts.
 - `verify` reads `.context` files created by `context`, validates deterministic structure, checks stale/freshness warnings, and can render stable CI Markdown reports.
 - `host` generates entrypoint text used by `install`.
 - `route` reads the shared module index, recommends direct modules, expands bounded reviewed-relation context, surfaces module-owned verification commands, and records generated route usage stats when policy allows; it must not propose nonexistent modules, treat related context as direct matches, or consume unpromoted relation candidates as route facts.
@@ -116,6 +119,8 @@ Generated evidence and stats are support layers: `evidence append`, MapPatch v2 
 
 ## State / Storage
 - Project memory: `.context/`
+- Localized reading mirror: `.context/i18n/<locale>/`
+- Project locale config: `.context/config.yml`
 - Deterministic maintenance policy: `.context/policy.yml`
 - Current handoff checkpoint: `.context/CHECKPOINT.md`
 - Task-local generated outputs: `.context/out/`
@@ -158,10 +163,11 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 - `update-agent` must not auto-write `MAP.md`, `DECISIONS.md`, module responsibilities, module relationships, or code files.
 - Generated evidence must stay clearly marked and must not be treated as a replacement for reviewed module purpose, boundaries, or decisions.
 - Relation candidates may be shown for review, but route and benchmark must not score from unpromoted candidates.
-- Import graph, route v2, and pack v2 are paused historical ideas; the current roadmap is HTML review first, then AI relation candidates.
+- Translation mirrors must not overwrite canonical `.context` facts; Chinese aliases and relation explanations should remain reviewable changes instead of silent semantic rewrites.
+- Import graph, route v2, and pack v2 are paused historical ideas; the current roadmap is localized HTML review and relation explanations on top of reviewed project maps.
 
 ## Verification Summary
-Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`; context pack budget/redaction behavior is covered by `tests/integration/m16-context-pack.test.ts`; inbox evidence path safety is covered by `tests/integration/m24-inbox-path-escape.test.ts`; structured candidate visibility in HTML view is covered by `tests/integration/m25-view-structured-candidates.test.ts`; HTML view secret redaction is covered by `tests/unit/redact.test.ts`.
+Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`; context pack budget/redaction behavior is covered by `tests/integration/m16-context-pack.test.ts`; inbox evidence path safety is covered by `tests/integration/m24-inbox-path-escape.test.ts`; structured candidate visibility in HTML view is covered by `tests/integration/m25-view-structured-candidates.test.ts`; localized view/i18n config behavior is covered by `tests/integration/m19-view-export.test.ts` and `tests/integration/m26-i18n-config.test.ts`; HTML view secret redaction is covered by `tests/unit/redact.test.ts`.
 
 ## Handoff Notes
 Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, budgeted/redacted `pack`, Obsidian view-layer export/check/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, MapPatch v1/v2 policy gate, generated/canonical evidence separation, generated stats store, freshness v2, controlled low-risk inbox promotion with project-root evidence path validation, structured candidate visibility in the HTML review view, strengthened HTML secret redaction, observe/assist hook evidence collection, assist hook session brief generation, Codex-first lifecycle render/ingest, Claude hook lifecycle render/test compatibility, deterministic graph projections, graph explanation, route context packing from reviewed module relations plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, GitHub Actions quality gate, and refreshed product showcase.
