@@ -3,6 +3,7 @@ import { Command, CommanderError } from "commander";
 import { runAddModule } from "./commands/add-module.js";
 import { runAdopt } from "./commands/adopt.js";
 import { runBenchmarkRoute } from "./commands/benchmark.js";
+import { runBootstrap } from "./commands/bootstrap.js";
 import { runBrief } from "./commands/brief.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCodexFinish, runCodexGuard, runCodexHandoff, runCodexStart } from "./commands/codex.js";
@@ -26,6 +27,7 @@ import { runPolicyShow, runPolicyValidate } from "./commands/policy.js";
 import { runReconcile } from "./commands/reconcile.js";
 import { runRelateIngest, runRelatePromote, runRelateRequest } from "./commands/relate.js";
 import { runRoute } from "./commands/route.js";
+import { runSkillExport } from "./commands/skill.js";
 import { runStatus } from "./commands/status.js";
 import { runUpdate, runUpdateRollback } from "./commands/update.js";
 import { runVerify } from "./commands/verify.js";
@@ -55,6 +57,28 @@ program
   .option("--lang <locale>", "Project locale: en or zh-CN")
   .action(async (options: { auto?: boolean; lang?: string }) => {
     await runInit(process.cwd(), options);
+  });
+
+program
+  .command("bootstrap")
+  .description("Initialize cmap entrypoints, skill pack, and start-here guide")
+  .option("--host <host>", "claude, codex, or both", "both")
+  .option("--lang <locale>", "Project locale: en or zh-CN", "en")
+  .option("--skill", "Export the cmap skill pack", true)
+  .action(async (options: { host?: string; lang?: string; skill?: boolean }) => {
+    await runBootstrap(process.cwd(), options);
+  });
+
+const skill = program.command("skill").description("Export portable cmap skill instructions");
+skill
+  .command("export")
+  .option("--out <dir>", "Output directory; defaults to .cmap/skills/cmap")
+  .option("--host <host>", "generic, codex, claude, or cursor", "generic")
+  .option("--lang <locale>", "Skill language: en or zh-CN", "en")
+  .option("--check", "Check whether the skill export is up to date without writing files")
+  .action(async (options: { out?: string; host?: string; lang?: string; check?: boolean }) => {
+    const code = await runSkillExport(process.cwd(), options);
+    process.exitCode = code;
   });
 
 const i18n = program.command("i18n").description("Export and check localized context mirrors");
