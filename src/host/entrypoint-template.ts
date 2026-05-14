@@ -1,6 +1,14 @@
 export function hostEntrypoint(projectName: string): string {
   return `# Project: ${projectName}
 
+${hostEntrypointBlock(projectName)}
+`;
+}
+
+export function hostEntrypointBlock(projectName: string): string {
+  return `<!-- cmap:start -->
+## CMAP Project Map
+
 This project uses cmap: a shared project map for humans and AI coding agents.
 
 ## Start Here
@@ -24,5 +32,6 @@ This project uses cmap: a shared project map for humans and AI coding agents.
 - \`cmap finish\` — close the task and suggest context updates.
 - \`cmap verify\` — check project map consistency.
 - \`cmap cp\` — move/copy/delete existing line blocks losslessly.
+<!-- cmap:end -->
 `;
 }

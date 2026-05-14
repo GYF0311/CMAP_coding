@@ -1,15 +1,21 @@
-import { writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { hostEntrypoint } from "../host/entrypoint-template.js";
+import { fileExists } from "../context/scanner.js";
+import { hostEntrypoint, hostEntrypointBlock } from "../host/entrypoint-template.js";
+import { appendCmapBlock, mergeCmapBlock } from "../host/merge-entrypoint.js";
 import { writeHookTemplates, type HookHost, type HookProfile } from "../hooks/templates.js";
 
 type InstallOptions = {
   host: string;
   hooks: string;
+  mode?: string;
+  force?: boolean;
+  backup?: boolean;
 };
 
 const validHosts = new Set(["claude", "codex", "both"]);
 const validHooks = new Set(["none", "reminder", "maintain", "observe", "assist", "strict"]);
+const validModes = new Set(["merge", "append", "print"]);
 
 export async function runInstall(cwd: string, options: InstallOptions): Promise<void> {
   if (!validHosts.has(options.host)) {
@@ -18,8 +24,14 @@ export async function runInstall(cwd: string, options: InstallOptions): Promise<
   if (!validHooks.has(options.hooks)) {
     throw new Error(`Invalid hooks profile "${options.hooks}". Expected none, reminder, maintain, observe, assist, or strict.`);
   }
+  const mode = options.mode ?? "merge";
+  if (!validModes.has(mode)) {
+    throw new Error(`Invalid install mode "${mode}". Expected merge, append, or print.`);
+  }
 
-  const content = hostEntrypoint(path.basename(cwd));
+  const projectName = path.basename(cwd);
+  const standalone = hostEntrypoint(projectName);
+  const block = hostEntrypointBlock(projectName);
   const targets =
     options.host === "both"
       ? ["AGENTS.md", "CLAUDE.md"]
@@ -27,13 +39,52 @@ export async function runInstall(cwd: string, options: InstallOptions): Promise<
         ? ["AGENTS.md"]
         : ["CLAUDE.md"];
 
-  for (const target of targets) {
-    await writeFile(path.join(cwd, target), content, "utf8");
+  if (mode === "print") {
+    for (const target of targets) {
+      process.stdout.write(`# ${target}\n\n${block.trimEnd()}\n\n`);
+    }
+    return;
   }
 
-  process.stdout.write(`Installed ${targets.join(", ")}\n`);
+  const backupRoot = options.backup ? path.join(cwd, ".context", "backups", `install-${dateStamp()}`) : undefined;
+  for (const target of targets) {
+    const targetPath = path.join(cwd, target);
+    const exists = await fileExists(targetPath);
+    const current = exists ? await readFile(targetPath, "utf8") : "";
+    let next = standalone;
+    let message = `${target}: created cmap entrypoint`;
+
+    if (options.force) {
+      message = `${target}: overwritten by --force`;
+    } else if (exists) {
+      if (mode === "append") {
+        next = appendCmapBlock(current, block);
+        message = `${target}: appended cmap block, original content preserved`;
+      } else {
+        const merged = mergeCmapBlock(current, block);
+        next = merged.content;
+        message =
+          merged.action === "updated"
+            ? `${target}: updated cmap block, original content preserved`
+            : `${target}: merged cmap block, original content preserved`;
+      }
+    }
+
+    if (backupRoot && exists && current !== next) {
+      await mkdir(backupRoot, { recursive: true });
+      await writeFile(path.join(backupRoot, target), current, "utf8");
+    }
+
+    await writeFile(targetPath, next, "utf8");
+    process.stdout.write(`${message}\n`);
+  }
+
   if (options.hooks !== "none") {
     const written = await writeHookTemplates(cwd, options.host as HookHost, options.hooks as Exclude<HookProfile, "none">);
     process.stdout.write(`Installed hook templates: ${written.join(", ")}\n`);
   }
+}
+
+function dateStamp(): string {
+  return new Date().toISOString().replace(/[:.]/g, "-");
 }

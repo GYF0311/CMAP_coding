@@ -592,7 +592,10 @@ program
   .description("Install short AI host entrypoints")
   .option("--host <host>", "claude, codex, or both", "both")
   .option("--hooks <profile>", "none, reminder, maintain, observe, or assist", "none")
-  .action(async (options: { host: string; hooks: string }) => {
+  .option("--mode <mode>", "merge, append, or print", "merge")
+  .option("--force", "Overwrite host entrypoints completely")
+  .option("--backup", "Back up existing entrypoints under .context/backups/install-* before writing")
+  .action(async (options: { host: string; hooks: string; mode?: string; force?: boolean; backup?: boolean }) => {
     await runInstall(process.cwd(), options);
   });
 
