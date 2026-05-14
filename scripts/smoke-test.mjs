@@ -8,6 +8,7 @@ import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cliPath = path.join(repoRoot, "dist", "cli.js");
+const packageJson = JSON.parse(await readFile(path.join(repoRoot, "package.json"), "utf8"));
 
 async function run(args, cwd, expectedCode = 0) {
   try {
@@ -42,7 +43,7 @@ await mkdir(path.join(project, "src", "features", "chat"), { recursive: true });
 await writeFile(path.join(project, "src", "features", "chat", "send.ts"), "export const send = true;\n", "utf8");
 
 const version = await run(["version"], project);
-assertIncludes(version.stdout, "0.1.0", "version output");
+assertIncludes(version.stdout, packageJson.version, "version output");
 
 await run(["init", "--auto"], project);
 await run(["install", "--host", "both", "--hooks", "reminder"], project);
