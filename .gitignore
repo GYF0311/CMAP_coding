@@ -13,3 +13,7 @@ _cmap/
 _cmap-view/
 .playwright-mcp/
 cmap-product-overview-*.png
+
+# Local review/research workspaces
+research/
+CMAP_review/CMAP_coding/

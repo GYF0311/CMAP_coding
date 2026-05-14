@@ -1,0 +1,54 @@
+=== typecheck ===
+
+> cmap@0.1.0 typecheck /Users/macbookpro/Desktop/CMAP_review/CMAP_coding
+> tsc --noEmit
+
+
+=== test ===
+
+> cmap@0.1.0 test /Users/macbookpro/Desktop/CMAP_review/CMAP_coding
+> vitest run
+
+
+ RUN  v4.1.5 /Users/macbookpro/Desktop/CMAP_review/CMAP_coding
+
+Exported cmap view to .context/out/view.html
+View output missing. Run cmap view export --out .context/out/view.html.
+Exported cmap view to .context/out/view.html
+View output is up to date.
+View output is stale.
+Exported cmap view to .context/out/view.html
+View output is stale.
+Exported cmap view to .context/out/view.html
+Exported cmap view to .context/out/default.html
+Exported cmap view to .context/out/full.html
+Exported cmap view to .context/out/view.html
+Exported cmap view to .context/out/view.html
+Exported cmap view to .context/out/view.html
+Exported cmap view to .context/out/view.html
+file:///var/folders/6m/z9pftyhx43ng7p7m45hpdvhw0000gn/T/cmap-m19-open-vvJTgH/.context/out/view.html
+
+ Test Files  24 passed (24)
+      Tests  134 passed (134)
+   Start at  00:04:43
+   Duration  61.22s (transform 885ms, setup 0ms, import 1.68s, tests 414.66s, environment 2ms)
+
+
+=== build ===
+
+> cmap@0.1.0 build /Users/macbookpro/Desktop/CMAP_review/CMAP_coding
+> tsup src/cli.ts --format esm --dts
+
+CLI Building entry: src/cli.ts
+CLI Using tsconfig: tsconfig.json
+CLI tsup v8.5.1
+CLI Target: es2022
+ESM Build start
+ESM dist/cli.js 287.26 KB
+ESM ⚡️ Build success in 245ms
+DTS Build start
+DTS ⚡️ Build success in 1560ms
+DTS dist/cli.d.ts 20.00 B
+
+=== smoke ===
+Smoke test passed in /var/folders/6m/z9pftyhx43ng7p7m45hpdvhw0000gn/T/cmap-smoke-B9ETkH
