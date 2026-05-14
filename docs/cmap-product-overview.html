@@ -3,27 +3,32 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CMAP_coding | AI Coding Project Map</title>
-  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" fill="%23f6f1e7"/><path d="M14 18h36v28H14z" fill="none" stroke="%23161b1d" stroke-width="4"/><path d="M22 32h20M32 22v20" stroke="%230c7b75" stroke-width="4"/></svg>'>
+  <title>CMAP | 给 AI Coding 的项目记忆地图</title>
+  <meta name="description" content="CMAP 是面向 AI coding 项目的 repo-local 项目记忆地图 CLI，提供 .context 事实源、确定性维护、AI 开工包、候选治理和人类审阅层。">
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="%23008983"/><path d="M32 11l16 9v18l-16 15-16-15V20z" fill="none" stroke="white" stroke-width="4"/><path d="M32 19v26M20 26h24" stroke="white" stroke-width="4"/></svg>'>
   <style>
     :root {
-      --paper: #f6f1e7;
-      --paper-2: #ebe2d1;
-      --ink: #161b1d;
-      --muted: #64706c;
-      --line: rgba(22, 27, 29, 0.14);
-      --panel: rgba(255, 252, 244, 0.76);
-      --teal: #0c7b75;
-      --teal-2: #1fa39b;
-      --amber: #c27b22;
-      --red: #b44535;
-      --blue: #315f8f;
-      --green: #426f45;
-      --shadow: 0 24px 70px rgba(22, 27, 29, 0.14);
+      --bg: #fbfcfa;
+      --surface: rgba(255, 255, 255, 0.86);
+      --surface-strong: #ffffff;
+      --ink: #101716;
+      --ink-soft: #34403d;
+      --muted: #68746f;
+      --faint: #eef3f0;
+      --line: #dbe4df;
+      --line-soft: rgba(33, 47, 43, 0.1);
+      --teal: #008a83;
+      --teal-dark: #006d68;
+      --teal-soft: #e2f4f1;
+      --gold: #f2aa16;
+      --gold-soft: #fff3d6;
+      --slate: #87928e;
+      --shadow: 0 18px 46px rgba(31, 45, 40, 0.08);
+      --shadow-soft: 0 10px 28px rgba(31, 45, 40, 0.055);
       --radius: 8px;
-      --mono: "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
-      --sans: "Avenir Next", "Segoe UI", "Noto Sans SC", sans-serif;
-      --serif: "Iowan Old Style", "Songti SC", Georgia, serif;
+      --font-display: "Avenir Next Condensed", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-body: "Avenir Next", "PingFang SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      --font-mono: "SFMono-Regular", "Cascadia Code", "Liberation Mono", Menlo, monospace;
     }
 
     * {
@@ -38,14 +43,16 @@
       margin: 0;
       color: var(--ink);
       background:
-        linear-gradient(90deg, rgba(22, 27, 29, 0.045) 1px, transparent 1px),
-        linear-gradient(0deg, rgba(22, 27, 29, 0.04) 1px, transparent 1px),
-        radial-gradient(circle at 82% 12%, rgba(31, 163, 155, 0.14), transparent 28%),
-        radial-gradient(circle at 15% 76%, rgba(194, 123, 34, 0.12), transparent 28%),
-        var(--paper);
-      background-size: 28px 28px, 28px 28px, auto, auto, auto;
-      font-family: var(--sans);
-      line-height: 1.55;
+        linear-gradient(90deg, rgba(0, 138, 131, 0.08) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(0, 138, 131, 0.06) 1px, transparent 1px),
+        radial-gradient(circle at 74% 18%, rgba(0, 138, 131, 0.08), transparent 30%),
+        linear-gradient(90deg, #f4f7f5 0 12.5%, transparent 12.5%),
+        var(--bg);
+      background-size: 52px 52px, 52px 52px, auto, auto, auto;
+      font-family: var(--font-body);
+      letter-spacing: 0;
+      line-height: 1.6;
+      overflow-x: hidden;
     }
 
     a {
@@ -53,88 +60,103 @@
       text-decoration: none;
     }
 
-    .app-shell {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 248px minmax(0, 1fr);
+    button {
+      font: inherit;
     }
 
-    .sidebar {
+    .page {
+      display: grid;
+      grid-template-columns: 208px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .side {
       position: sticky;
       top: 0;
       height: 100vh;
-      padding: 22px 18px;
+      padding: 30px 24px;
       border-right: 1px solid var(--line);
-      background: rgba(246, 241, 231, 0.88);
-      backdrop-filter: blur(14px);
+      background: rgba(247, 250, 248, 0.92);
+      backdrop-filter: blur(18px);
       display: flex;
       flex-direction: column;
+      gap: 28px;
+      z-index: 30;
+    }
+
+    .side-number {
+      display: grid;
       gap: 18px;
     }
 
-    .brand {
-      display: grid;
-      gap: 8px;
+    .side-number strong {
+      font-family: var(--font-display);
+      font-size: 108px;
+      line-height: 0.78;
+      color: var(--gold);
+      font-weight: 900;
     }
 
-    .brand-mark {
-      width: 42px;
-      height: 42px;
-      border: 2px solid var(--ink);
-      display: grid;
-      place-items: center;
-      font-family: var(--mono);
-      font-weight: 800;
-      background: linear-gradient(135deg, var(--paper), #ffffff);
-      box-shadow: 6px 6px 0 var(--teal);
-    }
-
-    .brand h1 {
-      margin: 0;
-      font-family: var(--serif);
-      font-size: 26px;
-      font-weight: 700;
-    }
-
-    .brand p {
-      margin: 0;
-      color: var(--muted);
+    .side-number span {
+      color: var(--gold);
+      font-weight: 900;
       font-size: 13px;
     }
 
-    .nav {
-      display: grid;
-      gap: 6px;
-      padding-top: 4px;
+    .side-rule {
+      width: 140px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--line));
     }
 
-    .nav a {
-      min-height: 38px;
+    .side-nav {
+      display: grid;
+      gap: 12px;
+    }
+
+    .side-nav a {
+      min-height: 44px;
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: var(--radius);
-      color: #303735;
+      gap: 12px;
+      padding: 10px 12px;
+      border-left: 3px solid transparent;
+      color: #5c6864;
+      font-weight: 800;
       font-size: 14px;
     }
 
-    .nav a:hover,
-    .nav a.active {
-      background: #fff8e9;
-      box-shadow: inset 0 0 0 1px var(--line);
+    .side-nav a:hover,
+    .side-nav a.active {
+      color: var(--teal-dark);
+      border-left-color: var(--teal);
+      background: rgba(0, 138, 131, 0.08);
     }
 
-    .nav svg {
-      flex: 0 0 16px;
+    .side-nav svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 1.8;
+      flex: 0 0 auto;
     }
 
-    .side-note {
+    .side-foot {
       margin-top: auto;
-      border-top: 1px solid var(--line);
-      padding-top: 16px;
-      font-size: 12px;
-      color: var(--muted);
+      display: grid;
+      gap: 10px;
+      color: #59635f;
+      font-size: 13px;
+    }
+
+    .compass {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--ink);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--teal);
+      font-weight: 900;
     }
 
     .main {
@@ -144,928 +166,1231 @@
     .topbar {
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 25;
+      height: 74px;
+      padding: 0 38px;
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-      padding: 16px 28px;
+      gap: 24px;
+      background: rgba(255, 255, 255, 0.82);
       border-bottom: 1px solid var(--line);
-      background: rgba(246, 241, 231, 0.78);
-      backdrop-filter: blur(16px);
+      backdrop-filter: blur(18px);
     }
 
-    .topbar strong {
-      font-family: var(--mono);
-      font-size: 13px;
-    }
-
-    .topbar-actions {
+    .brand {
       display: flex;
-      gap: 8px;
       align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
+      gap: 13px;
+      font-size: 25px;
+      font-weight: 950;
+      letter-spacing: 0;
     }
 
-    .pill {
-      min-height: 32px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(255, 252, 244, 0.8);
-      font-size: 12px;
-      color: #303735;
-      white-space: nowrap;
-    }
-
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--teal);
-      box-shadow: 0 0 0 4px rgba(12, 123, 117, 0.12);
-    }
-
-    .content {
-      padding: 32px 36px 72px;
+    .mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
       display: grid;
+      place-items: center;
+      background: var(--teal);
+      color: #fff;
+      box-shadow: 0 10px 22px rgba(0, 138, 131, 0.25);
+    }
+
+    .mark svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .top-links {
+      display: flex;
+      align-items: center;
       gap: 28px;
+      font-size: 14px;
+      font-weight: 900;
+      color: #58615e;
+    }
+
+    .top-links a {
+      position: relative;
+      padding: 28px 0 24px;
+    }
+
+    .top-links a.active,
+    .top-links a:hover {
+      color: var(--teal-dark);
+    }
+
+    .top-links a.active::after,
+    .top-links a:hover::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 3px;
+      background: var(--teal);
+    }
+
+    .container {
+      padding: 0 38px 72px;
     }
 
     section {
-      scroll-margin-top: 86px;
+      scroll-margin-top: 94px;
     }
 
     .hero {
-      min-height: calc(100vh - 116px);
+      min-height: 520px;
       display: grid;
-      grid-template-columns: minmax(0, 0.86fr) minmax(360px, 1.14fr);
-      gap: 28px;
-      align-items: stretch;
+      grid-template-columns: minmax(0, 0.88fr) minmax(450px, 1.12fr);
+      align-items: center;
+      gap: 34px;
+      border-bottom: 1px solid var(--line);
     }
 
-    .hero-copy {
-      align-self: center;
-      display: grid;
-      gap: 22px;
-      padding: 10px 0;
-    }
-
-    .eyebrow {
-      font-family: var(--mono);
-      color: var(--teal);
-      font-size: 12px;
-      text-transform: uppercase;
+    .hero h1 {
+      margin: 0;
+      font-family: var(--font-display);
+      font-size: clamp(82px, 9vw, 144px);
+      line-height: 0.78;
+      color: #111817;
+      font-weight: 950;
+      letter-spacing: 0;
     }
 
     .hero h2 {
-      margin: 0;
-      max-width: 780px;
-      font-family: var(--serif);
-      font-size: clamp(48px, 6.2vw, 96px);
-      line-height: 0.95;
-      font-weight: 760;
+      margin: 26px 0 12px;
+      font-size: 34px;
+      line-height: 1.12;
+      color: #1b2724;
+      font-weight: 950;
     }
 
-    .hero-copy p {
-      margin: 0;
-      max-width: 720px;
-      color: #39403d;
-      font-size: 18px;
+    .hero-line {
+      width: 32px;
+      height: 3px;
+      background: var(--teal);
+      margin: 16px 0 20px;
     }
 
-    .hero-grid {
+    .lead {
+      margin: 0;
+      max-width: 680px;
+      color: var(--muted);
+      font-size: 20px;
+      line-height: 1.78;
+    }
+
+    .trust-row {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      max-width: 720px;
+      gap: 16px;
+      margin-top: 38px;
     }
 
-    .metric {
-      min-height: 96px;
-      padding: 14px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      border-radius: var(--radius);
-    }
-
-    .metric b {
-      display: block;
-      font-family: var(--serif);
-      font-size: 34px;
-      line-height: 1;
-    }
-
-    .metric span {
-      display: block;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .map-stage {
-      position: relative;
-      min-height: 650px;
-      border: 1px solid rgba(22, 27, 29, 0.18);
-      border-radius: var(--radius);
-      background:
-        linear-gradient(145deg, rgba(255, 252, 244, 0.86), rgba(235, 226, 209, 0.72)),
-        repeating-linear-gradient(90deg, transparent 0 31px, rgba(22, 27, 29, 0.035) 31px 32px);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .map-stage::before {
-      content: "";
-      position: absolute;
-      inset: 18px;
-      border: 1px solid rgba(22, 27, 29, 0.12);
-      pointer-events: none;
-    }
-
-    .atlas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .node {
-      cursor: pointer;
-      transition: transform 180ms ease, filter 180ms ease, opacity 180ms ease;
-    }
-
-    .node:hover {
-      filter: drop-shadow(0 12px 18px rgba(22, 27, 29, 0.22));
-    }
-
-    .node circle,
-    .node rect {
-      transition: fill 180ms ease, stroke 180ms ease;
-    }
-
-    .node.active circle,
-    .node.active rect {
-      stroke: var(--red);
-      stroke-width: 4;
-    }
-
-    .edge {
-      stroke: rgba(22, 27, 29, 0.24);
-      stroke-width: 2;
-      fill: none;
-    }
-
-    .edge.strong {
-      stroke: rgba(12, 123, 117, 0.56);
-      stroke-width: 3;
-    }
-
-    .stage-label {
-      position: absolute;
-      left: 26px;
-      top: 22px;
-      padding: 8px 10px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.8);
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .stage-panel {
-      position: absolute;
-      left: 26px;
-      right: 26px;
-      bottom: 26px;
+    .mini-proof {
       display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: end;
-      padding: 16px;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      color: #2d3936;
+    }
+
+    .mini-proof .icon,
+    .module-icon,
+    .flow-icon {
+      width: 34px;
+      height: 34px;
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.88);
-      backdrop-filter: blur(12px);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: var(--teal);
+      background: #fff;
     }
 
-    .stage-panel h3 {
-      margin: 0;
-      font-size: 22px;
-      font-family: var(--serif);
-    }
-
-    .stage-panel p {
-      margin: 6px 0 0;
-      color: var(--muted);
+    .mini-proof strong {
+      display: block;
+      margin-bottom: 2px;
       font-size: 14px;
     }
 
-    .stage-panel code {
-      font-family: var(--mono);
+    .mini-proof span {
+      color: var(--muted);
       font-size: 12px;
-      background: #efe4ce;
+    }
+
+    .repo-map {
+      position: relative;
+      min-height: 350px;
+    }
+
+    .repo-card {
+      position: absolute;
       border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: 5px 7px;
-      white-space: nowrap;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow-soft);
+      padding: 12px 15px;
+      min-width: 120px;
+      font-size: 13px;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .repo-card span {
+      display: block;
+      color: #7b8581;
+      font-size: 11px;
+      margin-top: 2px;
+      font-weight: 800;
+    }
+
+    .repo-card::before {
+      content: "";
+      display: inline-block;
+      width: 19px;
+      height: 13px;
+      margin-right: 8px;
+      border: 2px solid var(--gold);
+      border-top-width: 5px;
+      border-radius: 3px;
+      vertical-align: -2px;
+    }
+
+    .repo-center {
+      position: absolute;
+      left: 45%;
+      top: 43%;
+      transform: translate(-50%, -50%);
+      width: 154px;
+      height: 88px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #00968f, #00756f);
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-size: 28px;
+      font-weight: 950;
+      box-shadow: 0 20px 46px rgba(0, 138, 131, 0.3);
+      z-index: 2;
+    }
+
+    .repo-card.a { left: 7%; top: 52%; }
+    .repo-card.b { left: 25%; top: 12%; }
+    .repo-card.c { right: 8%; top: 10%; }
+    .repo-card.d { right: 5%; top: 58%; }
+    .repo-card.e { left: 30%; bottom: 10%; }
+
+    .route-line {
+      position: absolute;
+      border: 1.5px dashed rgba(0, 138, 131, 0.72);
+      border-radius: 18px;
+      left: 24%;
+      top: 24%;
+      width: 56%;
+      height: 46%;
+    }
+
+    .solid-line {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0, 138, 131, 0.8), transparent);
+      transform-origin: left center;
+    }
+
+    .solid-line.l1 { left: 18%; top: 58%; width: 250px; transform: rotate(-18deg); }
+    .solid-line.l2 { left: 44%; top: 34%; width: 260px; transform: rotate(-28deg); }
+    .solid-line.l3 { left: 44%; top: 58%; width: 250px; transform: rotate(18deg); }
+
+    .legend {
+      position: absolute;
+      right: 0;
+      top: 118px;
+      display: grid;
+      gap: 13px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255,255,255,.84);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      min-width: 140px;
+      font-size: 12px;
+      color: #53605c;
+    }
+
+    .legend div {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .legend i {
+      width: 26px;
+      height: 2px;
+      display: inline-block;
+      background: var(--teal);
+    }
+
+    .legend .gray { background: #8c9591; }
+    .legend .dash { background: transparent; border-top: 2px dashed #9ea8a4; }
+
+    .boundary-pill {
+      position: absolute;
+      left: 48%;
+      bottom: 12px;
+      border: 1px solid rgba(0, 138, 131, 0.36);
+      background: rgba(255, 255, 255, .88);
+      color: var(--teal-dark);
+      padding: 11px 18px;
+      border-radius: 8px;
+      font-weight: 950;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .band {
+      padding: 42px 0;
+      border-bottom: 1px solid var(--line);
     }
 
     .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
-    .section-head h2 {
-      margin: 0;
-      font-family: var(--serif);
-      font-size: clamp(30px, 4vw, 58px);
-      line-height: 1;
-    }
-
-    .section-head p {
-      margin: 0;
-      max-width: 640px;
-      color: var(--muted);
-    }
-
-    .workflow {
       display: grid;
-      grid-template-columns: repeat(7, minmax(118px, 1fr));
-      gap: 8px;
+      grid-template-columns: minmax(0, 0.74fr) minmax(260px, 0.26fr);
+      gap: 26px;
+      align-items: end;
+      margin-bottom: 28px;
     }
 
-    .step {
-      position: relative;
-      min-height: 186px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 14px;
-      background: rgba(255, 252, 244, 0.76);
-      overflow: hidden;
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--teal-dark);
+      font-weight: 950;
+      font-size: 14px;
+      text-transform: uppercase;
     }
 
-    .step::after {
-      content: "";
-      position: absolute;
-      left: 14px;
-      right: 14px;
-      bottom: 12px;
-      height: 3px;
-      border-radius: 4px;
-      background: var(--accent, var(--teal));
+    h2 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.05;
+      letter-spacing: 0;
+      font-weight: 950;
     }
 
-    .step small {
-      font-family: var(--mono);
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .step h3 {
-      margin: 10px 0 8px;
-      font-size: 17px;
-    }
-
-    .step p {
+    .section-head p,
+    .text-block p {
       margin: 0;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 16px;
+      line-height: 1.8;
     }
 
-    .module-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }
-
-    .search {
-      min-width: min(360px, 100%);
-      min-height: 40px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.86);
-      padding: 8px 12px;
-      font: 14px var(--sans);
-      color: var(--ink);
-      outline: none;
-    }
-
-    .filter-button {
-      min-height: 38px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.78);
-      color: #29312f;
-      padding: 7px 11px;
-      font: 13px var(--sans);
-      cursor: pointer;
-    }
-
-    .filter-button.active {
-      background: var(--ink);
-      color: var(--paper);
-    }
-
-    .module-grid {
+    .stat-strip {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .module-card {
-      min-height: 226px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.8);
-      padding: 15px;
-      display: grid;
-      gap: 10px;
-      align-content: start;
-      transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
-    }
-
-    .module-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(12, 123, 117, 0.45);
-      box-shadow: 0 16px 34px rgba(22, 27, 29, 0.12);
-    }
-
-    .module-card h3 {
-      margin: 0;
-      font-size: 19px;
-      font-family: var(--serif);
-    }
-
-    .module-card p {
-      margin: 0;
-      color: #46514d;
-      font-size: 13px;
-    }
-
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .tag {
-      display: inline-flex;
-      min-height: 24px;
-      align-items: center;
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 2px 8px;
-      font-size: 11px;
-      color: #35403c;
-      background: rgba(255, 255, 255, 0.44);
-    }
-
-    .path-list {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: grid;
-      gap: 3px;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 11px;
-    }
-
-    .split {
-      display: grid;
-      grid-template-columns: minmax(0, 1.04fr) minmax(340px, 0.96fr);
       gap: 14px;
     }
 
-    .panel {
+    .stat {
+      min-height: 96px;
       border: 1px solid var(--line);
       border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.78);
-      padding: 18px;
+      background: var(--surface);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
     }
 
-    .panel h3 {
-      margin: 0 0 10px;
-      font-family: var(--serif);
-      font-size: 24px;
+    .stat strong {
+      display: block;
+      font-size: 30px;
+      line-height: 1;
+      color: var(--teal-dark);
+      margin-bottom: 10px;
     }
 
-    .terminal {
-      margin: 0;
-      min-height: 360px;
-      border: 1px solid rgba(22, 27, 29, 0.22);
-      border-radius: var(--radius);
-      background: #121717;
-      color: #e8f4ee;
-      padding: 18px;
-      font-family: var(--mono);
-      font-size: 12px;
-      overflow: auto;
-      white-space: pre-wrap;
-    }
-
-    .terminal .prompt {
-      color: #66d1c9;
-    }
-
-    .terminal .warn {
-      color: #e6ad5c;
-    }
-
-    .terminal .ok {
-      color: #9dde8d;
-    }
-
-    .evidence-list {
-      display: grid;
-      gap: 8px;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .evidence-list li {
-      display: grid;
-      grid-template-columns: 82px 1fr;
-      gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px solid var(--line);
-      font-size: 14px;
-    }
-
-    .evidence-list b {
-      font-family: var(--mono);
-      font-size: 12px;
-      color: var(--teal);
+    .stat span {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
     }
 
     .timeline {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
     }
 
-    .phase {
-      min-height: 168px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: rgba(255, 252, 244, 0.76);
-      padding: 14px;
+    .milestone {
+      min-height: 178px;
+      position: relative;
+      padding: 18px 14px 14px;
+      border-top: 3px solid var(--teal);
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: rgba(255, 255, 255, 0.82);
+      box-shadow: var(--shadow-soft);
     }
 
-    .phase h3 {
+    .milestone::before {
+      content: "";
+      position: absolute;
+      top: -11px;
+      left: 13px;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 0 8px rgba(242, 170, 22, .18);
+    }
+
+    .milestone time {
+      display: block;
+      margin-bottom: 14px;
+      padding-left: 26px;
+      color: #7f8a86;
+      font-size: 12px;
+      font-weight: 900;
+      font-family: var(--font-mono);
+    }
+
+    .milestone h3 {
       margin: 0 0 8px;
-      font-size: 18px;
+      font-size: 17px;
+      line-height: 1.22;
     }
 
-    .phase p {
+    .milestone p {
       margin: 0;
       color: var(--muted);
       font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .principle {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface);
+      padding: 20px;
+      min-height: 190px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .principle b {
+      display: inline-grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      margin-bottom: 18px;
+      color: #fff;
+      background: var(--teal);
+      font-family: var(--font-mono);
+    }
+
+    .principle h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .principle p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.72;
+    }
+
+    .modules {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .module-card {
+      min-height: 148px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 16px;
+      box-shadow: var(--shadow-soft);
+      display: grid;
+      align-content: start;
+      gap: 10px;
+    }
+
+    .module-card header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .module-card h3 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.15;
+      font-family: var(--font-mono);
+    }
+
+    .module-card small {
+      color: var(--teal-dark);
+      font-weight: 950;
+      font-size: 11px;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: var(--teal-soft);
+      white-space: nowrap;
+    }
+
+    .module-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.58;
+    }
+
+    .workflow {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .flow-card {
+      position: relative;
+      min-height: 144px;
+      border-top: 3px solid var(--teal);
+      border-radius: 0 0 var(--radius) var(--radius);
+      background: #fff;
+      padding: 18px 14px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .flow-card em {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-bottom: 14px;
+      background: var(--gold-soft);
+      color: #a76d10;
+      font-style: normal;
+      font-weight: 950;
+    }
+
+    .flow-card h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+    }
+
+    .flow-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .install-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .install-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 86px 1fr;
+      min-height: 210px;
+    }
+
+    .install-badge {
+      display: grid;
+      place-items: center;
+      color: #fff;
+      font-weight: 950;
+      font-size: 24px;
+      background: linear-gradient(180deg, var(--teal), #006c67);
+    }
+
+    .install-card:nth-child(2) .install-badge {
+      color: #18201e;
+      background: linear-gradient(180deg, #ffc23a, var(--gold));
+    }
+
+    .install-body {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+      align-content: start;
+    }
+
+    .install-body h3 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .install-body p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .code {
+      display: grid;
+      gap: 8px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      background: #f6f8f7;
+      overflow-x: auto;
+      color: #1f2926;
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      line-height: 1.55;
+    }
+
+    .copy {
+      justify-self: start;
+      border: 0;
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      color: #fff;
+      background: var(--teal);
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .copy:hover {
+      background: var(--teal-dark);
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .source-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.88);
+      padding: 18px;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .source-card h3 {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+
+    .source-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.72;
+    }
+
+    .callout {
+      border: 1px solid rgba(0, 138, 131, 0.28);
+      border-left: 5px solid var(--teal);
+      border-radius: var(--radius);
+      background: rgba(226, 244, 241, .68);
+      padding: 20px;
+      color: #23413e;
+      font-weight: 800;
     }
 
     .footer {
-      border-top: 1px solid var(--line);
-      padding-top: 18px;
+      padding: 34px 0 0;
       color: var(--muted);
       font-size: 13px;
     }
 
     @media (max-width: 1180px) {
-      .app-shell {
+      body {
+        background:
+          linear-gradient(90deg, rgba(0, 138, 131, 0.07) 1px, transparent 1px),
+          linear-gradient(0deg, rgba(0, 138, 131, 0.055) 1px, transparent 1px),
+          var(--bg);
+        background-size: 42px 42px, 42px 42px, auto;
+      }
+
+      .page {
         grid-template-columns: 1fr;
       }
-      .sidebar {
+
+      .side {
         position: static;
         height: auto;
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        overflow-x: auto;
+        max-width: 100vw;
+        min-width: 0;
+        padding: 14px 18px;
       }
-      .nav {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+
+      .side-number strong {
+        font-size: 54px;
       }
+
+      .side-rule,
+      .side-foot {
+        display: none;
+      }
+
+      .side-nav {
+        display: none;
+      }
+
+      .topbar {
+        top: 0;
+      }
+
       .hero,
-      .split {
+      .section-head,
+      .source-grid {
         grid-template-columns: 1fr;
       }
-      .module-grid {
+
+      .timeline {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-      .workflow {
+
+      .modules {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .workflow {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
       }
     }
 
-    @media (max-width: 760px) {
-      .content {
-        padding: 24px 16px 56px;
-      }
+    @media (max-width: 740px) {
       .topbar {
-        align-items: flex-start;
+        height: auto;
         flex-direction: column;
+        align-items: flex-start;
+        padding: 16px 18px;
       }
-      .nav {
-        grid-template-columns: 1fr 1fr;
+
+      .top-links {
+        display: none;
       }
+
+      .container {
+        width: 100vw;
+        max-width: 100vw;
+        padding: 0 18px 46px;
+        overflow: hidden;
+      }
+
+      .hero {
+        min-height: 0;
+        padding: 34px 0;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .hero > * {
+        min-width: 0;
+        max-width: 100%;
+      }
+
+      .hero h1 {
+        font-size: 74px;
+      }
+
       .hero h2 {
-        font-size: 44px;
+        font-size: 30px;
+        overflow-wrap: anywhere;
       }
-      .hero-grid,
-      .module-grid,
+
+      .lead,
+      .section-head p,
+      .text-block p {
+        font-size: 17px;
+        max-width: calc(100vw - 52px);
+        overflow-wrap: anywhere;
+      }
+
+      .repo-map {
+        width: 100%;
+        max-width: 100%;
+        min-height: 460px;
+        overflow: hidden;
+        display: grid;
+        gap: 12px;
+        padding-top: 10px;
+      }
+
+      .repo-center {
+        position: static;
+        transform: none;
+        width: calc(100vw - 52px);
+        max-width: 100%;
+        height: 84px;
+        order: 1;
+      }
+
+      .repo-card {
+        position: static;
+        min-width: 0;
+        width: calc(100vw - 52px);
+        max-width: 100%;
+      }
+
+      .repo-card.a,
+      .repo-card.b,
+      .repo-card.c,
+      .repo-card.d,
+      .repo-card.e {
+        left: auto;
+        right: auto;
+        top: auto;
+        bottom: auto;
+      }
+
+      .repo-card.b { order: 2; }
+      .repo-card.c { order: 3; }
+      .repo-card.a { order: 4; }
+      .repo-card.e { order: 5; }
+      .repo-card.d { order: 6; }
+
+      .legend,
+      .route-line,
+      .solid-line,
+      .boundary-pill {
+        display: none;
+      }
+
+      .trust-row,
+      .stat-strip,
       .timeline,
-      .workflow {
+      .principles,
+      .modules,
+      .workflow,
+      .install-grid,
+      .source-grid {
         grid-template-columns: 1fr;
       }
-      .map-stage {
-        min-height: 560px;
-      }
-      .stage-panel {
+
+      .install-card {
         grid-template-columns: 1fr;
+      }
+
+      .install-badge {
+        min-height: 72px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">cm</div>
-        <h1>cmap</h1>
-        <p>repo-local project memory map for AI coding continuity</p>
+  <div class="page">
+    <aside class="side" aria-label="页面导航">
+      <div class="side-number">
+        <strong>02</strong>
+        <span>Product HMI</span>
+        <div class="side-rule"></div>
       </div>
-      <nav class="nav" aria-label="页面目录">
-        <a class="active" href="#overview"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 5h16M4 12h10M4 19h16" fill="none" stroke="currentColor" stroke-width="2"/></svg>总览</a>
-        <a href="#workflow"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 7h6v6H5zM13 11h6v6h-6z" fill="none" stroke="currentColor" stroke-width="2"/></svg>工作流</a>
-        <a href="#modules"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="2"/></svg>模块</a>
-        <a href="#dogfood"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 18c5-12 11-12 16 0M7 18h10M12 4v14" fill="none" stroke="currentColor" stroke-width="2"/></svg>实践</a>
-        <a href="#obsidian"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3l8 5v8l-8 5-8-5V8zM12 3v18M4 8l16 8" fill="none" stroke="currentColor" stroke-width="2"/></svg>图谱</a>
-        <a href="#verification"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12l4 4L19 6" fill="none" stroke="currentColor" stroke-width="2"/></svg>验证</a>
+      <nav class="side-nav">
+        <a class="active" href="#intro">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/></svg>
+          介绍
+        </a>
+        <a href="#history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 6v6l4 2"/><path d="M21 12a9 9 0 1 1-3-6.7"/></svg>
+          引进过程
+        </a>
+        <a href="#thinking">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M8 14c-1.8-1.3-3-3.2-3-5.5A7 7 0 0 1 19 8.5c0 2.3-1.2 4.2-3 5.5-.7.5-1 1.2-1 2H9c0-.8-.3-1.5-1-2Z"/></svg>
+          引进思路
+        </a>
+        <a href="#modules">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5"/><path d="M12 12v9"/><path d="M12 12L4 7.5"/></svg>
+          模块
+        </a>
+        <a href="#workflow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 7h5"/><path d="M15 7h5"/><path d="M9 7a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z"/><path d="M4 17h8"/><path d="M18 17h2"/><path d="M12 17a3 3 0 1 0 6 0 3 3 0 0 0-6 0Z"/></svg>
+          流程
+        </a>
+        <a href="#install">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+          安装
+        </a>
       </nav>
-      <div class="side-note">
-        <strong>当前快照</strong><br>
-        commit: <code>0129477</code><br>
-        source: <code>.context/MAP.md</code><br>
-        artifact: <code>docs/cmap-product-overview.html</code>
+      <div class="side-foot">
+        <div class="compass">C</div>
+        <strong>Repo-local. AI-native.</strong>
+        <span>项目事实留在仓库里，AI 只在边界内协作。</span>
       </div>
     </aside>
 
     <main class="main">
       <header class="topbar">
-        <strong>CMAP_coding / product atlas</strong>
-        <div class="topbar-actions">
-          <span class="pill"><span class="dot"></span> main 与 origin/main 已同步</span>
-          <span class="pill">36 tests / smoke / verify passed</span>
-          <span class="pill">canonical: .context</span>
-        </div>
+        <a class="brand" href="#intro" aria-label="CMAP 首页">
+          <span class="mark">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+          </span>
+          CMAP
+        </a>
+        <nav class="top-links" aria-label="顶部导航">
+          <a class="active" href="#intro">Introduction</a>
+          <a href="#history">Evolution</a>
+          <a href="#modules">Modules</a>
+          <a href="#workflow">Workflow</a>
+          <a href="#install">Install</a>
+        </nav>
       </header>
 
-      <div class="content">
-        <section class="hero" id="overview">
-          <div class="hero-copy">
-            <div class="eyebrow">AI coding project map</div>
-            <h2>把项目从“会话记忆”变成可验证的工作地图。</h2>
-            <p>cmap 是一个本地 CLI，它把项目目标、模块边界、当前 handoff、验证方式和外部 workflow 候选事实收束到 <code>.context/</code>。这个仓库正在用 cmap 构建 cmap 本身，因此它既是产品，也是 dogfood 现场。</p>
-            <div class="hero-grid">
-              <div class="metric"><b>22</b><span>已登记模块，覆盖 CLI、上下文、验证、hooks、pack、graph、Obsidian、GSD adapter 等工作面。</span></div>
-              <div class="metric"><b>12</b><span>主要命令流：route、checkpoint、brief、pack、finish、verify、hooks、graph、obsidian、benchmark、inbox、reconcile。</span></div>
-              <div class="metric"><b>0</b><span>最新 `cmap verify` 错误与警告，模块关系检查通过。</span></div>
-            </div>
-          </div>
-
-          <div class="map-stage" aria-label="cmap 模块知识图">
-            <div class="stage-label">interactive module mind map</div>
-            <svg class="atlas" viewBox="0 0 920 700" role="img" aria-label="cmap module atlas">
-              <path class="edge strong" d="M460 324 C360 262 312 216 228 176"/>
-              <path class="edge strong" d="M460 324 C528 242 596 192 696 160"/>
-              <path class="edge strong" d="M460 324 C594 315 676 328 790 388"/>
-              <path class="edge strong" d="M460 324 C398 410 346 468 240 522"/>
-              <path class="edge" d="M460 324 C480 438 542 512 650 548"/>
-              <path class="edge" d="M228 176 C286 120 366 92 460 92"/>
-              <path class="edge" d="M696 160 C658 94 572 72 460 92"/>
-              <path class="edge" d="M790 388 C754 480 716 520 650 548"/>
-              <path class="edge" d="M240 522 C348 594 498 618 650 548"/>
-              <path class="edge" d="M228 176 C160 256 138 350 164 430"/>
-              <path class="edge" d="M164 430 C186 474 204 500 240 522"/>
-
-              <g class="node active" data-node="core" transform="translate(460 324)">
-                <circle r="82" fill="#fff8e9" stroke="#161b1d" stroke-width="2"/>
-                <text text-anchor="middle" y="-8" font-family="Iowan Old Style, Georgia, serif" font-size="30" font-weight="700">.context</text>
-                <text text-anchor="middle" y="22" font-family="SFMono-Regular, monospace" font-size="13" fill="#64706c">canonical map</text>
-              </g>
-              <g class="node" data-node="route" transform="translate(228 176)">
-                <rect x="-82" y="-42" width="164" height="84" rx="8" fill="#e8f5f2" stroke="#0c7b75" stroke-width="2"/>
-                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">route</text>
-                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">task -> modules</text>
-              </g>
-              <g class="node" data-node="brief" transform="translate(696 160)">
-                <rect x="-88" y="-42" width="176" height="84" rx="8" fill="#fff2dc" stroke="#c27b22" stroke-width="2"/>
-                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">brief</text>
-                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">AI start pack</text>
-              </g>
-              <g class="node" data-node="finish" transform="translate(790 388)">
-                <rect x="-92" y="-44" width="184" height="88" rx="8" fill="#f6e7e1" stroke="#b44535" stroke-width="2"/>
-                <text text-anchor="middle" y="-6" font-family="Iowan Old Style, Georgia, serif" font-size="25">finish</text>
-                <text text-anchor="middle" y="21" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">closeout gate</text>
-              </g>
-              <g class="node" data-node="obsidian" transform="translate(240 522)">
-                <rect x="-112" y="-42" width="224" height="84" rx="8" fill="#e9eff7" stroke="#315f8f" stroke-width="2"/>
-                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">Obsidian</text>
-                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">view / graph layer</text>
-              </g>
-              <g class="node" data-node="verify" transform="translate(650 548)">
-                <rect x="-92" y="-42" width="184" height="84" rx="8" fill="#edf2e5" stroke="#426f45" stroke-width="2"/>
-                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">verify</text>
-                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">drift check</text>
-              </g>
-              <g class="node" data-node="checkpoint" transform="translate(164 430)">
-                <rect x="-104" y="-42" width="208" height="84" rx="8" fill="#fff8e9" stroke="#161b1d" stroke-width="2"/>
-                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">checkpoint</text>
-                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">current handoff</text>
-              </g>
-              <g class="node" data-node="reconcile" transform="translate(460 92)">
-                <rect x="-104" y="-42" width="208" height="84" rx="8" fill="#f4efe3" stroke="#64706c" stroke-width="2"/>
-                <text text-anchor="middle" y="-5" font-family="Iowan Old Style, Georgia, serif" font-size="25">reconcile</text>
-                <text text-anchor="middle" y="20" font-family="SFMono-Regular, monospace" font-size="12" fill="#64706c">external candidates</text>
-              </g>
-            </svg>
-            <div class="stage-panel">
-              <div>
-                <h3 id="node-title">.context canonical map</h3>
-                <p id="node-copy">长期项目事实源。AI 和人都从这里读取模块边界、当前状态、验证规则和设计决策；外部系统只能作为候选输入。</p>
+      <div class="container">
+        <section class="hero" id="intro">
+          <div>
+            <h1>CMAP</h1>
+            <h2>Project Memory Map</h2>
+            <div class="hero-line"></div>
+            <p class="lead">CMAP 是给 AI coding 项目使用的 repo-local 项目记忆地图。它把项目目标、模块职责、当前主线、历史决策、验证方式和候选变更收进仓库里的 `.context/`，让人类、Codex 和 Claude Code 在同一张项目地图上协作。</p>
+            <div class="trust-row">
+              <div class="mini-proof">
+                <span class="icon">R</span>
+                <div><strong>Repo-local</strong><span>上下文留在你的 repo，不需要云账号、守护进程或遥测。</span></div>
               </div>
-              <code id="node-command">cmap verify</code>
+              <div class="mini-proof">
+                <span class="icon">B</span>
+                <div><strong>Trust Boundary</strong><span>AI 可以提语义候选，CLI 只做确定性、安全、可回滚的动作。</span></div>
+              </div>
+              <div class="mini-proof">
+                <span class="icon">H</span>
+                <div><strong>Human Review</strong><span>人类审阅后，候选才有机会进入 canonical `.context`。</span></div>
+              </div>
             </div>
           </div>
-        </section>
 
-        <section id="workflow">
-          <div class="section-head">
-            <h2>工作流闭环</h2>
-            <p>从自然语言任务开始，到模块路由、handoff、AI brief / pack、hook assist、实现、收工、验证、Obsidian 视图检查，形成一个可重复的 AI coding 操作链。</p>
-          </div>
-          <div class="workflow">
-            <article class="step" style="--accent:#0c7b75"><small>01 / route</small><h3>任务定位</h3><p>根据 alias、模块名、路径关键词和模块索引推荐 top modules。</p></article>
-            <article class="step" style="--accent:#c27b22"><small>02 / checkpoint</small><h3>保存 handoff</h3><p>记录当前任务、假设、已改文件、验证结果、下一步和不要重复做的事。</p></article>
-            <article class="step" style="--accent:#315f8f"><small>03 / brief + pack</small><h3>打包开工上下文</h3><p>brief 负责开工摘要，pack 负责带 token budget 的 redacted 阅读包。</p></article>
-            <article class="step" style="--accent:#426f45"><small>04 / hooks</small><h3>捕获会话事件</h3><p>assist 模式可生成 session brief、记录 route usage，并把 changed files 写成 generated evidence。</p></article>
-            <article class="step" style="--accent:#b44535"><small>05 / finish</small><h3>收工 gate</h3><p>列 changed files、affected modules、context 更新建议和 checkpoint close/write 提醒。</p></article>
-            <article class="step" style="--accent:#161b1d"><small>06 / verify + CI</small><h3>漂移校验</h3><p>检查结构、关系、路径、changed-file coverage、stale、CI report 和 benchmark 阈值。</p></article>
-            <article class="step" style="--accent:#1fa39b"><small>07 / view</small><h3>导出图谱视图</h3><p>把 `.context` 渲染为 Obsidian-friendly Markdown，并用 export --check 检查镜像漂移。</p></article>
-          </div>
-        </section>
-
-        <section id="modules">
-          <div class="section-head">
-            <h2>模块目录</h2>
-            <p>这些模块不是文件清单，而是 AI 开工前应该理解的职责边界。点击上方 mind map 节点或搜索模块名，可快速定位。</p>
-          </div>
-          <div class="module-toolbar">
-            <input class="search" id="moduleSearch" type="search" placeholder="搜索模块、路径或关键词">
-            <button class="filter-button active" data-filter="all">全部</button>
-            <button class="filter-button" data-filter="core">核心</button>
-            <button class="filter-button" data-filter="workflow">工作流</button>
-            <button class="filter-button" data-filter="integration">集成</button>
-            <button class="filter-button" data-filter="safety">安全</button>
-          </div>
-          <div class="module-grid" id="moduleGrid"></div>
-        </section>
-
-        <section id="dogfood">
-          <div class="section-head">
-            <h2>当前 dogfood 状态</h2>
-            <p>这个仓库正在用自己维护自己。最近一轮更新把 `finish` 和 `CHECKPOINT.md` 连接起来，避免“做完了代码，但 handoff 状态没有收口”。</p>
-          </div>
-          <div class="split">
-            <div class="panel">
-              <h3>实践链路</h3>
-              <pre class="terminal"><span class="prompt">$</span> cmap route "补齐收工 checkpoint 闭环"
-Likely modules:
-1. finish
-2. handoff
-3. tests
-
-<span class="prompt">$</span> cmap checkpoint write --task "Close finish/checkpoint handoff loop" --next "Run full verification"
-<span class="ok">Updated .context/CHECKPOINT.md</span>
-
-<span class="prompt">$</span> cmap finish --changed src/commands/finish.ts,tests/integration/m3.test.ts
-Context Updates Needed:
-- STATUS.md
-- CHECKPOINT.md
-- .context/modules/finish.md
-
-Handoff Actions:
-- cmap checkpoint write --task "current task" --next "next step"
-- cmap checkpoint close
-
-<span class="prompt">$</span> pnpm test && pnpm smoke
-<span class="ok">36 tests passed / smoke passed</span></pre>
+          <div class="repo-map" aria-label="CMAP 项目结构示意图">
+            <div class="route-line"></div>
+            <div class="solid-line l1"></div>
+            <div class="solid-line l2"></div>
+            <div class="solid-line l3"></div>
+            <div class="repo-card a">tests/<span>验证与回归</span></div>
+            <div class="repo-card b">src/<span>CLI 与命令</span></div>
+            <div class="repo-card c">.context/<span>canonical facts</span></div>
+            <div class="repo-card d">scripts/<span>构建与 smoke</span></div>
+            <div class="repo-card e">docs/<span>产品说明</span></div>
+            <div class="repo-center">CMAP</div>
+            <div class="legend">
+              <div><i></i>Trusted</div>
+              <div><i class="gray"></i>Read only</div>
+              <div><i class="dash"></i>Ignored</div>
             </div>
-            <div class="panel">
-              <h3>可行性判断</h3>
-              <ul class="evidence-list">
-                <li><b>可续接</b><span>`CHECKPOINT.md` 已经成为 brief 和收工流程的一等输入。</span></li>
-                <li><b>可验证</b><span>`verify --coverage`、CI Markdown 和 benchmark gates 能检查地图结构、覆盖率与路由质量。</span></li>
-                <li><b>可阅读</b><span>Obsidian export 把模块导成带 Properties 和 wikilinks 的 notes，并可用 export --check 防止视图层过期。</span></li>
-                <li><b>可扩展</b><span>`reconcile` 只写 inbox 候选，给 GSD/gstack/superpowers 留了安全入口。</span></li>
-                <li><b>可控边界</b><span>CLI 做确定性动作，AI/人负责语义判断和长期事实确认。</span></li>
-              </ul>
-            </div>
+            <div class="boundary-pill">Trust Boundary</div>
           </div>
         </section>
 
-        <section id="obsidian">
+        <section class="band" id="summary">
           <div class="section-head">
-            <h2>Obsidian 视图层</h2>
-            <p>`.context` 继续做事实源，`_cmap/CMAP_coding` 只是阅读和关系图谱层。这样既能看图谱，又不会形成双事实源。</p>
+            <div>
+              <p class="kicker">一句话</p>
+              <h2>它不是 AI coding 全家桶，而是项目持续可理解的底座。</h2>
+            </div>
+            <p>CMAP 的核心产品判断很克制：AI 负责理解、总结、提出候选；CLI 负责固定格式、路径安全、校验、证据收集、候选治理；人类负责最后的语义确认。</p>
+          </div>
+          <div class="stat-strip">
+            <div class="stat"><strong>.context</strong><span>项目事实源，记录地图、状态、决策、验证和模块文档。</span></div>
+            <div class="stat"><strong>24</strong><span>当前项目地图中的主要模块，从 CLI、route 到 view、hooks、evidence。</span></div>
+            <div class="stat"><strong>85</strong><span>本轮更新流程复盘参考过的本地 Markdown 研究与评审材料。</span></div>
+            <div class="stat"><strong>0</strong><span>设计目标：不让 CLI 自动生成可信项目语义，避免污染记忆。</span></div>
+          </div>
+        </section>
+
+        <section class="band" id="history">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Project Evolution</p>
+              <h2>CMAP 的引进过程：从项目小地图，到人类审阅层。</h2>
+            </div>
+            <p>这个项目不是一开始就想做复杂平台，而是在真实 AI coding dogfood 中一点点收窄边界：先解决续接，再解决可发现性，再解决 AI 能写什么、不能写什么。</p>
           </div>
           <div class="timeline">
-            <article class="phase"><h3>Export / Check</h3><p>`cmap obsidian export` 生成 `00_INDEX.md` 和 `modules/*.md`，`--check` 检测镜像是否落后于 canonical `.context`。</p></article>
-            <article class="phase"><h3>Open</h3><p>`cmap obsidian open <module>` 打印 `obsidian://open` URI，用终端跳转模块说明。</p></article>
-            <article class="phase"><h3>Pull dry-run</h3><p>Obsidian 人工补充内容后，只生成候选 diff 或 inbox，不直接改 `.context`。</p></article>
-            <article class="phase"><h3>Graph</h3><p>在 Obsidian 中用 `path:_cmap/CMAP_coding` 过滤，查看孤立模块、高风险模块和依赖聚类。</p></article>
+            <article class="milestone">
+              <time>2026-05-10</time>
+              <h3>v0.1 CLI 骨架</h3>
+              <p>先落地 `init`、`verify`、`install`、`route`、`checkpoint` 等基础命令，让项目拥有第一张 `.context` 小地图。</p>
+            </article>
+            <article class="milestone">
+              <time>2026-05-10</time>
+              <h3>真实 dogfood</h3>
+              <p>用 CMAP 管自己后发现：隐藏的 `.context` 对 AI 有用，但对人不够可见，需要 README、HTML、图谱这类入口。</p>
+            </article>
+            <article class="milestone">
+              <time>2026-05-11</time>
+              <h3>外部工作流比较</h3>
+              <p>对比 GSD、superpowers、gstack 等工具后，确定 CMAP 不做 workflow OS，只做 repo-local project map。</p>
+            </article>
+            <article class="milestone">
+              <time>2026-05-12</time>
+              <h3>AI Brief 工作流</h3>
+              <p>新增 `brief`、`pack`、Obsidian export，让 AI 开工前能拿到受控上下文，而不是把整个仓库塞进窗口。</p>
+            </article>
+            <article class="milestone">
+              <time>2026-05-12</time>
+              <h3>自动维护雏形</h3>
+              <p>引入 MapPatch、generated evidence、inbox、freshness、benchmark，让 AI 可以提建议，但不能直接改正式事实。</p>
+            </article>
+            <article class="milestone">
+              <time>2026-05-13</time>
+              <h3>Trust Boundary 重置</h3>
+              <p>暂停 import graph / route v2 / pack v2，把主线改成 generated/canonical 分层和 Human Review Layer。</p>
+            </article>
+            <article class="milestone">
+              <time>2026-05-14</time>
+              <h3>外部评审收口</h3>
+              <p>合并依赖清理、路径安全、报错 UX、HTML redaction、structured candidates 可见性等 POC 修复。</p>
+            </article>
           </div>
         </section>
 
-        <section id="verification">
+        <section class="band" id="thinking">
           <div class="section-head">
-            <h2>验证证据</h2>
-            <p>当前项目不是只写了文档，核心 CLI 和交互链路有集成测试、类型检查、自校验、构建和 smoke test 覆盖。</p>
+            <div>
+              <p class="kicker">Design Thinking</p>
+              <h2>引进 CMAP 的思路，是把“项目记忆”拆成三层。</h2>
+            </div>
+            <p>这三层是 CMAP 的产品边界，也是它和普通文档、普通 AI 总结工具最大的区别。</p>
           </div>
-          <div class="split">
-            <div class="panel">
-              <h3>最新通过命令</h3>
-              <ul class="evidence-list">
-                <li><b>test</b><span>`pnpm test`：7 个测试文件，36 个测试通过。</span></li>
-                <li><b>type</b><span>`pnpm typecheck`：TypeScript 编译检查通过。</span></li>
-                <li><b>verify</b><span>`pnpm dev verify`：Errors 0，Warnings 0。</span></li>
-                <li><b>coverage</b><span>`verify --coverage --changed-files src/commands/finish.ts,tests/integration/m3.test.ts`：2/2 映射。</span></li>
-                <li><b>build</b><span>`pnpm build`：生成 `dist/cli.js` 和类型声明。</span></li>
-                <li><b>smoke</b><span>`pnpm smoke`：built CLI 在临时项目完整跑通。</span></li>
-              </ul>
-            </div>
-            <div class="panel">
-              <h3>下一批优化</h3>
-              <ul class="evidence-list">
-                <li><b>promote</b><span>把 inbox 候选事实提升为 canonical 的半自动低风险 patch。</span></li>
-                <li><b>index</b><span>继续补 import/test ownership 等代码信号，提升 route 与 graph 精度。</span></li>
-                <li><b>Obsidian</b><span>在真实 vault 中审查 `_cmap/CMAP_coding` 的 Graph 连接质量。</span></li>
-                <li><b>GSD</b><span>拿真实 `.planning` / `.gsd` 产物测试 reconcile 降噪能力。</span></li>
-              </ul>
-            </div>
+          <div class="principles">
+            <article class="principle">
+              <b>1</b>
+              <h3>Canonical Facts</h3>
+              <p>`.context/MAP.md`、`STATUS.md`、`CHECKPOINT.md`、`DECISIONS.md` 和 `modules/*.md` 才是项目正式事实。它们描述项目当前是什么，而不是某一次模型怎么想。</p>
+            </article>
+            <article class="principle">
+              <b>2</b>
+              <h3>Generated Support</h3>
+              <p>`generated/`、evidence、stats、freshness 这类内容只做支持材料。它们可以提醒你“哪里可能变了”，但不能替代人类审阅过的模块职责和决策。</p>
+            </article>
+            <article class="principle">
+              <b>3</b>
+              <h3>Candidate Inbox</h3>
+              <p>AI、外部 workflow 或 review 工具提出的语义更新先进 `inbox/`。低风险候选可以按规则提升，高风险语义必须由人看过再进正式地图。</p>
+            </article>
+          </div>
+          <div class="callout" style="margin-top:18px">
+            CMAP 最重要的一句话：AI 写语义候选，CLI 做确定性维护，人类决定什么成为项目事实。
           </div>
         </section>
 
-        <footer class="footer">
-          <strong>Boundary:</strong> cmap 不做 AI coding 全家桶，不自动生成可信项目语义，不替代 git/CI/测试框架。它只让项目在 AI 与人之间持续可理解、可续接、可验证。
-        </footer>
+        <section class="band" id="modules">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Modules</p>
+              <h2>每个模块负责什么：从路由、开工包到审阅台。</h2>
+            </div>
+            <p>下面不是代码目录列表，而是 CMAP 这张项目地图里的产品能力拆分。每个模块都有自己的 `.context/modules/*.md`，AI 修改前应该先读对应模块文档。</p>
+          </div>
+          <div class="modules">
+            <article class="module-card"><header><h3>cli</h3><small>入口</small></header><p>负责命令注册、参数解析和退出码边界，是所有 `cmap` 命令的总入口。</p></article>
+            <article class="module-card"><header><h3>context</h3><small>骨架</small></header><p>生成 `.context` 模板、读取 policy、扫描项目确定性信号，帮助新项目建立地图。</p></article>
+            <article class="module-card"><header><h3>verify</h3><small>校验</small></header><p>检查 `.context` 结构、占位符、stale/freshness 和 CI 报告，避免地图悄悄漂移。</p></article>
+            <article class="module-card"><header><h3>host</h3><small>接入</small></header><p>生成 `AGENTS.md` 与 `CLAUDE.md`，让 Codex 或 Claude Code 知道先读哪里、怎么路由。</p></article>
+            <article class="module-card"><header><h3>route</h3><small>定位</small></header><p>根据任务描述推荐直接相关模块、上下文模块和验证命令，是 AI 开工前的第一步。</p></article>
+            <article class="module-card"><header><h3>graph</h3><small>关系</small></header><p>从已审阅模块文档生成确定性模块关系投影，不做 import graph，不猜测代码语义。</p></article>
+            <article class="module-card"><header><h3>brief</h3><small>开工包</small></header><p>把 route、checkpoint、status、模块文档和验证提醒打包成 AI coding startup brief。</p></article>
+            <article class="module-card"><header><h3>pack</h3><small>上下文</small></header><p>按 token 预算生成脱敏上下文包，只取路由邻域，不把整个仓库无边界塞给 AI。</p></article>
+            <article class="module-card"><header><h3>benchmark</h3><small>评测</small></header><p>用 JSONL 任务集评估 route 的 Top-1、Top-3 和上下文命中率，并可作为 CI 阈值。</p></article>
+            <article class="module-card"><header><h3>handoff</h3><small>续接</small></header><p>维护 `CHECKPOINT.md` 和 `STATUS.md`，解决新会话、上下文压缩后的接手问题。</p></article>
+            <article class="module-card"><header><h3>cp</h3><small>搬运</small></header><p>做安全行块 copy/move/delete/restore，并带备份，降低手动改 Markdown 的误伤风险。</p></article>
+            <article class="module-card"><header><h3>finish</h3><small>收尾</small></header><p>任务结束时生成 QA-lite closeout，提醒哪些 context 需要更新，也能生成 MapPatch 请求。</p></article>
+            <article class="module-card"><header><h3>update-agent</h3><small>闸门</small></header><p>处理 AI 写的 MapPatch，routine/generated 可按策略应用，语义更新进入 inbox。</p></article>
+            <article class="module-card"><header><h3>evidence</h3><small>证据</small></header><p>记录 generated evidence、stats、freshness 与 inbox backlog，帮助人看见支持材料。</p></article>
+            <article class="module-card"><header><h3>view</h3><small>审阅台</small></header><p>导出只读 HTML review dashboard，展示地图、证据、freshness 和候选，不写项目状态。</p></article>
+            <article class="module-card"><header><h3>relation-candidates</h3><small>关系候选</small></header><p>接收 AI RelationPatch，校验后写入候选池，v0.2 不自动提升为 canonical 关系。</p></article>
+            <article class="module-card"><header><h3>obsidian-adapter</h3><small>视图</small></header><p>把 `.context` 导出为 Obsidian 友好的 Markdown，供阅读和图谱查看，但不是事实源。</p></article>
+            <article class="module-card"><header><h3>reconcile-adapter</h3><small>对账</small></header><p>读取 GSD 等外部 workflow 产物，生成 dry-run 候选或 inbox 项，而不是直接改地图。</p></article>
+            <article class="module-card"><header><h3>showcase</h3><small>展示</small></header><p>维护当前这个产品介绍 HTML，用于人类理解、外部评审和项目介绍。</p></article>
+            <article class="module-card"><header><h3>memory-lite</h3><small>轻记录</small></header><p>提供 `log` 与 `idea`，用于显式记录工作日志和灵感，但不把它们当正式事实。</p></article>
+            <article class="module-card"><header><h3>adoption</h3><small>接管</small></header><p>帮助已有项目生成 adoption workspace 和候选模块信号，先分析，再决定怎么纳入地图。</p></article>
+            <article class="module-card"><header><h3>module-docs</h3><small>模块文档</small></header><p>创建候选模块文档，不自动改 MAP，让模块扩展保持可审阅。</p></article>
+            <article class="module-card"><header><h3>hooks-doctor</h3><small>诊断</small></header><p>提供 hook 模板、Codex lifecycle render/ingest、assist/strict 模式和 doctor 检查。</p></article>
+            <article class="module-card"><header><h3>tests</h3><small>验证</small></header><p>用 Vitest integration tests 和 smoke test 覆盖 CLI 行为，确保产品承诺能落到命令。</p></article>
+          </div>
+        </section>
+
+        <section class="band" id="workflow">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Workflow</p>
+              <h2>怎么用：先建地图，再让 AI 带着地图工作。</h2>
+            </div>
+            <p>CMAP 的日常使用不追求复杂，而是让每次 AI coding 都有稳定开工入口、明确模块边界和可验证收尾。</p>
+          </div>
+          <div class="workflow">
+            <article class="flow-card"><em>1</em><h3>初始化或接管</h3><p>新项目用 `cmap init --auto`，已有项目用 `cmap adopt`，先建立 `.context` 骨架。</p></article>
+            <article class="flow-card"><em>2</em><h3>安装宿主入口</h3><p>运行 `cmap install --host both`，生成 AGENTS/CLAUDE，让 AI 知道先读地图。</p></article>
+            <article class="flow-card"><em>3</em><h3>开工前路由</h3><p>用 `cmap route "任务"` 找模块，再用 `brief` 或 `pack` 生成受控上下文。</p></article>
+            <article class="flow-card"><em>4</em><h3>AI 在边界内修改</h3><p>AI 可以改代码、提出 MapPatch 或 RelationPatch，但语义候选先进 inbox。</p></article>
+            <article class="flow-card"><em>5</em><h3>人类审阅候选</h3><p>通过 `inbox triage`、`view export` 看证据、freshness 和候选，决定 promote/reject。</p></article>
+            <article class="flow-card"><em>6</em><h3>验证并收尾</h3><p>运行 `verify`、`finish`、测试和 CI，必要时更新 checkpoint，给下一次会话续接。</p></article>
+          </div>
+          <div class="source-grid" style="margin-top:22px">
+            <article class="source-card">
+              <h3>新项目 Quick Start</h3>
+              <pre><code>cmap init --auto
+cmap install --host both
+cmap verify</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>已有项目接入</h3>
+              <pre><code>cmap adopt
+cmap install --host both
+cmap route "你要做的任务"
+cmap brief "你要做的任务" --max-context 4</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="band" id="install">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Install</p>
+              <h2>安装到本机，再给 Codex 或 Claude Code 一个清晰入口。</h2>
+            </div>
+            <p>当前仓库名是 `cmap`，可从 GitHub 源码构建后安装成本机 CLI。下面的命令偏向源码安装，适合现在这个阶段使用。</p>
+          </div>
+          <div class="install-grid">
+            <article class="install-card">
+              <div class="install-badge">C</div>
+              <div class="install-body">
+                <h3>Codex 接入</h3>
+                <p>先把 `cmap` 安装成本机命令，再进入你的业务仓库执行 Codex host 安装。它会生成 `AGENTS.md`，提醒 Codex 先读 `.context/MAP.md`、`CHECKPOINT.md` 和相关模块文档。</p>
+                <div class="code">
+                  <pre><code>git clone https://github.com/GYF0311/CMAP_coding.git
+cd CMAP_coding
+corepack enable
+pnpm install
+pnpm build
+npm install -g .
+
+cd /path/to/your-project
+cmap init --auto
+cmap install --host codex
+cmap verify</code></pre>
+                  <button class="copy" type="button" data-copy="git clone https://github.com/GYF0311/CMAP_coding.git&#10;cd CMAP_coding&#10;corepack enable&#10;pnpm install&#10;pnpm build&#10;npm install -g .&#10;&#10;cd /path/to/your-project&#10;cmap init --auto&#10;cmap install --host codex&#10;cmap verify">复制 Codex 命令</button>
+                </div>
+              </div>
+            </article>
+            <article class="install-card">
+              <div class="install-badge">AI</div>
+              <div class="install-body">
+                <h3>Claude Code 接入</h3>
+                <p>Claude Code 侧入口是 `CLAUDE.md`。如果你口头说 Cloud Code，这里对应的是 Claude Code 这个 AI coding 宿主；CMAP 仍然保持 host-neutral，只写项目本地入口。</p>
+                <div class="code">
+                  <pre><code>git clone https://github.com/GYF0311/CMAP_coding.git
+cd CMAP_coding
+corepack enable
+pnpm install
+pnpm build
+npm install -g .
+
+cd /path/to/your-project
+cmap adopt
+cmap install --host claude
+cmap verify</code></pre>
+                  <button class="copy" type="button" data-copy="git clone https://github.com/GYF0311/CMAP_coding.git&#10;cd CMAP_coding&#10;corepack enable&#10;pnpm install&#10;pnpm build&#10;npm install -g .&#10;&#10;cd /path/to/your-project&#10;cmap adopt&#10;cmap install --host claude&#10;cmap verify">复制 Claude Code 命令</button>
+                </div>
+              </div>
+            </article>
+          </div>
+          <div class="source-grid" style="margin-top:22px">
+            <article class="source-card">
+              <h3>Codex 显式工作流</h3>
+              <p>不依赖 hook parity 时，可以用 `cmap codex start/finish/guard/handoff` 走显式流程。这样更稳，也更容易在 PR 和 CI 里复核。</p>
+              <pre><code>cmap codex start "修复登录页表单校验" --write-brief --write-pack
+cmap codex guard --changed
+cmap codex finish --task "修复登录页表单校验" --verified "pnpm test"</code></pre>
+            </article>
+            <article class="source-card">
+              <h3>可选 hooks 辅助</h3>
+              <p>hooks 是辅助层，不应该直接写 canonical facts。推荐先用 observe/assist，看噪音是否可控，再决定是否启用 strict。</p>
+              <pre><code>cmap install --host both --hooks assist
+cmap hooks render --host codex --mode assist
+cmap hooks test --event UserPromptSubmit --mode assist --prompt "更新产品页"</code></pre>
+            </article>
+          </div>
+        </section>
+
+        <section class="band" id="sources">
+          <div class="section-head">
+            <div>
+              <p class="kicker">Sources</p>
+              <h2>这份页面依据哪些材料写成。</h2>
+            </div>
+            <p>产品页不替代项目地图，只是把正式事实和更新流程翻译成更适合人看的 HMI 介绍页。</p>
+          </div>
+          <div class="source-grid">
+            <article class="source-card">
+              <h3>正式事实源</h3>
+              <p>`.context/MAP.md`、`.context/STATUS.md`、`.context/modules/*.md` 和 README 负责描述项目当前能力、模块职责、验证方式和约束边界。</p>
+            </article>
+            <article class="source-card">
+              <h3>更新流程复盘</h3>
+              <p>`docs/CMAP项目更新流程.md` 负责解释为什么项目从 v0.1 CLI 骨架演进到 v0.2 Trust Boundary + Human Review Layer。</p>
+            </article>
+          </div>
+          <div class="footer">
+            CMAP Product HMI. 这是一份静态 HTML 说明页，不写项目状态，不替代 `.context` canonical facts。
+          </div>
+        </section>
       </div>
     </main>
   </div>
 
   <script>
-    const nodeInfo = {
-      core: {
-        title: ".context canonical map",
-        copy: "长期项目事实源。AI 和人都从这里读取模块边界、当前状态、验证规则和设计决策；外部系统只能作为候选输入。",
-        command: "cmap verify"
-      },
-      route: {
-        title: "route / 任务定位",
-        copy: "根据模块 aliases、路径关键词和模块索引，把自然语言任务转成优先阅读的模块列表。",
-        command: "cmap route \"任务描述\""
-      },
-      checkpoint: {
-        title: "checkpoint / 当前 handoff",
-        copy: "保存短期工作状态：当前任务、假设、改动文件、验证结果、下一步和不要重复做的事情。",
-        command: "cmap checkpoint write --task"
-      },
-      brief: {
-        title: "brief / AI 开工包",
-        copy: "把 route、CHECKPOINT、模块文档、验证规则和 Obsidian 链接打包成一份 AI 可读上下文。",
-        command: "cmap brief \"任务\""
-      },
-      pack: {
-        title: "pack / 预算上下文包",
-        copy: "从 route 的图谱邻域生成带 token budget 的 redacted 阅读包，避免把全仓塞给 AI。",
-        command: "cmap pack \"任务\" --budget 1200"
-      },
-      finish: {
-        title: "finish / 收工 gate",
-        copy: "任务结束前列出 changed files、受影响模块、context 更新建议、验证提醒和 checkpoint close/write 建议。",
-        command: "cmap finish --changed"
-      },
-      verify: {
-        title: "verify / 漂移检查",
-        copy: "检查 .context 结构、frontmatter、模块关系、路径存在性、changed-file coverage 和入口一致性。",
-        command: "cmap verify --coverage"
-      },
-      obsidian: {
-        title: "Obsidian / 阅读与图谱层",
-        copy: "把 canonical .context 导出为 _cmap notes，通过 Properties 和 wikilinks 形成可浏览的知识图谱，并用 --check 发现镜像漂移。",
-        command: "cmap obsidian export --check"
-      },
-      reconcile: {
-        title: "reconcile / 外部候选事实",
-        copy: "从 GSD v1/v2 等 workflow 产物里提取候选事实、验证证据和冲突，只写 dry-run 或 inbox。",
-        command: "cmap reconcile --adapter gsd-v1"
-      }
-    };
-
-    const modules = [
-      { id: "cli", group: "core", purpose: "公共命令面：注册 commander 命令、处理参数、退出码和 stdout/stderr 边界。", paths: ["src/cli.ts", "src/commands"], tags: ["command", "entrypoint"] },
-      { id: "context", group: "core", purpose: "生成 `.context` 骨架和模板，把确定性项目扫描信号写成可审查文本。", paths: ["src/context/templates.ts", "src/context/scanner.ts"], tags: ["template", "skeleton"] },
-      { id: "route", group: "workflow", purpose: "任务到模块的 deterministic router，输出推荐模块、证据和 read-first 文件。", paths: ["src/commands/route.ts", "src/core/module-index.ts"], tags: ["routing", "aliases"] },
-      { id: "handoff", group: "workflow", purpose: "维护 `STATUS.md` 和 `CHECKPOINT.md`，让任务可以跨会话续接。", paths: ["src/commands/status.ts", "src/commands/checkpoint.ts"], tags: ["checkpoint", "status"] },
-      { id: "brief", group: "workflow", purpose: "生成 AI coding 开工包，优先读取 `CHECKPOINT.md`，再带上 route 和 module docs。", paths: ["src/commands/brief.ts"], tags: ["AI brief", "startup"] },
-      { id: "pack", group: "workflow", purpose: "生成带预算和 redaction 的 routed context pack，减少 AI 盲读全仓。", paths: ["src/commands/pack.ts"], tags: ["budget", "context pack"] },
-      { id: "finish", group: "workflow", purpose: "收工前的 read-only gate，提示 context 更新、验证和 checkpoint 生命周期。", paths: ["src/commands/finish.ts"], tags: ["closeout", "handoff"] },
-      { id: "verify", group: "safety", purpose: "检查 `.context` 文件、模块关系、路径存在性、入口漂移和 changed-file coverage。", paths: ["src/commands/verify.ts"], tags: ["drift", "coverage"] },
-      { id: "cp", group: "safety", purpose: "安全搬运行块，支持 copy/move/delete/restore，并为破坏性动作创建备份。", paths: ["src/commands/cp.ts", "src/fs"], tags: ["line block", "backup"] },
-      { id: "host", group: "integration", purpose: "生成简短 AGENTS.md / CLAUDE.md，让宿主 AI 先读地图再工作。", paths: ["src/host", "src/commands/install.ts"], tags: ["AGENTS", "CLAUDE"] },
-      { id: "hooks-doctor", group: "integration", purpose: "提供 hook lifecycle render/test、assist session brief、generated evidence 和 doctor 诊断，不自动写 canonical memory。", paths: ["src/commands/hooks.ts", "src/commands/doctor.ts"], tags: ["hooks", "doctor"] },
-      { id: "obsidian-adapter", group: "integration", purpose: "把 `.context` 导成 Obsidian-friendly notes，并支持 open / pull dry-run / export check。", paths: ["src/commands/obsidian.ts", "_cmap"], tags: ["graph", "view"] },
-      { id: "reconcile-adapter", group: "integration", purpose: "从 GSD 等外部 workflow 产物提取候选事实、冲突和验证证据。", paths: ["src/commands/reconcile.ts"], tags: ["GSD", "inbox"] },
-      { id: "benchmark", group: "safety", purpose: "用 JSONL fixture 评估 route top-k 命中率，为产品效果建立量化反馈。", paths: ["src/commands/benchmark.ts", "bench"], tags: ["route eval", "top-k"] },
-      { id: "adoption", group: "workflow", purpose: "接管已有项目时生成候选模块和 ADOPTION 工作台，不直接提升为事实。", paths: ["src/commands/adopt.ts"], tags: ["existing project", "candidate"] },
-      { id: "module-docs", group: "core", purpose: "创建候选 module doc，承载模块职责、路径、关系、验证方式和常见坑。", paths: ["src/commands/add-module.ts"], tags: ["module doc", "contract"] },
-      { id: "tests", group: "safety", purpose: "用 Vitest 集成测试和 built CLI smoke 证明真实用户命令行为。", paths: ["tests", "scripts/smoke-test.mjs"], tags: ["vitest", "smoke"] }
-    ];
-
-    const moduleGrid = document.querySelector("#moduleGrid");
-    const search = document.querySelector("#moduleSearch");
-    const filters = [...document.querySelectorAll(".filter-button")];
-    let activeFilter = "all";
-
-    function renderModules() {
-      const query = search.value.trim().toLowerCase();
-      moduleGrid.innerHTML = "";
-      modules
-        .filter((item) => activeFilter === "all" || item.group === activeFilter)
-        .filter((item) => {
-          const haystack = `${item.id} ${item.group} ${item.purpose} ${item.paths.join(" ")} ${item.tags.join(" ")}`.toLowerCase();
-          return !query || haystack.includes(query);
-        })
-        .forEach((item) => {
-          const article = document.createElement("article");
-          article.className = "module-card";
-          article.innerHTML = `
-            <div class="tag-row">
-              <span class="tag">${item.group}</span>
-              ${item.tags.slice(0, 2).map((tag) => `<span class="tag">${tag}</span>`).join("")}
-            </div>
-            <h3>${item.id}</h3>
-            <p>${item.purpose}</p>
-            <ul class="path-list">${item.paths.map((path) => `<li>${path}</li>`).join("")}</ul>
-          `;
-          moduleGrid.append(article);
-        });
-    }
-
-    filters.forEach((button) => {
-      button.addEventListener("click", () => {
-        filters.forEach((item) => item.classList.remove("active"));
-        button.classList.add("active");
-        activeFilter = button.dataset.filter;
-        renderModules();
-      });
-    });
-    search.addEventListener("input", renderModules);
-    renderModules();
-
-    document.querySelectorAll(".node").forEach((node) => {
-      node.addEventListener("click", () => {
-        document.querySelectorAll(".node").forEach((item) => item.classList.remove("active"));
-        node.classList.add("active");
-        const info = nodeInfo[node.dataset.node];
-        document.querySelector("#node-title").textContent = info.title;
-        document.querySelector("#node-copy").textContent = info.copy;
-        document.querySelector("#node-command").textContent = info.command;
-        search.value = node.dataset.node === "core" ? "" : node.dataset.node;
-        activeFilter = "all";
-        filters.forEach((item) => item.classList.toggle("active", item.dataset.filter === "all"));
-        renderModules();
-      });
-    });
-
+    const navLinks = [...document.querySelectorAll(".side-nav a, .top-links a")];
     const sections = [...document.querySelectorAll("section[id]")];
-    const navLinks = [...document.querySelectorAll(".nav a")];
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (!visible) return;
-      navLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
-    }, { threshold: [0.16, 0.36, 0.62] });
-    sections.forEach((section) => observer.observe(section));
+    const setActive = () => {
+      let current = sections[0]?.id;
+      for (const section of sections) {
+        if (section.getBoundingClientRect().top <= 120) current = section.id;
+      }
+      navLinks.forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === `#${current}`);
+      });
+    };
+    window.addEventListener("scroll", setActive, { passive: true });
+    setActive();
+
+    document.querySelectorAll("[data-copy]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const text = button.getAttribute("data-copy") || "";
+        try {
+          await navigator.clipboard.writeText(text);
+          const old = button.textContent;
+          button.textContent = "已复制";
+          setTimeout(() => { button.textContent = old; }, 1400);
+        } catch {
+          button.textContent = "请手动复制";
+        }
+      });
+    });
   </script>
 </body>
 </html>
