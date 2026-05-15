@@ -1,6 +1,7 @@
 import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileExists } from "../context/scanner.js";
+import { writeCandidateDrafts, type CmapCandidate } from "../core/candidate-store.js";
 import type { ContextModule } from "../core/module-index.js";
 import { loadModuleIndex } from "../core/module-index.js";
 import { recordRouteUsage } from "../core/generated-stats.js";
@@ -10,6 +11,7 @@ type RouteOptions = {
   format?: string;
   maxContext?: string | number;
   graph?: boolean;
+  writeAliasCandidate?: boolean;
 };
 
 const DEFAULT_MAX_CONTEXT_MODULES = 6;
@@ -47,6 +49,18 @@ export type RouteReport = {
   verifyCommands: string[];
   graphMode: boolean;
   warnings: string[];
+  aliasCandidate?: AliasCandidateSuggestion;
+  aliasCandidateWrite?: AliasCandidateWriteSummary;
+};
+
+type AliasCandidateSuggestion = {
+  command: string;
+  summary: string;
+};
+
+type AliasCandidateWriteSummary = {
+  written: string[];
+  duplicates: string[];
 };
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
@@ -76,16 +90,23 @@ export async function routeTask(cwd: string, task: string, options: RouteOptions
   const strong = ranked.filter((candidate) => candidate.score > 0 && hasHighConfidenceSignal(candidate));
   const contextModules = buildContextModules(strong, candidates, maxContext);
   const verifyCommands = unique(contextModules.flatMap((module) => module.verifyCommands));
+  const lowConfidence = strong.length === 0;
+  const aliasCandidate = lowConfidence ? buildAliasCandidateSuggestion(task) : undefined;
+  const aliasCandidateWrite = lowConfidence && options.writeAliasCandidate
+    ? await writeAliasCandidateRequest(cwd, task, ranked)
+    : undefined;
   return {
     task,
     modules: strong,
     contextModules,
     ranked,
-    lowConfidence: strong.length === 0,
+    lowConfidence,
     readFirst: buildReadFirst(contextModules),
     verifyCommands,
     graphMode: Boolean(options.graph),
-    warnings: await relationCandidateWarnings(cwd)
+    warnings: await relationCandidateWarnings(cwd),
+    aliasCandidate,
+    aliasCandidateWrite
   };
 }
 
@@ -183,6 +204,27 @@ function formatRouteReport(report: RouteReport): string {
   lines.push("", "Read first:");
   for (const file of report.readFirst) {
     lines.push(`- ${file}`);
+  }
+
+  if (report.aliasCandidate) {
+    lines.push("", "Suggested:");
+    lines.push("- Inspect source code before editing.");
+    lines.push("- Consider alias candidate:");
+    lines.push(`  ${report.aliasCandidate.command}`);
+  }
+
+  if (report.aliasCandidateWrite) {
+    if (report.aliasCandidateWrite.written.length > 0) {
+      lines.push("", "Alias candidate request written:");
+      for (const file of report.aliasCandidateWrite.written) {
+        lines.push(`- ${file}`);
+      }
+    } else if (report.aliasCandidateWrite.duplicates.length > 0) {
+      lines.push("", "Alias candidate request already exists:");
+      for (const file of report.aliasCandidateWrite.duplicates) {
+        lines.push(`- ${file}`);
+      }
+    }
   }
 
   if (report.verifyCommands.length > 0) {
@@ -350,7 +392,9 @@ function toJsonReport(report: RouteReport): object {
     readFirst: report.readFirst,
     verifyCommands: report.verifyCommands,
     graphMode: report.graphMode,
-    warnings: report.warnings
+    warnings: report.warnings,
+    aliasCandidate: report.aliasCandidate,
+    aliasCandidateWrite: report.aliasCandidateWrite
   };
 }
 
@@ -369,6 +413,54 @@ function evidence(module: ModuleCandidate | ContextModuleCandidate): string[] {
     values.push(`related via ${module.relation.type} from ${module.relation.from}`);
   }
   return values;
+}
+
+function buildAliasCandidateSuggestion(task: string): AliasCandidateSuggestion {
+  return {
+    command: `cmap route ${JSON.stringify(task)} --write-alias-candidate`,
+    summary: "No alias or module name matched. Inspect source before adding a reviewed module alias."
+  };
+}
+
+async function writeAliasCandidateRequest(
+  cwd: string,
+  task: string,
+  ranked: ModuleCandidate[]
+): Promise<AliasCandidateWriteSummary> {
+  const result = await writeCandidateDrafts(cwd, [
+    {
+      source: "route",
+      type: "module.alias.request",
+      target: "unresolved",
+      risk: "medium",
+      confidence: 0.2,
+      summary: `Low-confidence route for "${task}" needs source inspection before a reviewed module alias can be added.`,
+      evidence: [".context/MAP.md"],
+      fields: {
+        task,
+        requestedAlias: task,
+        instruction: "Inspect source and choose the correct existing module before converting this request into module.alias.add.",
+        topRankedModules: ranked.slice(0, 5).map((module) => ({
+          module: module.id,
+          score: module.score,
+          matchedAliases: module.matchedAliases,
+          matchedModuleName: module.matchedModuleName,
+          matchedPathKeywords: module.matchedPathKeywords
+        }))
+      }
+    }
+  ]);
+  return {
+    written: result.written.flatMap(candidateInboxPaths),
+    duplicates: result.duplicates.flatMap(candidateInboxPaths)
+  };
+}
+
+function candidateInboxPaths(candidate: CmapCandidate): string[] {
+  return [
+    `.context/inbox/candidates/${candidate.id}.json`,
+    `.context/inbox/candidates/${candidate.id}.md`
+  ];
 }
 
 async function relationCandidateWarnings(cwd: string): Promise<string[]> {

@@ -590,6 +590,9 @@ function suggestedTarget(type: string): string {
   if (type === "alias" || type === "module" || type === "path") {
     return ".context/modules/<module>.md";
   }
+  if (type === "module.alias.request") {
+    return "inspect source, then .context/modules/<module>.md";
+  }
   return ".context/MAP.md or a module doc after review";
 }
 

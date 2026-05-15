@@ -471,6 +471,16 @@
   },
   {
     "from": "route",
+    "to": "evidence",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/route.md relations.depends_on includes evidence"
+    ]
+  },
+  {
+    "from": "route",
     "to": "module-docs",
     "type": "depends_on",
     "source": "module_relations",

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:30:02+08:00
+updated_at: 2026-05-15T22:35:51+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -74,6 +74,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Verify evidence files exist inside the project root.
 - Keep generated evidence non-canonical and separate from reviewed module semantics.
 - Read unified inbox candidates from legacy `.context/inbox/*.md`, structured `.context/inbox/candidates/*.json`, and relation `.context/inbox/relations/*.json`.
+- Treat `module.alias.request` candidates as unresolved review prompts; they are not auto-applicable alias additions.
 - Print unified candidate counts plus legacy Markdown warnings through `cmap inbox status`.
 - Group unified inbox candidates by risk and type through `cmap inbox triage`.
 - Preview candidate promotion guidance through `cmap inbox promote <id> --dry-run` without editing canonical context.
@@ -116,7 +117,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `cmap hooks ingest --host codex --event UserPromptSubmit --mode assist`
 
 ## Data Flow
-User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry. External AI/update/reconcile outputs write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
+User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry. External AI/update/reconcile outputs and low-confidence route requests write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
 
 ## State / Storage
 - Writes `.context/generated/evidence/modules/*.jsonl`.
@@ -125,6 +126,7 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - Writes `.context/generated/stats/route-usage.json` when `stats.update` is enabled.
 - Writes `.context/generated/freshness.json` when snapshotting freshness.
 - Reads `.context/inbox/*.md` legacy candidates, `.context/inbox/candidates/*.json` structured candidates, and `.context/inbox/relations/*.json` relation candidates for backlog counts.
+- Reads route-authored `module.alias.request` candidates as medium-risk unresolved prompts.
 - Writes reviewed structured candidates and their Markdown companions into `.context/inbox/archive/`.
 - Writes `.context/audit/inbox-promote-*.md` and `.context/backups/*.json` before low-risk promotion writes.
 - Moves reviewed top-level inbox candidates into `.context/inbox/archive/`.
@@ -143,6 +145,7 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - Module activity stats are deterministic counters, not semantic ownership.
 - Route usage stats show working patterns, not module truth.
 - `inbox promote --dry-run` is review guidance only; `--apply` is limited to alias/path/evidence metadata and never writes semantic sections.
+- `module.alias.request` is intentionally not auto-applicable; convert it to a concrete module alias only after source review.
 - Archived inbox files are retained as records, not deleted.
 - Stale/freshness warnings are review prompts, not proof that a doc is wrong.
 

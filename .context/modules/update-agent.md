@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:30:02+08:00
+updated_at: 2026-05-15T22:35:51+08:00
 confidence: ai-drafted
 module: update-agent
 paths:
@@ -68,6 +68,7 @@ Accept AI-authored MapPatch proposals and safely maintain routine `.context` sta
 - Allow command-only `verification.evidence`, while validating any provided file evidence through project-root safe paths.
 - Route module semantics, decisions, verification policy, status updates, and low-risk metadata candidates to `.context/inbox/`.
 - For MapPatch operations routed to inbox, write structured `cmap.candidate.v1` JSON+Markdown pairs under `.context/inbox/candidates/` while retaining legacy `update-*.md` reports for compatibility.
+- Share the candidate-store schema with other producers such as low-confidence route alias requests; update-agent itself only produces MapPatch-derived candidates.
 - Deduplicate structured MapPatch candidates by stable fingerprint so repeated agent proposals do not spam inbox.
 - Reject blocked operations such as code writes, shell runs, module delete/rename, and semantic map overwrite.
 - Leave inbox backlog visible and governable through `cmap inbox status`, `cmap inbox triage`, `cmap inbox promote --dry-run|--apply`, `cmap inbox archive`, `cmap verify --stale`, and `cmap verify --freshness`.

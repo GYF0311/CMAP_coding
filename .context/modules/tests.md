@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-15T22:35:51+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -61,6 +61,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert assist UserPromptSubmit writes a generated session brief and route usage stats.
 - Assert Codex hook render/ingest reads stdin payloads, writes generated session briefs/logs, returns Codex-compatible JSON, and denies direct semantic canonical writes in strict PreToolUse.
 - Assert route context pack behavior separates direct matches from related context and surfaces module-owned verification commands.
+- Assert low-confidence route output does not invent modules and can write candidate-only alias requests.
 - Assert route/brief context size controls bound selected context modules and derived verification commands.
 - Assert route benchmark fixtures can measure context-pack hits separately from direct module hits.
 - Assert policy defaults, generated module activity stats, and policy-backed inbox thresholds.

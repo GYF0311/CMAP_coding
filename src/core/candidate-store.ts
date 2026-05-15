@@ -8,6 +8,7 @@ export const candidateSchema = "cmap.candidate.v1" as const;
 
 export const candidateTypes = [
   "module.alias.add",
+  "module.alias.request",
   "module.path.add",
   "evidence.merge",
   "verification.evidence",
@@ -17,7 +18,7 @@ export const candidateTypes = [
 ] as const;
 
 export type CmapCandidateType = (typeof candidateTypes)[number];
-export type CmapCandidateSource = "mappatch" | "relate" | "reconcile" | "obsidian-pull" | "manual";
+export type CmapCandidateSource = "mappatch" | "relate" | "reconcile" | "obsidian-pull" | "route" | "manual";
 export type CmapCandidateRisk = "routine" | "medium" | "high";
 
 export type CmapCandidate = {
@@ -229,7 +230,7 @@ function isCandidateType(value: string): value is CmapCandidateType {
 }
 
 function normalizeSource(value: string): CmapCandidateSource {
-  const allowed = new Set<CmapCandidateSource>(["mappatch", "relate", "reconcile", "obsidian-pull", "manual"]);
+  const allowed = new Set<CmapCandidateSource>(["mappatch", "relate", "reconcile", "obsidian-pull", "route", "manual"]);
   return allowed.has(value as CmapCandidateSource) ? (value as CmapCandidateSource) : "manual";
 }
 

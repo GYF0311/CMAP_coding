@@ -86,7 +86,8 @@ program
   .option("--format <format>", "Output format: text or json", "text")
   .option("--max-context <n>", "Maximum context modules to include in the route context pack", "6")
   .option("--graph", "Enable graph-aware route explanation")
-  .action(async (task: string, options: { format?: string; maxContext?: string; graph?: boolean }) => {
+  .option("--write-alias-candidate", "Write a candidate-only alias request when no high-confidence module matches")
+  .action(async (task: string, options: { format?: string; maxContext?: string; graph?: boolean; writeAliasCandidate?: boolean }) => {
     await runRoute(process.cwd(), task, options);
   });
 

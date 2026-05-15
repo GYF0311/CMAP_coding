@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:30:02+08:00
+updated_at: 2026-05-15T22:35:51+08:00
 confidence: ai-drafted
 module: route
 paths:
@@ -18,6 +18,7 @@ aliases:
 relations:
   depends_on:
     - module-docs
+    - evidence
   used_by:
     - brief
     - obsidian-adapter
@@ -28,6 +29,10 @@ relation_explanations:
       why: "route reads module frontmatter, paths, aliases, relations, and verification sections as its deterministic source."
       produces: "Likely modules, related context modules, read-first files, and suggested verification commands."
       impact: "Changes to module doc schema, relation fields, or verification headings may require updates in src/core/module-index.ts and src/commands/route.ts."
+    evidence:
+      why: "route writes generated route usage stats and low-confidence alias requests into non-canonical support stores."
+      produces: "Generated route usage telemetry and candidate-only module.alias.request files under .context/inbox/candidates/."
+      impact: "Changes to candidate-store or generated stats contracts may require route output, inbox, and benchmark tests to change."
   used_by:
     brief:
       why: "brief relies on route selection to decide which project map context to include for a task."
@@ -62,6 +67,8 @@ Recommend which `.context` files an AI should read first for a natural-language 
 - Extract suggested verification commands from each selected module's `## Tests / Verification` section.
 - Record generated route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
 - Output a route card with likely modules, related context, read-first files, suggested verify commands, and low-confidence notes.
+- For low-confidence routes, suggest source inspection and `--write-alias-candidate` instead of inventing a module.
+- `--write-alias-candidate` writes a non-canonical `module.alias.request` candidate with `target: unresolved`.
 - Surface pending relation candidates only as non-canonical review warnings when that workflow exists.
 - De-duplicate relation candidate warnings by candidate id so `.json` + `.md` pairs count once.
 - Avoid inventing modules when no high-confidence match exists.
@@ -72,15 +79,16 @@ Recommend which `.context` files an AI should read first for a natural-language 
 
 ## Used By
 - `cmap route "<task>"`
+- `cmap route "<task>" --write-alias-candidate`
 - `cmap brief "<task>"`
 - Future `finish` and hooks as a hint source.
 - `cmap hooks test --event UserPromptSubmit --mode assist`
 
 ## Data Flow
-Task text -> shared module index -> deterministic direct scoring -> bounded relation expansion -> verification command extraction from selected context modules -> optional generated route usage stats -> text/JSON route report.
+Task text -> shared module index -> deterministic direct scoring -> bounded relation expansion -> verification command extraction from selected context modules -> optional generated route usage stats -> optional unresolved alias request candidate -> text/JSON route report.
 
 ## State / Storage
-Writes generated `.context/generated/stats/route-usage.json` when policy allows stats updates; it does not write canonical context facts.
+Writes generated `.context/generated/stats/route-usage.json` when policy allows stats updates. With `--write-alias-candidate`, writes `.context/inbox/candidates/*.json|md` as candidate-only review input. It does not write canonical context facts.
 
 ## Constraints
 - No embeddings, no model calls, no semantic guessing.
@@ -89,6 +97,7 @@ Writes generated `.context/generated/stats/route-usage.json` when policy allows 
 - Related context is a reading suggestion only; it must not be treated as a direct route match or edit target.
 - `--max-context` changes context pack size only; it must not change the direct `modules` ranking.
 - Unpromoted candidates must not affect `route.modules`, `route.contextModules`, or route benchmark scoring.
+- Low-confidence alias requests must use `target: unresolved`; source inspection decides the real module later.
 - Route does not consume generated evidence, import graphs, or test ownership candidates as route facts.
 
 ## Traps

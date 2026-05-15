@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { createTempProject, expectFile, runCmap } from "../helpers.js";
@@ -76,9 +76,47 @@ describe("M2 route/status/checkpoint", () => {
 
     expect(result).toMatchObject({ code: 0 });
     expect(result.stdout).toContain("No high-confidence module match");
+    expect(result.stdout).toContain("Consider alias candidate");
+    expect(result.stdout).toContain('cmap route "结算发票税率不对" --write-alias-candidate');
     expect(result.stdout).toContain(".context/MAP.md");
     expect(result.stdout).toContain("update MAP.md aliases");
     expect(result.stdout).not.toContain("billing");
+  });
+
+  test("route can write a candidate-only alias request for low-confidence tasks", async () => {
+    const cwd = await createRoutableProject();
+
+    const result = await runCmap(["route", "结算发票税率不对", "--write-alias-candidate"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    expect(result.stdout).toContain("No high-confidence module match");
+    expect(result.stdout).toContain("Alias candidate request written");
+    expect(result.stdout).not.toContain("1. billing");
+    const candidateRoot = path.join(cwd, ".context/inbox/candidates");
+    const files = await readdir(candidateRoot);
+    const json = files.find((file) => file.endsWith(".json"));
+    const md = files.find((file) => file.endsWith(".md"));
+    expect(json).toBeTruthy();
+    expect(md).toBeTruthy();
+    const candidate = JSON.parse(await readFile(path.join(candidateRoot, json!), "utf8")) as {
+      schema: string;
+      source: string;
+      type: string;
+      target: string;
+      risk: string;
+      fields: Record<string, unknown>;
+    };
+    expect(candidate).toMatchObject({
+      schema: "cmap.candidate.v1",
+      source: "route",
+      type: "module.alias.request",
+      target: "unresolved",
+      risk: "medium",
+      fields: {
+        task: "结算发票税率不对"
+      }
+    });
+    expect(await readFile(path.join(candidateRoot, md!), "utf8")).toContain("Candidate / Non-canonical");
   });
 
   test("route does not match short ASCII aliases inside longer words", async () => {
