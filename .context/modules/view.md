@@ -1,6 +1,7 @@
 ---
 context_type: module
 module: view
+updated_at: 2026-05-15T22:28:19+08:00
 paths:
   - src/view
   - src/commands/view.ts

@@ -1,28 +1,28 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-15T14:25:42.513Z'
+updated_at: '2026-05-15T14:29:24.735Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Retire legacy .context pending/stats warning dirs
+Freshness and stale manual review
 
 ## Current Hypothesis
 None recorded.
 
 ## Changed Files
-- .context/CHECKPOINT.md
+- .context/modules/*.md
 
 ## Verified
-cmap verify; cmap verify --changed
+pnpm dev verify --stale; pnpm dev verify --freshness
 
 ## Failed / Pending
 None recorded.
 
 ## Next Step
-Run stale/freshness review for cli host view route evidence update-agent hooks-doctor
+Add relation_explanations for core modules
 
 ## Do Not Redo
 None recorded.

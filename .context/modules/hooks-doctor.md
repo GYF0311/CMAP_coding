@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-13T02:37:30+08:00
+updated_at: 2026-05-15T22:28:19+08:00
 confidence: ai-drafted
 module: hooks-doctor
 paths:
@@ -35,6 +35,7 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `src/hooks/templates.ts`
 - `src/hooks/events.ts`
 - `src/commands/hooks.ts`
+- `src/commands/codex.ts`
 - `src/commands/doctor.ts`
 - `src/commands/install.ts`
 
@@ -59,6 +60,7 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `codex handoff` writes a local `.context/out/codex-handoff.md` bundle from checkpoint, status, inbox, and next commands.
 - `hooks test --event PreToolUse --mode strict` blocks direct writes to semantic canonical context files.
 - `doctor` checks `.context`, entrypoint parity, and hook template presence.
+- `doctor --release` checks package metadata and release packaging prerequisites.
 
 ## Depends On
 - Host entrypoint install flow.
@@ -86,6 +88,7 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `cmap hooks stop`
 - `cmap hooks stop --profile assist --changed src/commands/route.ts`
 - `cmap doctor`
+- `cmap doctor --release`
 
 ## Data Flow
 Install options -> hook JSON templates. Render options -> project-local lifecycle settings. Real host stdin JSON or simulated hook event -> normalized event -> stdout reminder/Codex JSON, non-canonical hook/session log, generated session brief, strict guard decision, or generated evidence append depending on mode/profile.
