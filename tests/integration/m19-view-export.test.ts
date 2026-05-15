@@ -248,6 +248,95 @@ confidence: 0.9
     expect(html).not.toContain("eval(");
   });
 
+  test("module details include responsibilities incoming relations verify commands and related candidates", async () => {
+    const cwd = await createViewProject("m19-module-understanding");
+    await writeFile(
+      path.join(cwd, ".context/modules/view.md"),
+      `---
+context_type: module
+module: view
+name: View
+paths:
+  - src/view
+aliases:
+  - view
+relations:
+  depends_on:
+    - evidence
+relation_explanations:
+  depends_on:
+    evidence:
+      why: "view reads evidence support data."
+      produces: "Generated Evidence section."
+      impact: "Evidence schema changes affect view collection."
+confidence: ai-drafted
+---
+# Module: view
+
+## Purpose
+Render a human review dashboard.
+
+## Responsibilities
+- Render module understanding details.
+- Keep review actions copy-only.
+
+## Tests / Verification
+- \`pnpm test tests/integration/m19-view-export.test.ts\`
+`,
+      "utf8"
+    );
+    await writeFile(
+      path.join(cwd, ".context/modules/evidence.md"),
+      `---
+context_type: module
+module: evidence
+paths:
+  - src/evidence
+relations:
+  used_by:
+    - view
+relation_explanations:
+  used_by:
+    view:
+      why: "evidence supports the view dashboard."
+      produces: "Incoming relation signal."
+      impact: "Changing evidence affects view detail pages."
+confidence: ai-drafted
+---
+# Module: evidence
+`,
+      "utf8"
+    );
+    await mkdir(path.join(cwd, ".context/inbox"), { recursive: true });
+    await writeFile(
+      path.join(cwd, ".context/inbox/view-alias.md"),
+      `---
+type: module.alias.add
+risk: routine
+module: view
+alias: review dashboard
+confidence: 0.9
+---
+# Alias candidate
+`,
+      "utf8"
+    );
+
+    await runViewExport(cwd, { out: ".context/out/view.html", includeInbox: true });
+
+    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
+    const viewModule = data?.modules.find((module) => module.id === "view");
+    expect(viewModule?.responsibilities).toContain("Render module understanding details.");
+    expect(viewModule?.incomingRelations).toContainEqual(expect.objectContaining({ source: "evidence", type: "used_by" }));
+    expect(viewModule?.verifyCommands).toContain("pnpm test tests/integration/m19-view-export.test.ts");
+    expect(viewModule?.relatedCandidates).toContainEqual(expect.objectContaining({ id: "view-alias", type: "module.alias.add" }));
+    expect(html).toContain("Responsibilities");
+    expect(html).toContain("Incoming Relations");
+    expect(html).toContain("Module Verify");
+    expect(html).toContain("Related Candidates");
+  });
+
   test("view export rejects the retired --lang option", async () => {
     const cwd = await createViewProject("m19-retired-lang-option");
 

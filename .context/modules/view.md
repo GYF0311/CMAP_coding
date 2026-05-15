@@ -1,7 +1,7 @@
 ---
 context_type: module
 module: view
-updated_at: 2026-05-15T22:30:02+08:00
+updated_at: 2026-05-15T22:40:42+08:00
 paths:
   - src/view
   - src/commands/view.ts
@@ -53,6 +53,7 @@ Render a read-only, single-file English HTML review dashboard from trusted `.con
 - Missing support layers must degrade to warnings and "Not available", not hard failures.
 - `--check` compares normalized full HTML, not only embedded JSON, so renderer/template drift is caught while volatile `generatedAt` is ignored.
 - Provides local-only review controls: search, stale/candidate/high-risk/generated filters, copy-command buttons, and a module detail dialog.
+- Module details expose reviewed responsibilities, incoming relations, relation explanations, module-owned verification commands, and related candidates from existing `.context` data.
 - Suggested commands remain copy-only; the browser view never applies or promotes candidates.
 
 ## Safety

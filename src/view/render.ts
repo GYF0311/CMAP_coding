@@ -30,6 +30,7 @@ export function renderViewHtml(data: CmapViewData): string {
     .modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
     .pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; margin: 2px 4px 2px 0; color: var(--muted); font-size: 12px; }
     .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .compact-list { margin: 6px 0 10px; padding-left: 18px; }
     button { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
     button:hover { border-color: var(--accent); color: var(--accent); }
     .is-hidden { display: none !important; }
@@ -112,12 +113,26 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
   const relationText = module.relations.length > 0
     ? module.relations.map((relation) => `${relation.type}: ${relation.target}`).join(", ")
     : messages.notAvailable;
+  const incomingText = module.incomingRelations.length > 0
+    ? module.incomingRelations.map((relation) => `${relation.source} -> ${module.id} (${relation.type})`).join(", ")
+    : messages.notAvailable;
   const relationExplanations = module.relations
     .filter((relation) => relation.why || relation.produces || relation.impact)
     .map((relation) => renderRelationExplanation(`${module.id} -> ${relation.target}`, relation, messages))
     .join("");
-  const searchable = [module.id, module.name, module.description ?? "", module.aliases.join(" "), module.paths.join(" "), relationText].join(" ");
-  const hasCandidate = module.freshness.pendingInboxCandidates.length > 0;
+  const searchable = [
+    module.id,
+    module.name,
+    module.description ?? "",
+    module.aliases.join(" "),
+    module.paths.join(" "),
+    relationText,
+    incomingText,
+    module.responsibilities.join(" "),
+    module.verifyCommands.join(" "),
+    module.relatedCandidates.map((candidate) => `${candidate.id} ${candidate.summary}`).join(" ")
+  ].join(" ");
+  const hasCandidate = module.freshness.pendingInboxCandidates.length > 0 || module.relatedCandidates.length > 0;
   const isStale = module.freshness.state !== "Not available" && module.freshness.state !== "reviewed";
   const hasGenerated = module.freshness.newestGeneratedEvidenceAt !== "Not available";
   return `<article class="module" data-search="${escapeAttr(searchable)}" data-stale="${isStale ? "true" : "false"}" data-has-candidate="${hasCandidate ? "true" : "false"}" data-high-risk="false" data-generated="${hasGenerated ? "true" : "false"}" data-module-id="${escapeAttr(module.id)}">
@@ -125,9 +140,13 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
     <p class="meta"><code>${escapeHtml(module.id)}</code> · ${escapeHtml(module.status)} · ${escapeHtml(module.docPath)}</p>
     <p>${module.aliases.map((alias) => `<span class="pill">${escapeHtml(alias)}</span>`).join("")}</p>
     ${module.description ? `<p><strong>${escapeHtml(messages.purpose)}:</strong> ${escapeHtml(module.description)}</p>` : ""}
+    ${module.responsibilities.length > 0 ? `<div><strong>${escapeHtml(messages.responsibilities)}:</strong><ul class="compact-list">${module.responsibilities.slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}
     <p><strong>${escapeHtml(messages.paths)}:</strong> ${escapeHtml(module.paths.join(", ") || messages.notAvailable)}</p>
     <p><strong>${escapeHtml(messages.relations)}:</strong> ${escapeHtml(relationText)}</p>
+    <p><strong>${escapeHtml(messages.incomingRelations)}:</strong> ${escapeHtml(incomingText)}</p>
     ${relationExplanations ? `<div>${relationExplanations}</div>` : ""}
+    ${module.verifyCommands.length > 0 ? `<p><strong>${escapeHtml(messages.moduleVerify)}:</strong> ${module.verifyCommands.map((command) => `<code>${escapeHtml(command)}</code>`).join(", ")}</p>` : ""}
+    ${module.relatedCandidates.length > 0 ? `<p><strong>${escapeHtml(messages.relatedCandidates)}:</strong> ${module.relatedCandidates.map((candidate) => `<span class="pill">${escapeHtml(candidate.id)} · ${escapeHtml(candidate.type)}</span>`).join("")}</p>` : ""}
     <p><strong>${escapeHtml(messages.freshnessLabel)}:</strong> ${escapeHtml(module.freshness.state)} · ${escapeHtml(module.freshness.lastReviewedAt)}</p>
     ${renderCommandButtons(module.suggestedCommands)}
     <button type="button" data-open-module="${escapeAttr(module.id)}">${escapeHtml(messages.details)}</button>

@@ -49,12 +49,28 @@ export const CmapViewDataSchema = z.object({
     aliases: z.array(z.string()),
     paths: z.array(z.string()),
     description: z.string().optional(),
+    responsibilities: z.array(z.string()),
     relations: z.array(z.object({
       type: z.string(),
       target: z.string(),
       why: z.string().optional(),
       produces: z.string().optional(),
       impact: z.string().optional()
+    })),
+    incomingRelations: z.array(z.object({
+      type: z.string(),
+      source: z.string(),
+      why: z.string().optional(),
+      produces: z.string().optional(),
+      impact: z.string().optional()
+    })),
+    verifyCommands: z.array(z.string()),
+    relatedCandidates: z.array(z.object({
+      id: z.string(),
+      file: z.string(),
+      type: z.string(),
+      risk: z.string(),
+      summary: z.string()
     })),
     freshness: z.object({
       state: z.string(),

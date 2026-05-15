@@ -1,33 +1,32 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-15T14:37:48.497Z'
+updated_at: '2026-05-15T14:41:21.366Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Route low-confidence alias candidate request
+Review HTML module understanding polish
 
 ## Current Hypothesis
 None recorded.
 
 ## Changed Files
-- src/commands/route.ts
-- src/core/candidate-store.ts
-- src/commands/inbox.ts
-- src/cli.ts
-- tests/integration/m2.test.ts
-- .context/modules/route.md
+- src/view/collect.ts
+- src/view/render.ts
+- src/view/schema.ts
+- tests/integration/m19-view-export.test.ts
+- .context/modules/view.md
 
 ## Verified
-pnpm test tests/integration/m2.test.ts tests/integration/m21-candidate-store.test.ts; pnpm test tests/integration/m20-relation-candidates.test.ts; pnpm typecheck; pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0; pnpm dev verify; pnpm dev verify --stale; pnpm dev verify --freshness
+pnpm test tests/integration/m19-view-export.test.ts; pnpm test tests/integration/m25-view-structured-candidates.test.ts; pnpm typecheck; pnpm dev view export --out _cmap-view; pnpm dev view export --check --out _cmap-view; pnpm dev verify; pnpm dev verify --stale; pnpm dev verify --freshness
 
 ## Failed / Pending
 None recorded.
 
 ## Next Step
-Polish Review HTML module details
+Unify candidate inbox store producers
 
 ## Do Not Redo
 None recorded.

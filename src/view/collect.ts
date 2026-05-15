@@ -58,7 +58,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
       candidateCount: candidates.length + relationCandidates.length,
       warningCount: warnings.length
     },
-    modules: modules.map((module) => toModuleView(module, freshness)),
+    modules: modules.map((module) => toModuleView(module, modules, freshness, candidates, relationCandidates)),
     evidence,
     candidates,
     relationCandidates,
@@ -68,9 +68,24 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
 
 function toModuleView(
   module: ContextModule,
-  freshness: FreshnessIndex | undefined
+  modules: ContextModule[],
+  freshness: FreshnessIndex | undefined,
+  candidates: InboxCandidateView[],
+  relationCandidates: RelationCandidateView[]
 ): CmapViewData["modules"][number] {
   const freshnessModule = freshness?.modules[module.id];
+  const relatedCandidates = candidates
+    .filter((candidate) => candidateRelatesToModule(candidate, module))
+    .map(toRelatedCandidate);
+  relatedCandidates.push(...relationCandidates
+    .filter((candidate) => candidate.from === module.id || candidate.to === module.id)
+    .map((candidate) => toRelatedCandidate({
+      id: candidate.id,
+      file: candidate.file,
+      type: candidate.relation,
+      risk: "candidate",
+      summary: candidate.summary
+    })));
   return {
     id: module.id,
     name: module.name,
@@ -81,11 +96,15 @@ function toModuleView(
     aliases: module.aliases,
     paths: module.pathsInclude,
     description: extractModuleDescription(module.body),
+    responsibilities: extractBulletSection(module.body, "responsibilities"),
     relations: Object.entries(module.relations).flatMap(([type, targets]) => targets.map((target) => ({
       type,
       target,
       ...module.relationExplanations[type]?.[target]
     }))),
+    incomingRelations: incomingRelations(module, modules),
+    verifyCommands: extractVerificationCommands(module.body),
+    relatedCandidates,
     freshness: {
       state: freshnessModule?.reviewState ?? "Not available",
       lastReviewedAt: freshnessModule?.lastSemanticReviewedAt ?? "Not available",
@@ -96,6 +115,40 @@ function toModuleView(
       { label: "Review module", command: `cmap freshness review --module ${module.id}` },
       { label: "Mark reviewed", command: `cmap freshness mark-reviewed --module ${module.id} --evidence "Reviewed ${module.id}"` }
     ]
+  };
+}
+
+function incomingRelations(module: ContextModule, modules: ContextModule[]): CmapViewData["modules"][number]["incomingRelations"] {
+  return modules.flatMap((source) =>
+    Object.entries(source.relations).flatMap(([type, targets]) =>
+      targets
+        .filter((target) => target === module.id)
+        .map((target) => ({
+          type,
+          source: source.id,
+          ...source.relationExplanations[type]?.[target]
+        }))
+    )
+  );
+}
+
+function candidateRelatesToModule(candidate: InboxCandidateView, module: ContextModule): boolean {
+  return candidate.moduleId === module.id || candidate.moduleId === module.docPath;
+}
+
+function toRelatedCandidate(candidate: {
+  id: string;
+  file: string;
+  type: string;
+  risk: string;
+  summary: string;
+}): CmapViewData["modules"][number]["relatedCandidates"][number] {
+  return {
+    id: candidate.id,
+    file: candidate.file,
+    type: candidate.type,
+    risk: candidate.risk,
+    summary: candidate.summary
   };
 }
 
@@ -136,6 +189,28 @@ function firstNonEmptyParagraph(value: string): string | undefined {
     .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
     .filter(Boolean)
     .filter((paragraph) => !paragraph.startsWith("#"))[0];
+}
+
+function extractBulletSection(body: string, heading: string): string[] {
+  const section = parseMarkdownSections(body).get(heading.toLocaleLowerCase());
+  if (!section) {
+    return [];
+  }
+  return section
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s*-\s+(.+?)\s*$/)?.[1]?.trim())
+    .filter((line): line is string => Boolean(line));
+}
+
+function extractVerificationCommands(body: string): string[] {
+  const section = parseMarkdownSections(body).get("tests / verification");
+  if (!section) {
+    return [];
+  }
+  return section
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\s*-\s+`([^`]+)`/)?.[1]?.trim())
+    .filter((line): line is string => Boolean(line));
 }
 
 async function maybeReadFreshness(cwd: string, warnings: string[]): Promise<FreshnessIndex | undefined> {
