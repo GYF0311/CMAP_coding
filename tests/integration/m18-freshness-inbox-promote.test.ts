@@ -54,6 +54,11 @@ describe("M18 freshness v2 and inbox promotion", () => {
 
     const reviewed = await runCmap(["freshness", "mark-reviewed", "--module", "route", "--evidence", "Reviewed route."], cwd);
     expect(reviewed.code).toBe(0);
+    expect(reviewed.stdout).toContain("# Freshness Review Updated");
+    expect(reviewed.stdout).toContain("generated freshness review metadata only");
+    expect(reviewed.stdout).toContain("does not modify canonical module docs");
+    expect(reviewed.stdout).toContain(".context/modules/route.md");
+    expect(reviewed.stdout).toContain("cmap view export --out _cmap-view");
     const reviewedIndex = JSON.parse(await readFile(path.join(cwd, ".context/generated/freshness.json"), "utf8")) as {
       modules: Record<string, { reviewState: string; reviewEvidence?: string }>;
     };

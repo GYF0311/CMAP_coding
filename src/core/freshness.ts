@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileExists } from "../context/scanner.js";
+import { CmapCommandError } from "../errors.js";
 import { projectRelative } from "../fs/safe-path.js";
 import { generatedRoot, latestModuleEvidenceAt } from "./generated-store.js";
 import { loadModuleIndex, type ContextModule } from "./module-index.js";
@@ -51,6 +52,10 @@ export function freshnessPath(cwd: string): string {
   return path.join(generatedRoot(cwd), "freshness.json");
 }
 
+export function freshnessLockPath(cwd: string): string {
+  return `${freshnessPath(cwd)}.lock`;
+}
+
 export async function buildFreshnessIndex(cwd: string, previous?: FreshnessIndex): Promise<FreshnessIndex> {
   const modules = await loadModuleIndex(cwd);
   const updatedAt = new Date().toISOString();
@@ -70,16 +75,23 @@ export async function readFreshnessIndex(cwd: string): Promise<FreshnessIndex | 
 }
 
 export async function writeFreshnessIndex(cwd: string, index: FreshnessIndex): Promise<void> {
-  const target = freshnessPath(cwd);
-  await mkdir(path.dirname(target), { recursive: true });
-  await writeFile(target, `${JSON.stringify(index, null, 2)}\n`, "utf8");
+  await writeFreshnessIndexAtomic(cwd, index);
+}
+
+export async function updateFreshnessIndexLocked(
+  cwd: string,
+  updater: (current: FreshnessIndex | undefined) => Promise<FreshnessIndex>
+): Promise<FreshnessIndex> {
+  return withFreshnessLock(cwd, async () => {
+    const current = await readFreshnessIndex(cwd);
+    const next = await updater(current);
+    await writeFreshnessIndexAtomic(cwd, next);
+    return next;
+  });
 }
 
 export async function snapshotFreshness(cwd: string): Promise<FreshnessIndex> {
-  const previous = await readFreshnessIndex(cwd);
-  const index = await buildFreshnessIndex(cwd, previous);
-  await writeFreshnessIndex(cwd, index);
-  return index;
+  return updateFreshnessIndexLocked(cwd, (previous) => buildFreshnessIndex(cwd, previous));
 }
 
 export async function markModuleReviewed(
@@ -87,17 +99,93 @@ export async function markModuleReviewed(
   moduleId: string,
   evidence: string | undefined
 ): Promise<FreshnessIndex> {
-  const previous = await readFreshnessIndex(cwd);
-  const index = await buildFreshnessIndex(cwd, previous);
-  const module = index.modules[moduleId];
-  if (!module) {
-    throw new Error(`Unknown module: ${moduleId}`);
+  return updateFreshnessIndexLocked(cwd, async (previous) => {
+    const index = await buildFreshnessIndex(cwd, previous);
+    const module = index.modules[moduleId];
+    if (!module) {
+      throw new Error(`Unknown module: ${moduleId}`);
+    }
+    module.reviewState = "reviewed";
+    module.lastSemanticReviewedAt = reviewedAtFor(module);
+    module.reviewEvidence = evidence?.trim() || undefined;
+    return index;
+  });
+}
+
+async function withFreshnessLock<T>(cwd: string, fn: () => Promise<T>): Promise<T> {
+  const lockPath = freshnessLockPath(cwd);
+  await mkdir(path.dirname(lockPath), { recursive: true });
+  const timeoutMs = freshnessLockTimeoutMs();
+  const retryMs = freshnessLockRetryMs();
+  const started = Date.now();
+
+  while (true) {
+    let handle;
+    try {
+      handle = await open(lockPath, "wx");
+    } catch (error) {
+      if (!isFileExistsError(error)) {
+        throw error;
+      }
+      if (Date.now() - started >= timeoutMs) {
+        throw new CmapCommandError(
+          "freshness.json is locked by another cmap process. Retry after it finishes.",
+          2
+        );
+      }
+      await sleep(retryMs);
+      continue;
+    }
+
+    try {
+      await handle.writeFile(`${process.pid}\n`, "utf8");
+      return await fn();
+    } finally {
+      await handle.close();
+      await rm(lockPath, { force: true });
+    }
   }
-  module.reviewState = "reviewed";
-  module.lastSemanticReviewedAt = reviewedAtFor(module);
-  module.reviewEvidence = evidence?.trim() || undefined;
-  await writeFreshnessIndex(cwd, index);
-  return index;
+}
+
+async function writeFreshnessIndexAtomic(cwd: string, index: FreshnessIndex): Promise<void> {
+  const target = freshnessPath(cwd);
+  await mkdir(path.dirname(target), { recursive: true });
+  const tempPath = path.join(
+    path.dirname(target),
+    `freshness.json.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`
+  );
+  try {
+    await writeFile(tempPath, `${JSON.stringify(index, null, 2)}\n`, "utf8");
+    await rename(tempPath, target);
+  } catch (error) {
+    await rm(tempPath, { force: true });
+    throw error;
+  }
+}
+
+function freshnessLockTimeoutMs(): number {
+  return positiveIntegerFromEnv("CMAP_LOCK_TIMEOUT_MS", 5000);
+}
+
+function freshnessLockRetryMs(): number {
+  return positiveIntegerFromEnv("CMAP_LOCK_RETRY_MS", 50);
+}
+
+function positiveIntegerFromEnv(name: string, fallback: number): number {
+  const value = process.env[name];
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function isFileExistsError(error: unknown): boolean {
+  return Boolean(error && typeof error === "object" && "code" in error && (error as { code?: unknown }).code === "EEXIST");
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export async function buildFreshnessReview(cwd: string, options: FreshnessReviewOptions): Promise<FreshnessReview> {

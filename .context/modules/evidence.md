@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:44:41+08:00
+updated_at: 2026-05-16T01:52:42+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -68,6 +68,8 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Record deterministic route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
 - Maintain `.context/generated/freshness.json` snapshots and freshness review markers.
 - Treat the first freshness snapshot as a baseline, not a human semantic review; `mark-reviewed` is the explicit review marker.
+- Serialize freshness snapshot and mark-reviewed writes with `.context/generated/freshness.json.lock` and atomic temp-file rename.
+- Explain that `freshness mark-reviewed` updates generated review metadata only and never edits canonical module docs.
 - Render freshness review material with stale reasons, read-first files, and suggested `mark-reviewed` commands without modifying module docs.
 - Surface missing snapshot, frontmatter semantic drift, generated evidence drift, high-risk/routine inbox candidates, and relation candidate subdirectory signals through `verify --freshness`.
 - Require explicit module id or alias, evidence file, and summary before writing evidence.
@@ -125,7 +127,8 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - Writes `.context/generated/evidence/verification.jsonl`.
 - Writes `.context/generated/stats/module-activity.json` when `stats.update` is enabled.
 - Writes `.context/generated/stats/route-usage.json` when `stats.update` is enabled.
-- Writes `.context/generated/freshness.json` when snapshotting freshness.
+- Writes `.context/generated/freshness.json` when snapshotting or marking reviewed freshness state.
+- Creates `.context/generated/freshness.json.lock` briefly while updating the freshness index; stale locks cause a timeout error instead of an infinite wait.
 - Reads `.context/inbox/*.md` legacy candidates, `.context/inbox/candidates/*.json` structured candidates, and `.context/inbox/relations/*.json` relation candidates for backlog counts.
 - Reads route-authored `module.alias.request` candidates as medium-risk unresolved prompts.
 - Writes reviewed structured candidates and their Markdown companions into `.context/inbox/archive/`.
@@ -139,6 +142,8 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - Does not promote semantic or decision inbox candidates.
 - Does not write `MAP.md`, `DECISIONS.md`, or `VERIFY.md`.
 - Generated evidence is support data only and must not override reviewed module docs.
+- Freshness review markers are generated local review metadata only; durable truth changes still require manual `.context/modules/<module>.md` edits.
+- Freshness index writes must use lock plus atomic rename to avoid concurrent last-write-wins or partial JSON corruption.
 - Low-risk promotion must create backup/audit records and pass verify checks before archiving the candidate.
 
 ## Traps
@@ -149,12 +154,14 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - `module.alias.request` is intentionally not auto-applicable; convert it to a concrete module alias only after source review.
 - Archived inbox files are retained as records, not deleted.
 - Stale/freshness warnings are review prompts, not proof that a doc is wrong.
+- Do not run multiple freshness writers without the lock path; `snapshot` and `mark-reviewed` must share the same locked update path.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m8-evidence-stale-inbox.test.ts`
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m30-freshness-lock.test.ts`
 - `pnpm test tests/integration/m24-inbox-path-escape.test.ts`
 - `pnpm test tests/integration/m21-candidate-store.test.ts`
 - `pnpm dev evidence append --module route --file src/commands/route.ts --summary "Route inspected"`

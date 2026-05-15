@@ -39,7 +39,23 @@ export async function runFreshnessMarkReviewed(cwd: string, options: MarkReviewe
     throw new CmapCommandError("freshness mark-reviewed requires --module <id>", 2);
   }
   await markModuleReviewed(cwd, moduleId, options.evidence);
-  process.stdout.write(`Marked reviewed: ${moduleId}\n`);
+  process.stdout.write([
+    "# Freshness Review Updated",
+    "",
+    `Module: ${moduleId}`,
+    `Index: ${projectRelative(cwd, freshnessPath(cwd))}`,
+    "",
+    "This updates generated freshness review metadata only.",
+    "It does not modify canonical module docs.",
+    "",
+    "If this review changes durable project truth, update:",
+    `- .context/modules/${moduleId}.md`,
+    "",
+    "Then consider refreshing generated review layers:",
+    "- cmap graph build",
+    "- cmap view export --out _cmap-view",
+    ""
+  ].join("\n"));
 }
 
 export async function runFreshnessReview(cwd: string, options: ReviewOptions): Promise<void> {
