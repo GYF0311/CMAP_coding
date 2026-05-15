@@ -1,14 +1,5 @@
 # Project: CMAP_coding
 
-This project uses cmap: a shared project map for humans and AI coding agents.
-
-## Start Here
-1. Read `.context/CHECKPOINT.md` for the current handoff.
-2. Read `.context/MAP.md` for the project map, then `.context/STATUS.md` for durable status.
-3. Use `cmap route "<task>"` to find relevant modules.
-4. Before editing a module, read its `.context/modules/<module>.md` file.
-5. Before claiming done, run relevant verification, then `cmap finish` and `cmap verify --changed`.
-
 ## Current Direction
 - Current roadmap: Trust Boundary + Human Review Layer.
 - Review HTML is important: keep `cmap view export` focused on rendering existing `.context` map content.
@@ -18,35 +9,6 @@ This project uses cmap: a shared project map for humans and AI coding agents.
 - Do not revive import graph, route v2, or pack v2 as the active roadmap unless a new explicit plan supersedes this direction.
 - AI relation candidates are allowed, but remain candidate-only until reviewed.
 - Review HTML must not perform new semantic analysis; it renders the reviewed project map and support layers.
-
-## Rules
-- Do not read every `.context` file by default. Read by route.
-- Do not treat `logs/`, `ideas/`, or `pending/` as canonical facts.
-- Only `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, `VERIFY.md`, and `modules/*.md` are trusted project memory.
-- If code changes module responsibilities, dependencies, data flow, or verification, update `.context`.
-- If context is getting full, run `cmap checkpoint write --task "..." --next "..."`.
-
-## Git Safety
-- Run `git status --short` before making changes.
-- Do not overwrite, reset, restore, or delete existing user changes.
-- Do not use `git reset --hard`, `git checkout -- .`, `git restore .`, or `git clean -fd` unless the user explicitly asks.
-- Delete files with `/usr/bin/trash`, not `rm`.
-- Keep changes small and grouped by purpose.
-- Never stage or commit unrelated user changes.
-
-## Commit Policy
-- Proactive commits are allowed in this project after a coherent, verified work slice.
-- Before committing, inspect `git status --short`, stage only task-related files, run relevant verification, and use a specific commit message.
-- Never commit unrelated user changes; if unrelated changes exist, leave them unstaged and report them.
-- Report the commit hash after committing.
-
-## Tools
-- `cmap route "task"` — locate relevant modules.
-- `cmap checkpoint read` — read the current handoff.
-- `cmap checkpoint write --task "..." --next "..."` — save the current handoff.
-- `cmap finish` — close the task and suggest context updates.
-- `cmap verify` — check project map consistency.
-- `cmap cp` — move/copy/delete existing line blocks losslessly.
 
 <!-- cmap:start -->
 ## CMAP Project Map
