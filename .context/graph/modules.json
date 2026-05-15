@@ -53,7 +53,9 @@
       "命令",
       "version",
       "init",
-      "install"
+      "install",
+      "bootstrap",
+      "skill"
     ]
   },
   "context": {
@@ -95,9 +97,11 @@
       "src/commands/evidence.ts",
       "src/commands/inbox.ts",
       "src/commands/freshness.ts",
+      "src/core/candidate-store.ts",
       "src/core/generated-store.ts",
       "src/core/generated-stats.ts",
-      "src/core/freshness.ts"
+      "src/core/freshness.ts",
+      "src/fs/safe-path.ts"
     ],
     "aliases": [
       "evidence",
@@ -315,6 +319,23 @@
       "思维导图"
     ]
   },
+  "skill": {
+    "doc": ".context/modules/skill.md",
+    "paths": [
+      "src/commands/skill.ts",
+      "src/commands/bootstrap.ts",
+      "src/skill"
+    ],
+    "aliases": [
+      "skill",
+      "bootstrap",
+      "IDE",
+      "AGENTS",
+      "CLAUDE",
+      "start-here",
+      "接入"
+    ]
+  },
   "tests": {
     "doc": ".context/modules/tests.md",
     "paths": [
@@ -336,6 +357,7 @@
     "paths": [
       "src/commands/update.ts",
       "src/core/map-patch.ts",
+      "src/core/candidate-store.ts",
       "src/fs/backup.ts"
     ],
     "aliases": [
@@ -368,7 +390,9 @@
     "paths": [
       "src/view",
       "src/commands/view.ts",
-      "tests/integration/m19-view-export.test.ts"
+      "tests/integration/m19-view-export.test.ts",
+      "tests/integration/m25-view-structured-candidates.test.ts",
+      "tests/unit/redact.test.ts"
     ],
     "aliases": [
       "view",

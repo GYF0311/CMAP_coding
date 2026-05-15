@@ -64,6 +64,12 @@
       "evidence"
     ]
   },
+  "src/core/candidate-store.ts": {
+    "modules": [
+      "evidence",
+      "update-agent"
+    ]
+  },
   "src/core/generated-store.ts": {
     "modules": [
       "evidence"
@@ -75,6 +81,11 @@
     ]
   },
   "src/core/freshness.ts": {
+    "modules": [
+      "evidence"
+    ]
+  },
+  "src/fs/safe-path.ts": {
     "modules": [
       "evidence"
     ]
@@ -196,6 +207,21 @@
       "showcase"
     ]
   },
+  "src/commands/skill.ts": {
+    "modules": [
+      "skill"
+    ]
+  },
+  "src/commands/bootstrap.ts": {
+    "modules": [
+      "skill"
+    ]
+  },
+  "src/skill": {
+    "modules": [
+      "skill"
+    ]
+  },
   "tests": {
     "modules": [
       "tests"
@@ -237,6 +263,16 @@
     ]
   },
   "tests/integration/m19-view-export.test.ts": {
+    "modules": [
+      "view"
+    ]
+  },
+  "tests/integration/m25-view-structured-candidates.test.ts": {
+    "modules": [
+      "view"
+    ]
+  },
+  "tests/unit/redact.test.ts": {
     "modules": [
       "view"
     ]

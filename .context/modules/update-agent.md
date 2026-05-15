@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-15T22:30:02+08:00
 confidence: ai-drafted
 module: update-agent
 paths:
@@ -26,6 +26,28 @@ relations:
     - verify
     - cp
     - evidence
+relation_explanations:
+  depends_on:
+    handoff:
+      why: "update-agent consumes handoff-style MapPatch proposals generated from AI closeout workflows."
+      produces: "Validated routine updates, generated evidence writes, or candidate inbox artifacts."
+      impact: "Changing handoff request fields may require MapPatch parser and update command contract changes."
+    finish:
+      why: "finish --agent creates update-request artifacts that update-agent later validates and routes through policy."
+      produces: "A reviewable bridge from changed files to MapPatch candidate or routine operations."
+      impact: "Finish request format changes may require src/core/map-patch.ts and m7 update-agent tests to change."
+    verify:
+      why: "update-agent runs post-verify and rolls back when an applied routine change introduces new structural errors."
+      produces: "Backup-backed apply runs with verification evidence and rollback instructions."
+      impact: "Verify error semantics can change which updates are rolled back or reported as safe."
+    cp:
+      why: "update-agent shares backup and safe-path primitives used by reversible file updates."
+      produces: "Backup records for canonical writes and rollback support."
+      impact: "Backup format or path safety changes may affect update rollback and inbox promotion behavior."
+    evidence:
+      why: "update-agent writes generated evidence and structured candidates into stores owned by evidence/inbox workflows."
+      produces: "Generated evidence JSONL, verification evidence, and .context/inbox/candidates JSON+Markdown pairs."
+      impact: "Evidence store or candidate-store changes must be reflected in MapPatch routing and update tests."
 ---
 # Module: update-agent
 

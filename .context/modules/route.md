@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-15T22:30:02+08:00
 confidence: ai-drafted
 module: route
 paths:
@@ -22,6 +22,25 @@ relations:
     - brief
     - obsidian-adapter
     - relation-candidates
+relation_explanations:
+  depends_on:
+    module-docs:
+      why: "route reads module frontmatter, paths, aliases, relations, and verification sections as its deterministic source."
+      produces: "Likely modules, related context modules, read-first files, and suggested verification commands."
+      impact: "Changes to module doc schema, relation fields, or verification headings may require updates in src/core/module-index.ts and src/commands/route.ts."
+  used_by:
+    brief:
+      why: "brief relies on route selection to decide which project map context to include for a task."
+      produces: "Task brief sections scoped to direct and related modules."
+      impact: "Route scoring or context expansion changes can alter brief inputs and expected integration assertions."
+    obsidian-adapter:
+      why: "Obsidian export reuses route and module-index behavior to keep map navigation consistent with CLI routing."
+      produces: "Reviewable graph/navigation hints that match routed module relationships."
+      impact: "Changing route relation semantics may require Obsidian export and stale-check expectations to be refreshed."
+    relation-candidates:
+      why: "route surfaces pending relation candidates as review warnings without using them as canonical routing facts."
+      produces: "Non-canonical candidate warnings in route output when relation proposals exist."
+      impact: "Changing relation candidate storage or dedupe rules may require route warning and benchmark tests to change."
 ---
 # Module: route
 

@@ -1,7 +1,7 @@
 ---
 context_type: module
 module: view
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-15T22:30:02+08:00
 paths:
   - src/view
   - src/commands/view.ts
@@ -18,6 +18,20 @@ relations:
     - evidence
     - context
     - relation-candidates
+relation_explanations:
+  depends_on:
+    evidence:
+      why: "view reads generated evidence, freshness metadata, and inbox status as support layers for human review."
+      produces: "Generated, freshness, and inbox sections in the HTML review dashboard when enabled."
+      impact: "Changes to support-layer schemas may require updates in src/view/collect.ts, src/view/render.ts, and view export tests."
+    context:
+      why: "view renders canonical MAP, STATUS, CHECKPOINT, VERIFY, policy, and module docs from the .context skeleton."
+      produces: "The canonical overview, module list, verification, and warning data embedded in cmap.view_data.v1."
+      impact: "Changing context templates or required headings can affect collection, check-mode normalization, and dashboard copy."
+    relation-candidates:
+      why: "view displays relation proposals as candidate-only review signals without applying them."
+      produces: "Candidate relation cards and non-canonical labels in the review dashboard."
+      impact: "Candidate schema or path changes may require collect/render updates and structured candidate tests."
 confidence: ai-drafted
 ---
 # Module: view

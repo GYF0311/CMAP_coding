@@ -171,6 +171,16 @@
   },
   {
     "from": "cli",
+    "to": "skill",
+    "type": "dispatches_to",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/cli.md relations.dispatches_to includes skill"
+    ]
+  },
+  {
+    "from": "cli",
     "to": "update-agent",
     "type": "dispatches_to",
     "source": "module_relations",
@@ -497,6 +507,26 @@
     "confidence": 1,
     "evidence": [
       ".context/modules/route.md relations.used_by includes relation-candidates"
+    ]
+  },
+  {
+    "from": "skill",
+    "to": "context",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/skill.md relations.depends_on includes context"
+    ]
+  },
+  {
+    "from": "skill",
+    "to": "host",
+    "type": "depends_on",
+    "source": "module_relations",
+    "confidence": 1,
+    "evidence": [
+      ".context/modules/skill.md relations.depends_on includes host"
     ]
   },
   {

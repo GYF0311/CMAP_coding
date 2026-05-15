@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-15T22:30:02+08:00
 confidence: ai-drafted
 module: hooks-doctor
 paths:
@@ -25,6 +25,12 @@ aliases:
 relations:
   depends_on:
     - evidence
+relation_explanations:
+  depends_on:
+    evidence:
+      why: "assist hooks and Codex prompt ingest write generated support evidence and route usage stats instead of canonical semantics."
+      produces: "Non-canonical session briefs, hook logs, generated evidence, and generated route usage stats."
+      impact: "Changes to generated evidence or stats schemas may require updates in hook ingest, assist tests, and evidence commands."
 ---
 # Module: hooks-doctor
 

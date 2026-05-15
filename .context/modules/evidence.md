@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-15T22:30:02+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -35,6 +35,20 @@ relations:
     - verify
     - update-agent
     - context
+relation_explanations:
+  depends_on:
+    verify:
+      why: "evidence and inbox state are surfaced through verify stale/freshness warnings rather than becoming trusted facts."
+      produces: "Actionable warnings for generated evidence drift, inbox backlog, and freshness review gaps."
+      impact: "Changing evidence stores or warning thresholds may require updates in src/commands/verify.ts and freshness tests."
+    update-agent:
+      why: "update-agent produces structured candidates and generated evidence that evidence/inbox commands must list, triage, promote, or archive."
+      produces: "Unified candidate backlog views plus bounded generated evidence records."
+      impact: "MapPatch candidate schema or policy changes may require candidate-store, inbox, and evidence command updates."
+    context:
+      why: "evidence respects .context policy, directory layout, and project-root path safety."
+      produces: "Generated evidence, stats, freshness snapshots, and inbox archives in approved non-canonical locations."
+      impact: "Context directory or policy changes may require updates in generated-store, safe-path, and inbox handling."
 ---
 # Module: evidence
 
