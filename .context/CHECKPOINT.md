@@ -1,28 +1,28 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-15T14:23:04.305Z'
+updated_at: '2026-05-15T14:25:42.513Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Execute CMAP follow-up cleanup and P1 dogfood plan
+Retire legacy .context pending/stats warning dirs
 
 ## Current Hypothesis
 None recorded.
 
 ## Changed Files
-None recorded.
+- .context/CHECKPOINT.md
 
 ## Verified
-Not recorded.
+cmap verify; cmap verify --changed
 
 ## Failed / Pending
 None recorded.
 
 ## Next Step
-Run baseline tests and verify, then dedupe AGENTS/CLAUDE
+Run stale/freshness review for cli host view route evidence update-agent hooks-doctor
 
 ## Do Not Redo
 None recorded.
