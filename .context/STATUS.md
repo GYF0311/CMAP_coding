@@ -9,29 +9,34 @@ confidence: ai-drafted
 # Status
 
 ## Active Goal
-Keep cmap on Trust Boundary + Human Review Layer while removing the i18n / locale branch and keeping Review HTML as an English project-map review page.
+Keep cmap on Trust Boundary + Human Review Layer while making real-project onboarding safe: non-destructive host entrypoints, English-only skill/bootstrap discovery, and Review HTML as the human review layer.
 
 ## Done Recently
-The i18n / zh-CN / locale branch has been soft-reverted from the command surface and implementation. `cmap i18n export/check`, `cmap config get/set locale`, `init --lang`, `view --lang`, `.context/i18n/<locale>/` mirror reading, `locale` in the view data contract, and zh-CN UI messages are removed. Review HTML remains as the read-only human review layer for canonical project maps, generated evidence, freshness, inbox candidates, and relation explanations.
+`cmap install` now defaults to marker merge with `<!-- cmap:start -->` / `<!-- cmap:end -->`, preserving existing `AGENTS.md` / `CLAUDE.md` content outside the cmap block. `--mode print` previews without writing, `--force` is the explicit full-overwrite escape hatch, and `--backup` stores previous entrypoints under `.context/backups/install-*`.
+
+`cmap skill export` writes an English project-local instruction pack under `.cmap/skills/cmap/` and supports `--check` for stale detection. `cmap bootstrap` now requires an existing `.context`, then delegates to non-destructive install, optional skill export, and `.context/out/start-here.md` generation.
+
+`AGENTS.md` and `CLAUDE.md` were dogfooded through non-destructive install, so the original project rules are preserved and the new cmap marker block includes Git Safety Rules.
+
+The project commit policy now allows proactive commits after coherent, verified work slices. Agents must still inspect `git status --short`, stage only task-related files, avoid unrelated user changes, and report the commit hash.
 
 ## Left Off
-Canonical graph is still derived only from reviewed module docs. Route may warn about pending relation candidates but does not score or include them in `route.modules`, `route.contextModules`, or route benchmark data. Review HTML renders canonical `.context` module docs in English UI and ignores legacy locale config or translation mirrors.
+P0-PR2 i18n/locale removal remains intact: no `i18n`, `config`, or `--lang` command surface has been restored. Current implementation is ready for final verification and review as one onboarding hardening slice.
 
 ## Next Steps
-1. Review the i18n cleanup diff and commit it as one coherent cleanup slice if desired.
-2. Continue improving Review HTML as an English project understanding page.
-3. Decide a separate cleanup/migration task for legacy `.context/pending` and `.context/stats`; do not delete them in this cleanup.
-4. Use `freshness mark-reviewed` only after a human/AI semantic review of updated module docs.
+1. Run final full verification after this status update.
+2. Review and commit the P0 onboarding hardening slice if desired.
+3. Continue P1 with relation explanation polish and Review HTML module understanding improvements.
+4. Decide a separate cleanup/migration task for legacy `.context/pending` and `.context/stats`; do not delete them in this cleanup.
 
 ## Changed Files
-- `.context/CHECKPOINT.md`, `.context/STATUS.md`, `.context/MAP.md`, `.context/modules/cli.md`, `.context/modules/view.md`, deleted `.context/modules/i18n.md`.
-- `AGENTS.md`, `CLAUDE.md`, `README.md`, `docs/CMAP项目更新流程.md`, deleted superseded localized-review plan.
-- `src/cli.ts`, `src/commands/init.ts`, `src/commands/view.ts`, deleted `src/commands/i18n.ts`, deleted `src/commands/config.ts`, deleted `src/i18n/*`.
-- `src/view/collect.ts`, `src/view/messages.ts`, `src/view/render.ts`, `src/view/schema.ts`.
-- `tests/integration/m19-view-export.test.ts`, deleted `tests/integration/m26-i18n-config.test.ts`, `tests/unit/redact.test.ts`.
+- `.context/CHECKPOINT.md`, `.context/STATUS.md`, `.context/MAP.md`, `.context/VERIFY.md`, `.context/modules/cli.md`, `.context/modules/host.md`, `.context/modules/skill.md`.
+- `AGENTS.md`, `CLAUDE.md`, `README.md`.
+- `src/cli.ts`, `src/commands/install.ts`, `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/host/entrypoint-template.ts`, `src/host/merge-entrypoint.ts`, `src/skill/templates.ts`.
+- `tests/integration/m27-install-merge.test.ts`, `tests/integration/m28-skill-bootstrap.test.ts`.
 
 ## Risks
-Legacy `.context/pending` and `.context/stats` still exist and intentionally produce warnings. `verify --changed` also reports the deleted i18n files/docs as unmapped because the i18n module was removed. `verify --stale` and `verify --freshness` report older semantic review metadata; resolve by review, not generated evidence writes.
+Legacy `.context/pending` and `.context/stats` still exist and intentionally produce warnings. `verify --stale` and `verify --freshness` may report older semantic review metadata; resolve by review, not generated evidence writes. `.cmap/skills/cmap/` is generated output for consuming projects and is not required to be committed in this repo.
 
 ## Last Verified
-2026-05-15: `pnpm test` passed 27 files / 150 tests, `pnpm typecheck` passed, `pnpm smoke` passed, `pnpm dev verify` passed with 0 errors and 2 expected legacy warnings, `pnpm dev verify --stale` and `pnpm dev verify --freshness` passed with warning-only stale/freshness findings, `pnpm dev verify --policy` passed, `pnpm dev verify --ci --format markdown` passed, `pnpm dev view export --out _cmap-view` passed, `pnpm dev view export --check --out _cmap-view` passed, `pnpm dev obsidian export --out _cmap/CMAP_coding` refreshed the ignored view layer, `pnpm dev obsidian export --check` passed, route benchmark passed 100% Top-1/Top-3/context with 0 bad hits, and `git diff --check` passed.
+2026-05-15: targeted install/skill/bootstrap tests passed; `pnpm typecheck` passed; `pnpm dev --help` showed `skill` and `bootstrap`; command-surface negative check for `i18n|config|--lang` passed; `pnpm test` passed 29 files / 155 tests; `pnpm build` passed; `pnpm smoke` passed; `pnpm dev verify`, `pnpm dev verify --changed`, `pnpm dev verify --policy`, and `pnpm dev verify --ci --format markdown` passed with warning-only legacy/coverage findings; `pnpm dev verify --stale` and `pnpm dev verify --freshness` passed with warning-only stale/freshness findings; `pnpm dev skill export --out .context/out/skill-check` and `pnpm dev skill export --check --out .context/out/skill-check` passed; `pnpm dev view export --out _cmap-view` and `pnpm dev view export --check --out _cmap-view` passed; `pnpm dev obsidian export --out _cmap/CMAP_coding` refreshed the ignored view layer and `pnpm dev obsidian export --check` passed; route benchmark passed 100% Top-1/Top-3/context with 0 bad hits; `git diff --check` passed.

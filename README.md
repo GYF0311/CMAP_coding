@@ -42,7 +42,7 @@ New project:
 
 ```bash
 cmap init --auto
-cmap install --host both
+cmap bootstrap --host both --skill
 cmap verify
 ```
 
@@ -51,6 +51,7 @@ Existing project:
 ```bash
 cmap adopt
 cmap install --host both
+cmap skill export --host generic
 cmap verify
 ```
 
@@ -89,6 +90,9 @@ cmap obsidian export
 cmap obsidian export --check
 cmap view export --out _cmap-view
 cmap view export --check --out _cmap-view
+cmap skill export --host codex
+cmap skill export --check
+cmap bootstrap --host both --skill
 cmap relate request --task "多人对话页面消息发不出去" --changed src/commands/route.ts --out .context/out/relation-request.md
 cmap relate ingest --from .context/out/relation-patch.json --dry-run
 cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
@@ -101,8 +105,14 @@ cmap reconcile --adapter gsd-v1 --from .planning
 |---|---|
 | `cmap version` | Print version. |
 | `cmap init --auto` | Create `.context` skeleton for a new project. |
+| `cmap bootstrap --host claude\|codex\|both --skill` | In an initialized project, merge host entrypoints, optionally export skill instructions, and write `.context/out/start-here.md`. |
 | `cmap adopt` | Create adoption workspace and candidate signals for an existing project. |
-| `cmap install --host claude\|codex\|both` | Write short host entrypoints. |
+| `cmap install --host claude\|codex\|both` | Merge short cmap marker blocks into host entrypoints without overwriting existing rules. |
+| `cmap install --host both --mode print` | Print the cmap marker block without writing files. |
+| `cmap install --host both --force` | Explicitly overwrite host entrypoints with standalone cmap entrypoints. |
+| `cmap install --host both --backup` | Back up existing entrypoints under `.context/backups/install-*` before writing. |
+| `cmap skill export --host generic\|codex\|claude` | Export a project-local skill/reference pack under `.cmap/skills/cmap/`. |
+| `cmap skill export --check` | Fail when the exported skill pack is missing or stale. |
 | `cmap install --host both --hooks reminder` | Write project-local hook templates under `.context/hooks/`. |
 | `cmap install --host both --hooks assist` | Write hook templates that can record generated evidence from changed files. |
 | `cmap hooks render --host codex --mode observe\|assist\|strict` | Render Codex lifecycle settings to `.codex/hooks.json` without editing global host config. |

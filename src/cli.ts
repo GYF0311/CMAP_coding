@@ -4,6 +4,7 @@ import { runAddModule } from "./commands/add-module.js";
 import { runAdopt } from "./commands/adopt.js";
 import { runBenchmarkRoute } from "./commands/benchmark.js";
 import { runBrief } from "./commands/brief.js";
+import { runBootstrap } from "./commands/bootstrap.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCodexFinish, runCodexGuard, runCodexHandoff, runCodexStart } from "./commands/codex.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
@@ -24,6 +25,7 @@ import { runPolicyShow, runPolicyValidate } from "./commands/policy.js";
 import { runReconcile } from "./commands/reconcile.js";
 import { runRelateIngest, runRelatePromote, runRelateRequest } from "./commands/relate.js";
 import { runRoute } from "./commands/route.js";
+import { runSkillExport } from "./commands/skill.js";
 import { runStatus } from "./commands/status.js";
 import { runUpdate, runUpdateRollback } from "./commands/update.js";
 import { runVerify } from "./commands/verify.js";
@@ -555,9 +557,33 @@ program
   .command("install")
   .description("Install short AI host entrypoints")
   .option("--host <host>", "claude, codex, or both", "both")
-  .option("--hooks <profile>", "none, reminder, maintain, observe, or assist", "none")
-  .action(async (options: { host: string; hooks: string }) => {
+  .option("--hooks <profile>", "none, reminder, maintain, observe, assist, or strict", "none")
+  .option("--mode <mode>", "merge or print", "merge")
+  .option("--force", "Overwrite the whole entrypoint file instead of merging a cmap block")
+  .option("--backup", "Back up existing entrypoint files before writing")
+  .action(async (options: { host: string; hooks: string; mode?: string; force?: boolean; backup?: boolean }) => {
     await runInstall(process.cwd(), options);
+  });
+
+const skill = program.command("skill").description("Export portable cmap skill packs");
+skill
+  .command("export")
+  .description("Export a project-local cmap Skill instruction pack")
+  .option("--out <path>", "Output directory", ".cmap/skills/cmap")
+  .option("--host <host>", "generic, codex, or claude", "generic")
+  .option("--check", "Check whether the exported skill pack is up to date")
+  .action(async (options: { out?: string; host?: string; check?: boolean }) => {
+    const code = await runSkillExport(process.cwd(), options);
+    process.exitCode = code;
+  });
+
+program
+  .command("bootstrap")
+  .description("Connect an initialized project to cmap entrypoints and optional skill pack")
+  .option("--host <host>", "claude, codex, or both", "both")
+  .option("--skill", "Export .cmap/skills/cmap after installing entrypoints")
+  .action(async (options: { host?: string; skill?: boolean }) => {
+    await runBootstrap(process.cwd(), options);
   });
 
 try {

@@ -16,6 +16,8 @@ aliases:
   - version
   - init
   - install
+  - bootstrap
+  - skill
 relations:
   dispatches_to:
     - route
@@ -32,6 +34,7 @@ relations:
     - relation-candidates
     - hooks-doctor
     - verify
+    - skill
 ---
 # Module: cli
 
@@ -62,6 +65,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `view export/open` while keeping HTML collection/render/check behavior in `view`.
 - Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
 - Register `codex start/finish/guard/handoff` as explicit Codex workflow commands without relying on strict hook parity.
+- Register `skill export` and `bootstrap` as host-neutral IDE onboarding commands without embedding skill template rendering in `cli.ts`.
 - Register `verify --policy` and `doctor --release` without embedding policy or package checks in `cli.ts`.
 - Register hook observe/assist/strict profile options plus `hooks render`, `hooks ingest`, and `hooks test` while keeping hook behavior in `hooks-doctor`.
 - Register `verify --stale` and `verify --freshness` as deterministic warning modes.
@@ -83,6 +87,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `view` for the HTML project-map review dashboard.
 - `relation-candidates` for AI relation candidate workflow commands.
 - `hooks-doctor` for hook lifecycle command behavior.
+- `skill` for portable skill pack export and bootstrap onboarding.
 
 ## Used By
 - Package bin `cmap`.
@@ -110,6 +115,8 @@ No persistent state except files written by command modules.
 - `pnpm test tests/integration/m19-view-export.test.ts`
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`
 - `pnpm test tests/integration/m21-candidate-store.test.ts`
+- `pnpm test tests/integration/m27-install-merge.test.ts`
+- `pnpm test tests/integration/m28-skill-bootstrap.test.ts`
 - `pnpm test tests/integration/m22-freshness-policy.test.ts`
 - `pnpm test tests/integration/m23-release-hygiene.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`

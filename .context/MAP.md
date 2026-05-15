@@ -36,7 +36,8 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 | cli | command registration, option parsing, exit-code boundary | `src/cli.ts`, `src/commands` | `.context/modules/cli.md` | cli, command, 命令, version, init, install |
 | context | `.context` templates, deterministic policy v2 loading, and project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
 | verify | deterministic L0 structure checks, freshness/stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
-| host | AGENTS/CLAUDE short entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
+| host | AGENTS/CLAUDE non-destructive entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
+| skill | project-local Skill/reference export and bootstrap onboarding | `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/skill` | `.context/modules/skill.md` | skill, bootstrap, IDE, AGENTS, CLAUDE, start-here, 接入 |
 | route | direct module routing, generated route usage stats, and bounded reviewed-relation context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
 | graph | canonical module relation projection and typed relation explanation | `src/commands/graph.ts`, `src/core/context-graph.ts` | `.context/modules/graph.md` | graph, context graph, graph build, graph explain, 关系图, 图谱 |
 | brief | AI coding startup brief from route/checkpoint/bounded context pack/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
@@ -65,6 +66,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 | 命令、参数、退出码、version、install | cli | `.context/modules/cli.md`, `src/cli.ts` |
 | 校验、漂移、TODO、missing file、verify | verify | `.context/modules/verify.md`, `src/commands/verify.ts` |
 | AGENTS、CLAUDE、宿主入口、host | host | `.context/modules/host.md`, `src/host/entrypoint-template.ts` |
+| skill、bootstrap、IDE 接入、start-here、技能包 | skill | `.context/modules/skill.md`, `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/skill/templates.ts` |
 | route、alias、模块定位、推荐读取文件 | route | `.context/modules/route.md`, `src/commands/route.ts` |
 | graph、context graph、graph build、graph explain、图谱、关系图 | graph | `.context/modules/graph.md`, `src/commands/graph.ts`, `src/core/context-graph.ts` |
 | brief、AI brief、开工包、AI 开工包、启动包 | brief | `.context/modules/brief.md`, `src/commands/brief.ts`, `.context/CHECKPOINT.md`, `.context/STATUS.md` |
@@ -90,7 +92,8 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 - `cli` dispatches to command modules and owns process exit behavior.
 - `context` provides templates, deterministic policy v2 defaults/loading, and project signal scanning used by `init`.
 - `verify` reads `.context` files created by `context`, validates deterministic structure, checks stale/freshness warnings, and can render stable CI Markdown reports.
-- `host` generates entrypoint text used by `install`.
+- `host` generates entrypoint text used by `install`, merging cmap marker blocks by default so existing project rules outside the block are preserved.
+- `skill` exports a project-local instruction pack and bootstraps initialized projects by delegating non-destructive host install plus optional skill export/start-here generation.
 - `route` reads the shared module index, recommends direct modules, expands bounded reviewed-relation context, surfaces module-owned verification commands, and records generated route usage stats when policy allows; it must not propose nonexistent modules, treat related context as direct matches, or consume unpromoted relation candidates as route facts.
 - `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs. It is a canonical module-relation projection, not an import graph or test ownership graph.
 - `brief` packages route result, bounded route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
@@ -137,6 +140,8 @@ Generated evidence and stats are support layers: `evidence append`, MapPatch v2 
 - GitHub Actions quality gate: `.github/workflows/cmap.yml`
 - External workflow candidates: `.context/inbox/`
 - Host entrypoints: `AGENTS.md`, `CLAUDE.md`
+- Project-local skill pack: `.cmap/skills/cmap/`
+- Bootstrap guide: `.context/out/start-here.md`
 - Build output: `dist/`
 - Dependency lock: `pnpm-lock.yaml`
 
