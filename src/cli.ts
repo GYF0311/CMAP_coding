@@ -580,10 +580,11 @@ skill
 
 program
   .command("bootstrap")
-  .description("Connect an initialized project to cmap entrypoints and optional skill pack")
+  .description("Connect a project to cmap entrypoints and optional skill pack")
+  .option("--init", "Create the .context skeleton before bootstrapping a new project")
   .option("--host <host>", "claude, codex, or both", "both")
   .option("--skill", "Export .cmap/skills/cmap after installing entrypoints")
-  .action(async (options: { host?: string; skill?: boolean }) => {
+  .action(async (options: { host?: string; skill?: boolean; init?: boolean }) => {
     await runBootstrap(process.cwd(), options);
   });
 

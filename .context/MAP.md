@@ -93,7 +93,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 - `context` provides templates, deterministic policy v2 defaults/loading, and project signal scanning used by `init`.
 - `verify` reads `.context` files created by `context`, validates deterministic structure, checks stale/freshness warnings, and can render stable CI Markdown reports.
 - `host` generates entrypoint text used by `install`, merging cmap marker blocks by default so existing project rules outside the block are preserved.
-- `skill` exports a project-local instruction pack and bootstraps initialized projects by delegating non-destructive host install plus optional skill export/start-here generation.
+- `skill` exports a project-local instruction pack and bootstraps onboarding by delegating non-destructive host install plus optional skill export/start-here generation; new projects must opt in with `bootstrap --init`.
 - `route` reads the shared module index, recommends direct modules, expands bounded reviewed-relation context, surfaces module-owned verification commands, and records generated route usage stats when policy allows; it must not propose nonexistent modules, treat related context as direct matches, or consume unpromoted relation candidates as route facts.
 - `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs. It is a canonical module-relation projection, not an import graph or test ownership graph.
 - `brief` packages route result, bounded route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.

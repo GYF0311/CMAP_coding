@@ -37,7 +37,7 @@ confidence: ai-drafted
 | verify CI report | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | `verify --ci --format markdown` emits a stable CI report. |
 | host | `pnpm dev install --host both` in a temp project | Existing host rules are preserved outside the cmap marker block. |
 | host install | `pnpm test tests/integration/m27-install-merge.test.ts` | Install merge preserves original host entrypoints and supports preview/force/backup modes. |
-| skill/bootstrap | `pnpm test tests/integration/m28-skill-bootstrap.test.ts` | Skill export/check and bootstrap onboarding behave non-destructively. |
+| skill/bootstrap | `pnpm test tests/integration/m28-skill-bootstrap.test.ts` | Skill export/check, default bootstrap refusal, and explicit `bootstrap --init` onboarding behave non-destructively. |
 | route | `pnpm test tests/integration/m11-context-size-controls.test.ts` | Direct matches stay separate from graph-related context; `--max-context` bounds selected context and derived verify commands. |
 | route usage stats | `pnpm test tests/integration/m13-policy-stats.test.ts` | Route commands write generated route usage stats when policy allows `stats.update`. |
 | graph | `pnpm test tests/integration/m14-graph-route.test.ts` | `graph build`, `graph explain`, and `route --graph` are covered. |

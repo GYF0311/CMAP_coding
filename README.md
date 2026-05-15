@@ -41,8 +41,7 @@ pnpm dev --help
 New project:
 
 ```bash
-cmap init --auto
-cmap bootstrap --host both --skill
+cmap bootstrap --init --host both --skill
 cmap verify
 ```
 
@@ -105,6 +104,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 |---|---|
 | `cmap version` | Print version. |
 | `cmap init --auto` | Create `.context` skeleton for a new project. |
+| `cmap bootstrap --init --host both --skill` | Recommended new-project entrypoint: create `.context`, merge host entrypoints, export skill instructions, and write `.context/out/start-here.md`. |
 | `cmap bootstrap --host claude\|codex\|both --skill` | In an initialized project, merge host entrypoints, optionally export skill instructions, and write `.context/out/start-here.md`. |
 | `cmap adopt` | Create adoption workspace and candidate signals for an existing project. |
 | `cmap install --host claude\|codex\|both` | Merge short cmap marker blocks into host entrypoints without overwriting existing rules. |

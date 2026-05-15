@@ -3,12 +3,14 @@ import path from "node:path";
 import { fileExists } from "../context/scanner.js";
 import { CmapCommandError } from "../errors.js";
 import { projectRelative } from "../fs/safe-path.js";
+import { runInit } from "./init.js";
 import { runInstall } from "./install.js";
 import { runSkillExport } from "./skill.js";
 
 type BootstrapOptions = {
   host?: string;
   skill?: boolean;
+  init?: boolean;
 };
 
 const validHosts = new Set(["claude", "codex", "both"]);
@@ -19,8 +21,19 @@ export async function runBootstrap(cwd: string, options: BootstrapOptions): Prom
     throw new CmapCommandError(`Invalid bootstrap host "${host}". Expected claude, codex, or both.`, 2);
   }
 
-  if (!(await fileExists(path.join(cwd, ".context")))) {
-    throw new CmapCommandError("Missing .context. Run `cmap init --auto` first, then rerun `cmap bootstrap`.", 1);
+  const contextRoot = path.join(cwd, ".context");
+  if (!(await fileExists(contextRoot))) {
+    if (!options.init) {
+      throw new CmapCommandError(
+        [
+          "Missing .context.",
+          "For a new project, run `cmap bootstrap --init --host both --skill`.",
+          "For an existing map, run `cmap init --auto` first or rerun bootstrap from the project root."
+        ].join("\n"),
+        1
+      );
+    }
+    await runInit(cwd, { auto: true });
   }
 
   await runInstall(cwd, {

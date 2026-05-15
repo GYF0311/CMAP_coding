@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:35:51+08:00
+updated_at: 2026-05-16T01:33:55+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -66,7 +66,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `view export/open` while keeping HTML collection/render/check behavior in `view`.
 - Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
 - Register `codex start/finish/guard/handoff` as explicit Codex workflow commands without relying on strict hook parity.
-- Register `skill export` and `bootstrap` as host-neutral IDE onboarding commands without embedding skill template rendering in `cli.ts`.
+- Register `skill export` and `bootstrap --init` as host-neutral IDE onboarding commands without embedding skill template rendering in `cli.ts`.
 - Register `verify --policy` and `doctor --release` without embedding policy or package checks in `cli.ts`.
 - Register hook observe/assist/strict profile options plus `hooks render`, `hooks ingest`, and `hooks test` while keeping hook behavior in `hooks-doctor`.
 - Register `verify --stale` and `verify --freshness` as deterministic warning modes.

@@ -48,9 +48,24 @@ describe("skill export and bootstrap", () => {
     const result = await runCmap(["bootstrap", "--host", "both", "--skill"], cwd);
 
     expect(result.code).toBe(1);
-    expect(result.stderr).toContain("Run `cmap init --auto` first");
+    expect(result.stderr).toContain("cmap bootstrap --init --host both --skill");
     expect(await fileExists(path.join(cwd, "AGENTS.md"))).toBe(false);
     expect(await fileExists(path.join(cwd, ".cmap", "skills", "cmap", "SKILL.md"))).toBe(false);
+  });
+
+  test("bootstrap --init creates context before installing entrypoints", async () => {
+    const cwd = await createTempProject("bootstrap-init");
+
+    const result = await runCmap(["bootstrap", "--init", "--host", "both", "--skill"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    expect(result.stdout).toContain("Created .context skeleton");
+    expect(result.stdout).toContain("AGENTS.md: created cmap entrypoint");
+    expect(result.stdout).toContain("CLAUDE.md: created cmap entrypoint");
+    expect(result.stdout).toContain("Exported cmap skill to .cmap/skills/cmap");
+    expect(await fileExists(path.join(cwd, ".context", "MAP.md"))).toBe(true);
+    expect(await fileExists(path.join(cwd, ".context", "out", "start-here.md"))).toBe(true);
+    expect(await fileExists(path.join(cwd, ".cmap", "skills", "cmap", "SKILL.md"))).toBe(true);
   });
 
   test("bootstrap merges entrypoints, exports skill, and writes start-here", async () => {

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-16T01:33:55+08:00
 confidence: ai-drafted
 module: host
 paths:
@@ -45,6 +45,7 @@ Generate short host entrypoints and optional project-local hook templates for AI
 - `cmap install --host both --backup`
 - `cmap install --host both --force`
 - `cmap install --host both --hooks reminder|maintain|observe|assist|strict`
+- `cmap bootstrap --init --host both --skill`
 - `cmap bootstrap --host claude|codex|both`
 
 ## Data Flow

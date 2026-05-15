@@ -14,7 +14,9 @@ Keep cmap on Trust Boundary + Human Review Layer while making real-project onboa
 ## Done Recently
 `cmap install` now defaults to marker merge with `<!-- cmap:start -->` / `<!-- cmap:end -->`, preserving existing `AGENTS.md` / `CLAUDE.md` content outside the cmap block. `--mode print` previews without writing, `--force` is the explicit full-overwrite escape hatch, and `--backup` stores previous entrypoints under `.context/backups/install-*`.
 
-`cmap skill export` writes an English project-local instruction pack under `.cmap/skills/cmap/` and supports `--check` for stale detection. `cmap bootstrap` now requires an existing `.context`, then delegates to non-destructive install, optional skill export, and `.context/out/start-here.md` generation.
+`cmap skill export` writes an English project-local instruction pack under `.cmap/skills/cmap/` and supports `--check` for stale detection. `cmap bootstrap` still refuses to invent `.context` by default, but now recommends `cmap bootstrap --init --host both --skill` for new projects; explicit `--init` creates the skeleton before delegating to non-destructive install, optional skill export, and `.context/out/start-here.md` generation.
+
+Package version was bumped to `0.2.1` so the CLI version matches the current Entry Safety + Skill Bootstrap + Review HTML Focus release line.
 
 `AGENTS.md` and `CLAUDE.md` were dogfooded through non-destructive install, so the original project rules are preserved and the new cmap marker block includes Git Safety Rules.
 
@@ -35,22 +37,23 @@ Review HTML module details now include responsibilities, incoming relations, rel
 Unified candidate-store producers now cover MapPatch/update, low-confidence route alias requests, reconcile, and Obsidian pull under `.context/inbox/candidates/*.json|md`; relation candidates remain under `.context/inbox/relations/*.json|md`; legacy top-level inbox reports remain readable.
 
 ## Left Off
-P0 and P1 slices are implemented and committed locally through unified candidate store. Final validation has passed; push is the remaining closeout action.
+`bootstrap --init` onboarding and `0.2.1` version metadata are implemented and verified locally. Commit and push are the remaining closeout actions for this slice.
 
 ## Next Steps
-1. Commit this final status/checkpoint refresh.
+1. Commit this bootstrap/version slice.
 2. Push main to origin.
-3. Monitor GitHub state after push.
+3. Keep the broader P1缺点评审 paused until the next explicit execution plan.
 
 ## Changed Files
 - Entrypoint/onboarding: `AGENTS.md`, `CLAUDE.md`, `README.md`, `src/commands/install.ts`, `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/host/*`, `src/skill/*`, install/skill tests.
+- Bootstrap/version slice: `package.json`, `src/cli.ts`, `src/commands/bootstrap.ts`, `tests/integration/m1.test.ts`, `tests/integration/m28-skill-bootstrap.test.ts`, `README.md`, `.context/MAP.md`, `.context/VERIFY.md`, and related module docs.
 - Cleanup/review docs: `.context/CHECKPOINT.md`, `.context/STATUS.md`, `.context/modules/*.md`, `.context/graph/*.json`.
 - Route/candidate store: `src/commands/route.ts`, `src/core/candidate-store.ts`, `src/commands/inbox.ts`, route/candidate tests.
 - Review HTML: `src/view/*`, `tests/integration/m19-view-export.test.ts`, `tests/integration/m25-view-structured-candidates.test.ts`.
 - Unified producers: `src/commands/reconcile.ts`, `src/commands/obsidian.ts`, `tests/integration/m6-brief-obsidian.test.ts`.
 
 ## Risks
-`_cmap-view`, `_cmap`, `.context/generated/*`, `.context/out/*`, and `.cmap/skills/*` remain generated/ignored local artifacts. Candidate requests are intentionally non-canonical until reviewed. `module.alias.request` has `target: unresolved` by design and must be converted manually after source inspection.
+`_cmap-view`, `_cmap`, `.context/generated/*`, `.context/out/*`, and `.cmap/skills/*` remain generated/ignored local artifacts. Candidate requests are intentionally non-canonical until reviewed. `module.alias.request` has `target: unresolved` by design and must be converted manually after source inspection. Dogfood note: run `cmap freshness mark-reviewed` sequentially for now; concurrent writes can corrupt the generated freshness index until the command gains atomic write or locking.
 
 ## Last Verified
-2026-05-15: `pnpm test` passed 29 files / 157 tests; `pnpm typecheck` passed; `pnpm build` passed; `pnpm smoke` passed; `pnpm dev verify`, `pnpm dev verify --changed`, `pnpm dev verify --stale`, `pnpm dev verify --freshness`, `pnpm dev verify --policy`, and `pnpm dev verify --ci --format markdown` passed with 0 warnings/errors. `pnpm dev view export --out _cmap-view` plus `--check` passed; `pnpm dev obsidian export` plus `--check` passed; route benchmark passed 100% Top-1/Top-3/context with 0 bad hits; `git diff --check` passed.
+2026-05-16: `pnpm test` passed 29 files / 158 tests; `pnpm typecheck` passed; `pnpm build` passed; `pnpm smoke` passed; `pnpm dev verify`, `pnpm dev verify --stale`, `pnpm dev verify --freshness`, and `pnpm dev verify --policy` passed with 0 warnings/errors. `pnpm dev view export --out _cmap-view` plus `--check` passed; `pnpm dev obsidian export` plus `--check` passed; `pnpm dev version` printed `0.2.1`; `pnpm dev bootstrap --help` shows `--init`; `git diff --check` passed.
