@@ -14,6 +14,7 @@ export const candidateTypes = [
   "verification.evidence",
   "module.semantic.update",
   "decision.record",
+  "status.update",
   "verify.policy.update"
 ] as const;
 

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:40:42+08:00
+updated_at: 2026-05-15T22:44:41+08:00
 confidence: ai-drafted
 module: tests
 paths:
@@ -74,6 +74,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert HTML view redaction covers auth headers, cloud SDK credential fields, and PEM private key blocks without over-redacting innocent identifiers.
 - Assert `view export --include-inbox` surfaces structured `cmap.candidate.v1` files from `.context/inbox/candidates/*.json`.
 - Assert Review HTML module details include responsibilities, incoming relations, relation explanations, verify commands, and related candidates.
+- Assert Obsidian pull and reconcile keep legacy inbox reports while writing structured candidate-store JSON+Markdown.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
 
 ## Depends On

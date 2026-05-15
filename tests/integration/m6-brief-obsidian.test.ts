@@ -181,8 +181,26 @@ Recommend updated module docs for a task.
 
     expect(writeInbox).toMatchObject({ code: 0 });
     expect(writeInbox.stdout).toContain("Wrote .context/inbox/obsidian-");
+    expect(writeInbox.stdout).toContain("Structured candidates written: 1");
     const inboxFiles = await readdir(path.join(cwd, ".context/inbox"));
     expect(inboxFiles.some((file) => file.startsWith("obsidian-") && file.endsWith(".md"))).toBe(true);
+    const structuredFiles = await readdir(path.join(cwd, ".context/inbox/candidates"));
+    const structuredJson = structuredFiles.find((file) => file.endsWith(".json"));
+    expect(structuredJson).toBeTruthy();
+    const candidate = JSON.parse(await readFile(path.join(cwd, ".context/inbox/candidates", structuredJson!), "utf8")) as {
+      source: string;
+      type: string;
+      target: string;
+      fields: Record<string, unknown>;
+    };
+    expect(candidate).toMatchObject({
+      source: "obsidian-pull",
+      type: "module.semantic.update",
+      target: ".context/modules/route.md",
+      fields: {
+        notePath: "_cmap/TestProject/modules/Route.md"
+      }
+    });
   });
 
   test("benchmark route reports top-k route accuracy from JSONL tasks", async () => {
@@ -238,5 +256,19 @@ Recommend updated module docs for a task.
 
     expect(writeInbox).toMatchObject({ code: 0 });
     expect(writeInbox.stdout).toContain("Wrote .context/inbox/gsd-v1-");
+    expect(writeInbox.stdout).toContain("Structured candidates written:");
+    const structuredFiles = await readdir(path.join(cwd, ".context/inbox/candidates"));
+    const candidates = await Promise.all(structuredFiles
+      .filter((file) => file.endsWith(".json"))
+      .map(async (file) => JSON.parse(await readFile(path.join(cwd, ".context/inbox/candidates", file), "utf8")) as {
+        source: string;
+        type: string;
+      }));
+    expect(candidates.map((candidate) => candidate.source)).toContain("reconcile");
+    expect(candidates.map((candidate) => candidate.type)).toEqual(expect.arrayContaining([
+      "decision.record",
+      "module.semantic.update",
+      "verification.evidence"
+    ]));
   });
 });

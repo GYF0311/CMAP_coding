@@ -3,6 +3,7 @@ import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
+import { writeCandidateDrafts, type CandidateDraft } from "../core/candidate-store.js";
 import {
   type ContextModule,
   loadModuleIndex,
@@ -80,10 +81,13 @@ export async function runObsidianPull(cwd: string, options: ObsidianPullOptions)
   const candidates = await detectObsidianCandidates(cwd, modulesRoot);
   const report = renderPullReport(candidates);
   if (options.writeInbox && candidates.length > 0) {
+    const structured = await writeCandidateDrafts(cwd, candidates.map(obsidianCandidateDraft));
     const inboxRoot = path.join(cwd, ".context", "inbox");
     await mkdir(inboxRoot, { recursive: true });
     const target = path.join(inboxRoot, `obsidian-${dateStamp()}.md`);
     await writeFile(target, report, "utf8");
+    process.stdout.write(`Structured candidates written: ${structured.written.length}\n`);
+    process.stdout.write(`Structured duplicate candidates skipped: ${structured.duplicates.length}\n`);
     process.stdout.write(`Wrote ${projectRelative(cwd, target)}\n`);
     return;
   }
@@ -376,6 +380,23 @@ function renderPullReport(candidates: ObsidianCandidate[]): string {
   );
 
   return lines.join("\n");
+}
+
+function obsidianCandidateDraft(candidate: ObsidianCandidate): CandidateDraft {
+  return {
+    source: "obsidian-pull",
+    type: "module.semantic.update",
+    target: candidate.sourcePath || "unresolved",
+    risk: "high",
+    confidence: 0.6,
+    summary: `${candidate.reason}: ${candidate.sourcePath}`,
+    evidence: [candidate.notePath],
+    fields: {
+      modulePath: candidate.sourcePath,
+      notePath: candidate.notePath,
+      reason: candidate.reason
+    }
+  };
 }
 
 function dateStamp(): string {

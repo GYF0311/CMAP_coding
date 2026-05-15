@@ -587,6 +587,9 @@ function suggestedTarget(type: string): string {
   if (type === "verify") {
     return ".context/VERIFY.md";
   }
+  if (type === "status.update") {
+    return ".context/STATUS.md or .context/CHECKPOINT.md";
+  }
   if (type === "alias" || type === "module" || type === "path") {
     return ".context/modules/<module>.md";
   }

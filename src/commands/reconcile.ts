@@ -1,6 +1,7 @@
 import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileExists } from "../context/scanner.js";
+import { writeCandidateDrafts, type CandidateDraft, type CmapCandidateType } from "../core/candidate-store.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 
 type ReconcileOptions = {
@@ -31,10 +32,13 @@ export async function runReconcile(cwd: string, options: ReconcileOptions): Prom
   const candidates = await collectCandidates(cwd, sourceRoot);
   const report = renderReconcileReport(adapter, projectRelative(cwd, sourceRoot), candidates);
   if (options.writeInbox && candidates.length > 0) {
+    const structured = await writeCandidateDrafts(cwd, candidates.map((candidate) => reconcileCandidateDraft(adapter, candidate)));
     const inboxRoot = path.join(cwd, ".context", "inbox");
     await mkdir(inboxRoot, { recursive: true });
     const target = path.join(inboxRoot, `${adapter}-${dateStamp()}.md`);
     await writeFile(target, report, "utf8");
+    process.stdout.write(`Structured candidates written: ${structured.written.length}\n`);
+    process.stdout.write(`Structured duplicate candidates skipped: ${structured.duplicates.length}\n`);
     process.stdout.write(`Wrote ${projectRelative(cwd, target)}\n`);
     return;
   }
@@ -157,6 +161,60 @@ function renderReconcileReport(adapter: string, sourceRoot: string, candidates: 
   );
 
   return lines.join("\n");
+}
+
+function reconcileCandidateDraft(adapter: string, candidate: ReconcileCandidate): CandidateDraft {
+  return {
+    source: "reconcile",
+    type: reconcileCandidateType(candidate.kind),
+    target: reconcileCandidateTarget(candidate.kind),
+    risk: reconcileCandidateRisk(candidate.kind),
+    confidence: candidate.confidence === "medium" ? 0.65 : 0.45,
+    summary: candidate.summary,
+    evidence: [candidate.sourcePath],
+    fields: {
+      adapter,
+      kind: candidate.kind,
+      sourcePath: candidate.sourcePath,
+      originalSummary: candidate.summary
+    }
+  };
+}
+
+function reconcileCandidateType(kind: CandidateKind): CmapCandidateType {
+  if (kind === "decision" || kind === "conflict") {
+    return "decision.record";
+  }
+  if (kind === "verification") {
+    return "verification.evidence";
+  }
+  if (kind === "phase_note") {
+    return "status.update";
+  }
+  return "module.semantic.update";
+}
+
+function reconcileCandidateTarget(kind: CandidateKind): string {
+  if (kind === "decision" || kind === "conflict") {
+    return ".context/DECISIONS.md";
+  }
+  if (kind === "verification") {
+    return ".context/VERIFY.md";
+  }
+  if (kind === "phase_note") {
+    return ".context/STATUS.md";
+  }
+  return "unresolved";
+}
+
+function reconcileCandidateRisk(kind: CandidateKind): "routine" | "medium" | "high" {
+  if (kind === "verification") {
+    return "medium";
+  }
+  if (kind === "phase_note") {
+    return "medium";
+  }
+  return "high";
 }
 
 function normalizeAdapter(value: string | undefined): "gsd-v1" | "gsd-v2" {

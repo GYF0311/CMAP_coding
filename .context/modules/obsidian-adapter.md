@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T22:17:54+08:00
+updated_at: 2026-05-15T22:44:41+08:00
 confidence: ai-drafted
 module: obsidian-adapter
 paths:
@@ -42,7 +42,7 @@ Export `.context` into Obsidian-friendly Markdown notes so humans can read modul
 - Render typed `relations` as body wikilinks so Obsidian Graph can draw edges.
 - Print `obsidian://open` links for individual module notes.
 - Detect edited exported module notes with `pull --dry-run`.
-- Write candidate reports to `.context/inbox/` with `--write-inbox` without changing canonical facts.
+- Write structured `cmap.candidate.v1` JSON+Markdown under `.context/inbox/candidates/` with `--write-inbox`, while preserving a legacy `.context/inbox/obsidian-*.md` report.
 
 ## Depends On
 - `module-docs`
@@ -59,7 +59,7 @@ Export `.context` into Obsidian-friendly Markdown notes so humans can read modul
 ## Data Flow
 Export: `.context/modules/*.md` -> module index -> Obsidian note renderer -> `_cmap/<project>/`.
 Check: generated expected files -> compare with current `_cmap/<project>/` -> report stale/missing/extra view files without writing.
-Pull dry-run: `_cmap/<project>/modules/*.md` -> source hash/body comparison -> candidate report or `.context/inbox/`.
+Pull dry-run: `_cmap/<project>/modules/*.md` -> source hash/body comparison -> candidate report to stdout, or structured candidate plus legacy inbox report when `--write-inbox` is set.
 
 ## State / Storage
 Writes view files under `_cmap/<project>/`. These files are generated reading/visualization artifacts, not canonical facts.
@@ -71,7 +71,7 @@ Writes view files under `_cmap/<project>/`. These files are generated reading/vi
 
 ## Traps
 - YAML-only links may not create obvious graph relationships; body wikilinks are the stable Graph input.
-- Generated `_cmap` files can be overwritten by export, so manual edits belong in `.context` or a future dry-run inbox.
+- Generated `_cmap` files can be overwritten by export, so detected edits enter candidate review instead of rewriting canonical module docs.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`

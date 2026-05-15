@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-12T01:24:00+08:00
+updated_at: 2026-05-15T22:44:41+08:00
 confidence: ai-drafted
 module: reconcile-adapter
 paths:
@@ -35,7 +35,7 @@ Read external workflow artifacts and produce dry-run candidate reports without c
 - Default to `.planning` for GSD v1 and `.gsd` for GSD v2.
 - Recursively scan Markdown workflow artifacts.
 - Classify candidate lines as module facts, decisions, verification evidence, phase notes, or conflicts.
-- Optionally write candidate reports to `.context/inbox/`.
+- Optionally write structured `cmap.candidate.v1` JSON+Markdown under `.context/inbox/candidates/` while preserving a legacy `.context/inbox/<adapter>-*.md` report.
 
 ## Depends On
 - `module-docs`
@@ -46,10 +46,10 @@ Read external workflow artifacts and produce dry-run candidate reports without c
 - `cmap reconcile --adapter gsd-v2 --from .gsd`
 
 ## Data Flow
-External workflow Markdown -> lightweight classifier -> dry-run report -> stdout or `.context/inbox/*`.
+External workflow Markdown -> lightweight classifier -> dry-run report -> stdout, or structured candidates plus a legacy inbox report when `--write-inbox` is set.
 
 ## State / Storage
-Read-only by default. With `--write-inbox`, writes a candidate report under `.context/inbox/`.
+Read-only by default. With `--write-inbox`, writes structured candidates under `.context/inbox/candidates/` and a compatibility report under `.context/inbox/`.
 
 ## Constraints
 - Never writes directly to `.context/modules`, `DECISIONS.md`, or `VERIFY.md`.
