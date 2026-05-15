@@ -10,7 +10,7 @@ describe("M1 CLI skeleton", () => {
     const result = await runCmap(["version"], cwd);
 
     expect(result).toMatchObject({ code: 0 });
-    expect(result.stdout.trim()).toBe("0.2.1");
+    expect(result.stdout.trim()).toBe("0.2.2");
   });
 
   test("init --auto creates the required .context skeleton without inventing project semantics", async () => {

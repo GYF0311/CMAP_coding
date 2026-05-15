@@ -1,31 +1,30 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-15T17:52:42.000Z'
+updated_at: '2026-05-15T17:57:07.000Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-CMAP v0.2.2 closeout orchestration patch
+CMAP v0.2.2 closeout orchestration patch final validation
 
 ## Current Hypothesis
-Freshness mark-reviewed should clearly separate generated review metadata from canonical module docs, while snapshot and mark-reviewed share a lock plus atomic write path.
+The v0.2.2 closeout patches are implemented and verified; next action is commit and push, then stop active tool polishing.
 
 ## Changed Files
-- freshness mark-reviewed generated/canonical UX
-- freshness index lock and atomic write path
-- freshness lock integration tests
-- evidence module docs and verify checklist
+- v0.2.2 package version and version test
+- bootstrap existing-context `--init` coverage
+- v0.2.2 status/checkpoint refresh
 
 ## Verified
-pnpm test tests/integration/m18-freshness-inbox-promote.test.ts; pnpm test tests/integration/m30-freshness-lock.test.ts; pnpm typecheck
+pnpm test tests/integration/m29-finish-view-reminder.test.ts; pnpm test tests/integration/m18-freshness-inbox-promote.test.ts tests/integration/m30-freshness-lock.test.ts; pnpm test tests/integration/m1.test.ts; pnpm test tests/integration/m28-skill-bootstrap.test.ts; pnpm test; pnpm typecheck; pnpm build; pnpm smoke; pnpm dev version; pnpm dev verify; pnpm dev verify --stale; pnpm dev verify --freshness; pnpm dev verify --policy; pnpm dev verify --ci --format markdown; pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0; pnpm dev graph build; pnpm dev view export --out _cmap-view; pnpm dev view export --check --out _cmap-view; pnpm dev obsidian export; pnpm dev obsidian export --check; git diff --check
 
 ## Failed / Pending
-Pending: version bump to 0.2.2 and final validation.
+None in validation. Commit and push pending.
 
 ## Next Step
-Update version/docs to v0.2.2, refresh generated views, run final validation.
+Commit and push the v0.2.2 closeout slice.
 
 ## Do Not Redo
 None recorded.

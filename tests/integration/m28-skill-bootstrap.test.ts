@@ -91,4 +91,19 @@ describe("skill export and bootstrap", () => {
     expect(startHere).toContain("cmap route \"<task>\"");
     expect(startHere).not.toContain("--lang");
   });
+
+  test("bootstrap --init preserves an existing context skeleton", async () => {
+    const cwd = await createTempProject("bootstrap-init-existing-context");
+    await runCmap(["init", "--auto"], cwd);
+    const mapBefore = await expectFile(path.join(cwd, ".context", "MAP.md"));
+    await writeFile(path.join(cwd, "AGENTS.md"), "# Existing Agent Rules\n\nKeep the old rule.\n", "utf8");
+
+    const result = await runCmap(["bootstrap", "--init", "--host", "both", "--skill"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    expect(result.stdout).not.toContain("Created .context skeleton");
+    expect(result.stdout).toContain("AGENTS.md: merged cmap block, original content preserved");
+    expect(await expectFile(path.join(cwd, ".context", "MAP.md"))).toBe(mapBefore);
+    expect(await fileExists(path.join(cwd, ".context", "out", "start-here.md"))).toBe(true);
+  });
 });
