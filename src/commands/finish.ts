@@ -21,6 +21,7 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
   const modules = await loadModuleIndex(cwd);
   const mapping = mapChangedFilesToModules(changedFiles, modules);
   const affectedModules = mapping.affectedModules;
+  const canonicalContextChanged = changedFiles.some(isCanonicalContextFile);
 
   const agentRequestPath = options.agent
     ? await writeAgentUpdateRequest(cwd, {
@@ -67,6 +68,19 @@ export async function runFinish(cwd: string, options: FinishOptions): Promise<vo
       ]
       : ["- None generated automatically in v0.1"]),
     "",
+    ...(canonicalContextChanged
+      ? [
+        "## Generated View Refresh",
+        "Canonical context files changed. Refresh generated review layers:",
+        "- `cmap graph build`",
+        "- `cmap view export --out _cmap-view`",
+        "- `cmap obsidian export`",
+        "Check generated views:",
+        "- `cmap view export --check --out _cmap-view`",
+        "- `cmap obsidian export --check`",
+        ""
+      ]
+      : []),
     "## Verification",
     "- Suggested: cmap verify --changed",
     "- Also run project commands listed in .context/VERIFY.md before claiming done",
@@ -169,6 +183,17 @@ function splitCsv(value: string): string[] {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function isCanonicalContextFile(file: string): boolean {
+  return (
+    file === ".context/MAP.md" ||
+    file === ".context/STATUS.md" ||
+    file === ".context/CHECKPOINT.md" ||
+    file === ".context/DECISIONS.md" ||
+    file === ".context/VERIFY.md" ||
+    /^\.context\/modules\/[^/]+\.md$/.test(file)
+  );
 }
 
 function timeStamp(): string {

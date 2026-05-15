@@ -45,7 +45,7 @@ confidence: ai-drafted
 | pack | `pnpm test tests/integration/m16-context-pack.test.ts` | Writes a redacted, budgeted context pack from routed graph-neighborhood context only. |
 | handoff | `pnpm dev checkpoint read` | Prints current `CHECKPOINT.md`, falling back to `STATUS.md`; checkpoint writes only explicit fields. |
 | cp | `pnpm test tests/integration/m3.test.ts` | Copy/move/delete/restore preserve expected line content and reject path escape. |
-| finish | `pnpm dev finish --changed src/commands/cp.ts` | Prints a report with context update and checkpoint close/write reminders; does not modify trusted memory. |
+| finish | `pnpm test tests/integration/m29-finish-view-reminder.test.ts` | Prints context update and checkpoint reminders; canonical context changes also trigger generated graph/view/Obsidian refresh reminders without modifying trusted memory. |
 | update-agent | `pnpm test tests/integration/m7-update-agent.test.ts` | MapPatch v1/v2 dry-run is read-only; `--apply-routine` writes only policy-approved checkpoint/generated state, backup, audit, and inbox candidates. |
 | unified candidate store | `pnpm test tests/integration/m21-candidate-store.test.ts` | MapPatch candidate writes JSON+Markdown drafts, duplicate fingerprints are skipped, and low-risk candidates can be promoted through inbox apply. |
 | evidence | `pnpm test tests/integration/m13-policy-stats.test.ts` | Generated evidence writes `.context/generated/evidence/**` and policy-backed module activity stats; inbox thresholds remain deterministic. |

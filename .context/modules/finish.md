@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-16T01:50:03+08:00
 confidence: ai-drafted
 module: finish
 paths:
@@ -42,6 +42,7 @@ Produce a QA-lite closeout report focused on project memory and verification rem
 - Suggest `checkpoint write` when work continues and `checkpoint close` when the task is complete.
 - With `--agent`, write a MapPatch request artifact under `.context/out/` for an AI to fill and pass to `cmap update --agent`.
 - Suggest `cmap verify --changed`.
+- When canonical `.context` files changed, remind the user to refresh generated graph, Review HTML, and Obsidian views.
 - Report unmapped changed files so map coverage gaps are visible.
 
 ## Depends On
@@ -55,6 +56,7 @@ Produce a QA-lite closeout report focused on project memory and verification rem
 
 ## Data Flow
 Changed files -> shared module path matching -> Markdown report. With `--agent`, the same evidence also becomes a local MapPatch request template.
+Canonical context file paths additionally trigger a generated-view refresh reminder; `finish` only prints commands and does not execute them.
 
 ## State / Storage
 - Default mode is read-only.
@@ -68,11 +70,14 @@ Changed files -> shared module path matching -> Markdown report. With `--agent`,
 - Matching by path is deterministic but not semantic truth.
 - `finish` should remind about checkpoint lifecycle without closing or clearing it automatically.
 - `finish --agent` should not become an implicit memory writer; it only prepares input for the MapPatch gate.
+- Generated graph/view/Obsidian refresh remains a reminder, not an automatic side effect.
 
 ## Tests / Verification
 - `pnpm test tests/integration/m3.test.ts`
+- `pnpm test tests/integration/m29-finish-view-reminder.test.ts`
 - `pnpm test tests/integration/m7-update-agent.test.ts`
 - `pnpm dev finish --changed src/commands/finish.ts`
+- `pnpm dev finish --changed .context/modules/route.md`
 
 ## When to Update This Doc
 When finish changes the MapPatch request format, starts generating other artifacts, or changes closeout checks.
