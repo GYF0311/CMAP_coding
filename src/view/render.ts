@@ -1,16 +1,15 @@
 import { type CmapViewData } from "./schema.js";
-import { viewMessages, type ViewMessages } from "./messages.js";
+import { enMessages, type ViewMessages } from "./messages.js";
 
 export function renderViewHtml(data: CmapViewData): string {
   const safeData = redactViewData(data);
-  const messages = viewMessages(safeData.locale);
   const json = escapeScriptJson(JSON.stringify(safeData, null, 2));
   return `<!doctype html>
-<html lang="${escapeAttr(safeData.locale)}">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(safeData.project.name)} ${escapeHtml(messages.htmlTitleSuffix)}</title>
+  <title>${escapeHtml(safeData.project.name)} ${escapeHtml(enMessages.htmlTitleSuffix)}</title>
   <style>
     :root { color-scheme: light; --ink: #19201f; --muted: #63706c; --line: #d9dfdc; --wash: #f5f7f6; --accent: #145c4b; --warn: #8a4b00; }
     * { box-sizing: border-box; }
@@ -43,48 +42,48 @@ export function renderViewHtml(data: CmapViewData): string {
 </head>
 <body>
   <header>
-    <h1>${escapeHtml(safeData.project.name)} ${escapeHtml(messages.htmlTitleSuffix)}</h1>
+    <h1>${escapeHtml(safeData.project.name)} ${escapeHtml(enMessages.htmlTitleSuffix)}</h1>
     <p class="meta">Schema ${escapeHtml(safeData.schema)} · Generated ${escapeHtml(safeData.generatedAt)} · Root ${escapeHtml(safeData.projectRootName)}</p>
-    <p class="meta">${escapeHtml(messages.canonicalSource)}: .context/ · ${escapeHtml(messages.generatedSource)}: .context/generated/${safeData.sourceCommit ? ` · ${escapeHtml(messages.sourceCommit)} ${escapeHtml(safeData.sourceCommit)}` : ""}</p>
+    <p class="meta">${escapeHtml(enMessages.canonicalSource)}: .context/ · ${escapeHtml(enMessages.generatedSource)}: .context/generated/${safeData.sourceCommit ? ` · ${escapeHtml(enMessages.sourceCommit)} ${escapeHtml(safeData.sourceCommit)}` : ""}</p>
     <div class="grid">
-      ${stat(messages.modules, safeData.summary.moduleCount)}
-      ${stat(messages.evidence, safeData.summary.evidenceCount)}
-      ${stat(messages.candidates, safeData.summary.candidateCount)}
-      ${stat(messages.warnings, safeData.summary.warningCount)}
+      ${stat(enMessages.modules, safeData.summary.moduleCount)}
+      ${stat(enMessages.evidence, safeData.summary.evidenceCount)}
+      ${stat(enMessages.candidates, safeData.summary.candidateCount)}
+      ${stat(enMessages.warnings, safeData.summary.warningCount)}
     </div>
   </header>
   <main>
-    <section class="toolbar" aria-label="${escapeAttr(messages.reviewFilters)}">
-      <input id="view-search" type="search" placeholder="${escapeAttr(messages.searchPlaceholder)}">
-      <label><input id="filter-stale" type="checkbox"> ${escapeHtml(messages.stale)}</label>
-      <label><input id="filter-candidates" type="checkbox"> ${escapeHtml(messages.hasCandidates)}</label>
-      <label><input id="filter-high-risk" type="checkbox"> ${escapeHtml(messages.highRisk)}</label>
-      <label><input id="filter-generated" type="checkbox"> ${escapeHtml(messages.generatedEvidenceFilter)}</label>
+    <section class="toolbar" aria-label="${escapeAttr(enMessages.reviewFilters)}">
+      <input id="view-search" type="search" placeholder="${escapeAttr(enMessages.searchPlaceholder)}">
+      <label><input id="filter-stale" type="checkbox"> ${escapeHtml(enMessages.stale)}</label>
+      <label><input id="filter-candidates" type="checkbox"> ${escapeHtml(enMessages.hasCandidates)}</label>
+      <label><input id="filter-high-risk" type="checkbox"> ${escapeHtml(enMessages.highRisk)}</label>
+      <label><input id="filter-generated" type="checkbox"> ${escapeHtml(enMessages.generatedEvidenceFilter)}</label>
     </section>
     <section>
-      <h2>${escapeHtml(messages.overview)}</h2>
-      ${renderOverview(safeData, messages)}
+      <h2>${escapeHtml(enMessages.overview)}</h2>
+      ${renderOverview(safeData, enMessages)}
     </section>
     <section>
-      <h2>${escapeHtml(messages.warnings)}</h2>
-      ${safeData.warnings.length > 0 ? `<div class="panel warning"><ul>${safeData.warnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : `<p class="meta">${escapeHtml(messages.noWarnings)}</p>`}
+      <h2>${escapeHtml(enMessages.warnings)}</h2>
+      ${safeData.warnings.length > 0 ? `<div class="panel warning"><ul>${safeData.warnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : `<p class="meta">${escapeHtml(enMessages.noWarnings)}</p>`}
     </section>
     <section>
-      <h2>${escapeHtml(messages.modules)}</h2>
-      <div class="modules">${safeData.modules.map((module) => renderModule(module, messages)).join("")}</div>
+      <h2>${escapeHtml(enMessages.modules)}</h2>
+      <div class="modules">${safeData.modules.map((module) => renderModule(module, enMessages)).join("")}</div>
     </section>
     <section>
-      <h2>${escapeHtml(messages.canonicalRelations)}</h2>
-      ${renderCanonicalRelations(safeData, messages)}
+      <h2>${escapeHtml(enMessages.canonicalRelations)}</h2>
+      ${renderCanonicalRelations(safeData, enMessages)}
     </section>
     <section>
-      <h2>${escapeHtml(messages.verification)}</h2>
-      ${renderVerification(safeData, messages)}
+      <h2>${escapeHtml(enMessages.verification)}</h2>
+      ${renderVerification(safeData, enMessages)}
     </section>
-    ${safeData.included.freshness ? `<section><h2>${escapeHtml(messages.freshness)}</h2>${renderFreshness(safeData, messages)}</section>` : ""}
-    ${safeData.included.generated ? `<section><h2>${escapeHtml(messages.generatedEvidence)}</h2>${renderEvidence(safeData, messages)}</section>` : ""}
-    ${safeData.included.inbox ? `<section><h2>${escapeHtml(messages.reviewCandidates)}</h2>${renderCandidates(safeData, messages)}</section><section><h2>${escapeHtml(messages.relationCandidates)}</h2>${renderRelationCandidates(safeData, messages)}</section>` : ""}
-    <dialog id="module-dialog"><button type="button" data-close-dialog>${escapeHtml(messages.close)}</button><h2 id="module-dialog-title">${escapeHtml(messages.module)}</h2><pre id="module-dialog-body"></pre></dialog>
+    ${safeData.included.freshness ? `<section><h2>${escapeHtml(enMessages.freshness)}</h2>${renderFreshness(safeData, enMessages)}</section>` : ""}
+    ${safeData.included.generated ? `<section><h2>${escapeHtml(enMessages.generatedEvidence)}</h2>${renderEvidence(safeData, enMessages)}</section>` : ""}
+    ${safeData.included.inbox ? `<section><h2>${escapeHtml(enMessages.reviewCandidates)}</h2>${renderCandidates(safeData, enMessages)}</section><section><h2>${escapeHtml(enMessages.relationCandidates)}</h2>${renderRelationCandidates(safeData, enMessages)}</section>` : ""}
+    <dialog id="module-dialog"><button type="button" data-close-dialog>${escapeHtml(enMessages.close)}</button><h2 id="module-dialog-title">${escapeHtml(enMessages.module)}</h2><pre id="module-dialog-body"></pre></dialog>
     <script type="application/json" id="cmap-view-data">${json}</script>
     <script>${renderClientScript()}</script>
   </main>

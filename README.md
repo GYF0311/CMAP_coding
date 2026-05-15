@@ -18,7 +18,8 @@ Current v0.2 direction is **Trust Boundary + Human Review Layer**:
 
 - Graph means a deterministic projection of reviewed canonical module relations, not an import graph.
 - Route uses canonical module docs and reviewed relations only; unpromoted candidates can be surfaced for review but must not affect `route.modules`, `route.contextModules`, or benchmark scoring.
-- HTML view is the next human review layer for maps, evidence, freshness, and candidates.
+- HTML view is the English human review layer for maps, evidence, freshness, and candidates.
+- i18n / zh-CN / locale mirrors are paused; future translation work should be a separate candidate workflow, not a second maintained fact store.
 - Old import graph, route v2, and pack v2 plans are paused historical ideas, not the active roadmap.
 
 ## Install

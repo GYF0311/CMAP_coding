@@ -6,7 +6,6 @@ import { runBenchmarkRoute } from "./commands/benchmark.js";
 import { runBrief } from "./commands/brief.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCodexFinish, runCodexGuard, runCodexHandoff, runCodexStart } from "./commands/codex.js";
-import { runConfigGet, runConfigSet } from "./commands/config.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
 import { runFinish } from "./commands/finish.js";
@@ -16,7 +15,6 @@ import { runEvidenceAppend, runEvidenceList, runEvidenceMigrate } from "./comman
 import { runHookIngest, runHookRender, runHookSessionStart, runHookStop, runHookTest } from "./commands/hooks.js";
 import { runInboxArchive, runInboxPromote, runInboxReject, runInboxStatus, runInboxTriage } from "./commands/inbox.js";
 import { runIdeaAdd } from "./commands/idea.js";
-import { runI18nCheck, runI18nExport } from "./commands/i18n.js";
 import { runInit } from "./commands/init.js";
 import { runInstall } from "./commands/install.js";
 import { runLogAdd } from "./commands/log.js";
@@ -52,41 +50,8 @@ program
   .command("init")
   .description("Create the .context project map skeleton")
   .option("--auto", "Create default templates without prompting")
-  .option("--lang <locale>", "Project locale: en or zh-CN")
-  .action(async (options: { auto?: boolean; lang?: string }) => {
+  .action(async (options: { auto?: boolean }) => {
     await runInit(process.cwd(), options);
-  });
-
-const i18n = program.command("i18n").description("Export and check localized context mirrors");
-i18n
-  .command("export")
-  .requiredOption("--lang <locale>", "Target locale: zh-CN or en")
-  .option("--out <dir>", "Output directory; defaults to .context/i18n/<locale>/")
-  .action(async (options: { lang?: string; out?: string }) => {
-    await runI18nExport(process.cwd(), options);
-  });
-i18n
-  .command("check")
-  .requiredOption("--lang <locale>", "Target locale: zh-CN or en")
-  .option("--out <dir>", "Output directory; defaults to .context/i18n/<locale>/")
-  .action(async (options: { lang?: string; out?: string }) => {
-    const code = await runI18nCheck(process.cwd(), options);
-    process.exitCode = code;
-  });
-
-const config = program.command("config").description("Read and write cmap project config");
-config
-  .command("get")
-  .argument("<key>", "Config key")
-  .action(async (key: string) => {
-    await runConfigGet(process.cwd(), key);
-  });
-config
-  .command("set")
-  .argument("<key>", "Config key")
-  .argument("<value>", "Config value")
-  .action(async (key: string, value: string) => {
-    await runConfigSet(process.cwd(), key, value);
   });
 
 program
@@ -508,13 +473,12 @@ const view = program.command("view").description("Export a standalone HTML proje
 view
   .command("export")
   .option("--out <path>", "Output directory or HTML file path; defaults to _cmap-view/")
-  .option("--lang <locale>", "View locale: en or zh-CN")
   .option("--single-file", "Write one standalone HTML file")
   .option("--include-generated", "Include generated evidence")
   .option("--include-inbox", "Include inbox candidates")
   .option("--include-freshness", "Include generated freshness data")
   .option("--check", "Check whether the view export is up to date without writing files")
-  .action(async (options: { out?: string; lang?: string; singleFile?: boolean; includeGenerated?: boolean; includeInbox?: boolean; includeFreshness?: boolean; check?: boolean }) => {
+  .action(async (options: { out?: string; singleFile?: boolean; includeGenerated?: boolean; includeInbox?: boolean; includeFreshness?: boolean; check?: boolean }) => {
     const code = await runViewExport(process.cwd(), options);
     process.exitCode = code;
   });

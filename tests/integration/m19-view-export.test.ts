@@ -248,23 +248,18 @@ confidence: 0.9
     expect(html).not.toContain("eval(");
   });
 
-  test("view export --lang zh-CN renders Chinese UI and embeds locale", async () => {
-    const cwd = await createViewProject("m19-zh-ui");
+  test("view export rejects the retired --lang option", async () => {
+    const cwd = await createViewProject("m19-retired-lang-option");
 
     const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
 
-    expect(result).toMatchObject({ code: 0 });
-    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
-    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
-    expect(html).toContain("<html lang=\"zh-CN\">");
-    expect(html).toContain("项目概览");
-    expect(html).toContain("已确认模块关系");
-    expect(html).toContain("验证方式");
-    expect(data?.locale).toBe("zh-CN");
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("unknown option '--lang'");
   });
 
-  test("zh-CN view prefers translated module mirror content with English fallback", async () => {
-    const cwd = await createViewProject("m19-zh-mirror");
+  test("view export ignores legacy locale config and i18n mirrors", async () => {
+    const cwd = await createViewProject("m19-english-default");
+    await writeFile(path.join(cwd, ".context/config.yml"), "locale: zh-CN\nfallback_locale: en\n", "utf8");
     await mkdir(path.join(cwd, ".context/i18n/zh-CN/modules"), { recursive: true });
     await writeFile(
       path.join(cwd, ".context/i18n/zh-CN/modules/view.md"),
@@ -282,32 +277,21 @@ i18n_locale: zh-CN
       "utf8"
     );
 
-    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+    const result = await runCmap(["view", "export", "--out", ".context/out/view.html"], cwd);
 
     expect(result).toMatchObject({ code: 0 });
     const html = await expectFile(path.join(cwd, ".context/out/view.html"));
     const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
-    expect(html).toContain("把项目地图渲染成中文审阅页。");
+    expect(html).toContain("<html lang=\"en\">");
+    expect(html).toContain("Overview");
+    expect(html).toContain("Canonical Relations");
+    expect(html).toContain("Verification");
+    expect(html).toContain("Render a human review dashboard.");
+    expect(html).not.toContain("项目概览");
+    expect(html).not.toContain("把项目地图渲染成中文审阅页。");
     expect(html).not.toContain("<script>alert(\"x\")</script>");
-    expect(data?.modules[0].description).toBe("把项目地图渲染成中文审阅页。<script>alert(\"x\")</script>");
-  });
-
-  test("zh-CN view reads the Translation section produced by i18n scaffold", async () => {
-    const cwd = await createViewProject("m19-zh-scaffold");
-    await runCmap(["i18n", "export", "--lang", "zh-CN"], cwd);
-    const mirrorPath = path.join(cwd, ".context", "i18n", "zh-CN", "modules", "view.md");
-    const scaffold = await readFile(mirrorPath, "utf8");
-    await writeFile(
-      mirrorPath,
-      scaffold.replace("## Translation\nTODO(ai-translate)", "## Translation\n这是 scaffold 中填写的中文翻译。"),
-      "utf8"
-    );
-
-    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
-
-    expect(result).toMatchObject({ code: 0 });
-    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
-    expect(data?.modules[0].description).toBe("这是 scaffold 中填写的中文翻译。");
+    expect(data).not.toHaveProperty("locale");
+    expect(data?.modules[0].description).toBe("Render a human review dashboard.");
   });
 
   test("renders relation explanations without changing the canonical relations schema", async () => {
@@ -339,7 +323,7 @@ Render a human review dashboard.
       "utf8"
     );
 
-    const result = await runCmap(["view", "export", "--lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+    const result = await runCmap(["view", "export", "--out", ".context/out/view.html"], cwd);
 
     expect(result).toMatchObject({ code: 0 });
     const html = await expectFile(path.join(cwd, ".context/out/view.html"));
@@ -351,23 +335,22 @@ Render a human review dashboard.
       produces: "生成证据区块。",
       impact: "evidence schema 变化会影响 view 渲染。"
     });
-    expect(html).toContain("为什么关联");
+    expect(html).toContain("Why");
     expect(html).toContain("view 页面要展示证据。");
     expect(html).toContain("生成证据区块。");
     expect(html).toContain("evidence schema 变化会影响 view 渲染。");
   });
 
-  test("view export --check compares the selected language output", async () => {
-    const cwd = await createViewProject("m19-check-lang");
+  test("view export --check ignores legacy locale config", async () => {
+    const cwd = await createViewProject("m19-check-legacy-locale");
     const output = ".context/out/view.html";
 
-    await runCmap(["view", "export", "--lang", "zh-CN", "--out", output], cwd);
-    const zhClean = await runCmap(["view", "export", "--lang", "zh-CN", "--out", output, "--check"], cwd);
-    const enStale = await runCmap(["view", "export", "--lang", "en", "--out", output, "--check"], cwd);
+    await runCmap(["view", "export", "--out", output], cwd);
+    await writeFile(path.join(cwd, ".context/config.yml"), "locale: zh-CN\nfallback_locale: en\n", "utf8");
+    const check = await runCmap(["view", "export", "--out", output, "--check"], cwd);
 
-    expect(zhClean).toMatchObject({ code: 0 });
-    expect(enStale.code).toBe(1);
-    expect(enStale.stdout).toContain("View output is stale.");
+    expect(check).toMatchObject({ code: 0 });
+    expect(check.stdout).toContain("View output is up to date.");
   });
 
   test("overview and verification data are parsed into the view contract", async () => {

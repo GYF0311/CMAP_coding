@@ -2,12 +2,9 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { contextDirectories, contextTemplates } from "../context/templates.js";
 import { fileExists, inferVerifyCommands } from "../context/scanner.js";
-import { readCmapConfig, writeCmapConfig } from "../i18n/config.js";
-import { parseLocale } from "../i18n/locale.js";
 
 type InitOptions = {
   auto?: boolean;
-  lang?: string;
 };
 
 export async function runInit(cwd: string, options: InitOptions): Promise<void> {
@@ -22,15 +19,6 @@ export async function runInit(cwd: string, options: InitOptions): Promise<void> 
   await mkdir(contextRoot, { recursive: true });
   for (const directory of contextDirectories) {
     await mkdir(path.join(contextRoot, directory), { recursive: true });
-  }
-
-  if (options.lang) {
-    const existingConfig = await readCmapConfig(cwd);
-    await writeCmapConfig(cwd, {
-      ...existingConfig,
-      locale: parseLocale(options.lang, "lang"),
-      fallback_locale: "en"
-    });
   }
 
   let created = 0;

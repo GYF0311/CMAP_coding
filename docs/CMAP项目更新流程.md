@@ -322,7 +322,7 @@ cmap v0.2 已经基本满足最初目标，评分约 87-88/100。
 
 ### 未采纳或延后
 
-- view dashboard 中文硬替换：延后，未来应做 i18n，而不是直接硬改英文 UI。
+- view dashboard 中文硬替换 / i18n：暂停；当前 Review HTML 回归英文 UI，未来翻译需另开独立 workflow。
 - routeTask 复用 module index、loadModuleIndex 并发：真问题，但收益不急。
 - RelationPatch risk enum：应该做，但要和 view schema/render 一起设计。
 - CmapCommandError cause chain：调试体验项，低优先级。
@@ -385,7 +385,7 @@ v0.2 human review 层
   view export / view check / freshness / relation candidates / structured candidates
 
 v0.3 方向
-  candidate review workflow / release hygiene / i18n / 更多真实项目 dogfood
+  candidate review workflow / release hygiene / 更多真实项目 dogfood
 ```
 
 这张图说明：`cmap` 的能力不是横向扩张成一个大平台，而是围绕 `.context` 事实源逐层加安全边界、审阅能力和工作流接口。
@@ -439,6 +439,6 @@ v0.3 方向: usability/release hygiene/candidate review workflow
 应继续推进的小方向：
 
 - RelationPatch risk enum + view schema 同步。
-- `view --lang zh-CN` / i18n，而不是中文硬替换。
+- Review HTML 继续增强英文项目理解页；i18n / `view --lang zh-CN` 暂停，不作为当前路线。
 - release hygiene：CHANGELOG、CONTRIBUTING、release automation。
 - 更多真实项目 dogfood，而不是继续堆抽象能力。

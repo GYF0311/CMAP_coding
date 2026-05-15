@@ -5,8 +5,6 @@ import { writeFile } from "node:fs/promises";
 import { fileExists } from "../context/scanner.js";
 import { CmapCommandError } from "../errors.js";
 import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
-import { readCmapConfig } from "../i18n/config.js";
-import { parseLocale, type Locale } from "../i18n/locale.js";
 import { collectViewData } from "../view/collect.js";
 import { viewHtmlMatches } from "../view/check.js";
 import { renderViewHtml } from "../view/render.js";
@@ -18,7 +16,6 @@ type ViewExportOptions = {
   includeGenerated?: boolean;
   includeInbox?: boolean;
   includeFreshness?: boolean;
-  lang?: string;
 };
 
 type ViewOpenOptions = {
@@ -30,12 +27,10 @@ const DEFAULT_VIEW_DIR = "_cmap-view";
 
 export async function runViewExport(cwd: string, options: ViewExportOptions): Promise<number> {
   const target = await resolveInsideRoot(cwd, outputPath(options));
-  const locale = await resolveViewLocale(cwd, options.lang);
   const data = await collectViewData(cwd, {
     includeGenerated: Boolean(options.includeGenerated),
     includeInbox: Boolean(options.includeInbox),
-    includeFreshness: Boolean(options.includeFreshness),
-    locale
+    includeFreshness: Boolean(options.includeFreshness)
   });
   const expectedHtml = renderViewHtml(data);
   if (options.check) {
@@ -56,13 +51,6 @@ export async function runViewExport(cwd: string, options: ViewExportOptions): Pr
   await writeFile(target, expectedHtml, "utf8");
   process.stdout.write(`Exported cmap view to ${projectRelative(cwd, target)}\n`);
   return 0;
-}
-
-async function resolveViewLocale(cwd: string, raw: string | undefined): Promise<Locale> {
-  if (raw) {
-    return parseLocale(raw, "lang");
-  }
-  return (await readCmapConfig(cwd)).locale;
 }
 
 export async function runViewOpen(cwd: string, options: ViewOpenOptions): Promise<void> {

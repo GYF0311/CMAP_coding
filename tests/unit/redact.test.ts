@@ -5,7 +5,6 @@ import type { CmapViewData } from "../../src/view/schema.js";
 function withSummary(summary: string): CmapViewData {
   return {
     schema: "cmap.view_data.v1",
-    locale: "en",
     generatedAt: "2026-05-14T00:00:00Z",
     projectRootName: "test",
     included: { generated: false, inbox: false, freshness: false },

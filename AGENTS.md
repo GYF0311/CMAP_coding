@@ -3,11 +3,21 @@
 This project uses cmap: a shared project map for humans and AI coding agents.
 
 ## Start Here
-1. Read `.context/MAP.md` for the project map.
-2. Read `.context/CHECKPOINT.md` for the current handoff, then `.context/STATUS.md` for durable status.
+1. Read `.context/CHECKPOINT.md` for the current handoff.
+2. Read `.context/MAP.md` for the project map, then `.context/STATUS.md` for durable status.
 3. Use `cmap route "<task>"` to find relevant modules.
 4. Before editing a module, read its `.context/modules/<module>.md` file.
-5. Before claiming done, run `cmap finish` and `cmap verify --changed`.
+5. Before claiming done, run relevant verification, then `cmap finish` and `cmap verify --changed`.
+
+## Current Direction
+- Current roadmap: Trust Boundary + Human Review Layer.
+- Review HTML is important: keep `cmap view export` focused on rendering existing `.context` map content.
+- Review HTML uses English UI by default.
+- Do not revive `i18n`, `zh-CN`, `locale`, translation mirrors, `init --lang`, `view --lang`, or `config locale` as the active roadmap.
+- Future translation work, if needed, should be a separate candidate workflow and must not create a second maintained fact store.
+- Do not revive import graph, route v2, or pack v2 as the active roadmap unless a new explicit plan supersedes this direction.
+- AI relation candidates are allowed, but remain candidate-only until reviewed.
+- Review HTML must not perform new semantic analysis; it renders the reviewed project map and support layers.
 
 ## Rules
 - Do not read every `.context` file by default. Read by route.
@@ -15,6 +25,19 @@ This project uses cmap: a shared project map for humans and AI coding agents.
 - Only `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, `VERIFY.md`, and `modules/*.md` are trusted project memory.
 - If code changes module responsibilities, dependencies, data flow, or verification, update `.context`.
 - If context is getting full, run `cmap checkpoint write --task "..." --next "..."`.
+
+## Git Safety
+- Run `git status --short` before making changes.
+- Do not overwrite, reset, restore, or delete existing user changes.
+- Do not use `git reset --hard`, `git checkout -- .`, `git restore .`, or `git clean -fd` unless the user explicitly asks.
+- Delete files with `/usr/bin/trash`, not `rm`.
+- Keep changes small and grouped by purpose.
+- Never stage or commit unrelated user changes.
+
+## Commit Policy
+- Make commits only when the user explicitly asks for commits, or when the current task instruction says commits are allowed.
+- Before committing, inspect `git status --short`, stage only task-related files, run relevant verification, and use a specific commit message.
+- If those conditions are not met, do not commit; report changed files and suggested commit boundaries instead.
 
 ## Tools
 - `cmap route "task"` — locate relevant modules.

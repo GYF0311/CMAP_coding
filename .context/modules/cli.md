@@ -27,7 +27,6 @@ relations:
     - reconcile-adapter
     - finish
     - update-agent
-    - i18n
     - evidence
     - view
     - relation-candidates
@@ -57,12 +56,10 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `benchmark route` quality threshold flags while keeping metric evaluation in `benchmark`.
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Register `update --agent` and `update rollback` while keeping MapPatch v2 policy out of `cli.ts`.
-- Register `i18n export/check` and `config get/set locale` while keeping mirror generation and config persistence out of `cli.ts`.
 - Register `policy show/validate` while keeping deterministic policy loading and validation in command modules.
 - Register `evidence append/list/migrate` and `freshness snapshot/diff/mark-reviewed/review` while keeping generated-store and freshness policy in command modules.
 - Register `inbox status/triage/promote/reject/archive` while keeping candidate governance, explicit rejection, and low-risk apply policy in command modules.
 - Register `view export/open` while keeping HTML collection/render/check behavior in `view`.
-- Register `view export --lang` while keeping locale resolution and renderer messages in `view`/`i18n`.
 - Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
 - Register `codex start/finish/guard/handoff` as explicit Codex workflow commands without relying on strict hook parity.
 - Register `verify --policy` and `doctor --release` without embedding policy or package checks in `cli.ts`.
@@ -82,7 +79,6 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `obsidian-adapter` for Obsidian view commands.
 - `reconcile-adapter` for external workflow candidate reports.
 - `update-agent` for MapPatch intake and routine context maintenance.
-- `i18n` for localized mirror and locale config commands.
 - `evidence` for generated evidence and inbox visibility commands.
 - `view` for the HTML project-map review dashboard.
 - `relation-candidates` for AI relation candidate workflow commands.
@@ -112,7 +108,6 @@ No persistent state except files written by command modules.
 - `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
 - `pnpm test tests/integration/m19-view-export.test.ts`
-- `pnpm test tests/integration/m26-i18n-config.test.ts`
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`
 - `pnpm test tests/integration/m21-candidate-store.test.ts`
 - `pnpm test tests/integration/m22-freshness-policy.test.ts`
