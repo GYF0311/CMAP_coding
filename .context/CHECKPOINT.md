@@ -1,31 +1,34 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-05-15T14:45:58.168Z'
+updated_at: '2026-05-15T14:48:37.288Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-Unified candidate inbox store producers
+CMAP v0.2.1 cleanup and P1 closeout
 
 ## Current Hypothesis
 None recorded.
 
 ## Changed Files
-- src/commands/reconcile.ts
-- src/commands/obsidian.ts
-- src/core/candidate-store.ts
-- tests/integration/m6-brief-obsidian.test.ts
+- STATUS.md
+- CHECKPOINT.md
+- entrypoints
+- route
+- view
+- candidate store
+- module docs
 
 ## Verified
-pnpm test tests/integration/m6-brief-obsidian.test.ts; pnpm test tests/integration/m21-candidate-store.test.ts; pnpm test tests/integration/m7-update-agent.test.ts; pnpm test tests/integration/m20-relation-candidates.test.ts; pnpm test tests/integration/m18-freshness-inbox-promote.test.ts; pnpm typecheck; pnpm dev view export --check --out _cmap-view; pnpm dev verify; pnpm dev verify --stale; pnpm dev verify --freshness
+pnpm test; pnpm typecheck; pnpm build; pnpm smoke; pnpm dev verify; pnpm dev verify --changed; pnpm dev verify --stale; pnpm dev verify --freshness; pnpm dev verify --policy; pnpm dev verify --ci --format markdown; pnpm dev view export --check --out _cmap-view; pnpm dev obsidian export --check; pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0; git diff --check
 
 ## Failed / Pending
 None recorded.
 
 ## Next Step
-Run final full validation and update STATUS/CHECKPOINT before push
+Push main to origin and monitor GitHub state
 
 ## Do Not Redo
 None recorded.
