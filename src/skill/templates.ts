@@ -17,7 +17,12 @@ export function renderSkillFiles(host: SkillHost): SkillExportFile[] {
   return [
     {
       relativePath: "SKILL.md",
-      content: `# CMAP Project Map Skill
+      content: `---
+name: cmap
+description: "CMAP project map workflow. Use when starting a new coding project with cmap, connecting an existing repo to cmap, routing a task through .context/MAP.md, reading module docs, running cmap verify/finish, exporting Review HTML/Obsidian views, or maintaining generated freshness review metadata."
+---
+
+# CMAP Project Map Skill
 
 CMAP is a repo-local project memory map and deterministic maintenance CLI.
 

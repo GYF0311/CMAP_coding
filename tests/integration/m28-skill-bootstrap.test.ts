@@ -24,6 +24,8 @@ describe("skill export and bootstrap", () => {
     const commands = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "commands.md"));
     const boundaries = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "boundaries.md"));
     const examples = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "examples.md"));
+    expect(skill).toContain("name: cmap");
+    expect(skill).toContain("description:");
     expect(skill).toContain("CMAP Project Map Skill");
     expect(skill).toContain("Canonical Facts");
     expect(skill).toContain("AGENTS.md");

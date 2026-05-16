@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-16T01:33:55+08:00
+updated_at: 2026-05-16T12:13:42+08:00
 confidence: ai-drafted
 module: skill
 paths:
@@ -35,6 +35,7 @@ Export portable cmap skill/reference instructions and bootstrap project onboardi
 
 ## Responsibilities
 - Render `.cmap/skills/cmap/` as a reusable English instructions pack with `SKILL.md`, `commands.md`, `boundaries.md`, and `examples.md`.
+- Include `name` and `description` frontmatter in `SKILL.md` so copied global installs are visible in Codex/agent skill pickers.
 - Check whether an exported skill pack is stale without writing files.
 - Bootstrap onboarding by running non-destructive host entrypoint install, optional skill export, and `.context/out/start-here.md` generation.
 - Support explicit new-project onboarding with `cmap bootstrap --init --host both --skill`, which creates the `.context` skeleton before installing entrypoints.
@@ -56,7 +57,7 @@ Export portable cmap skill/reference instructions and bootstrap project onboardi
 Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bootstrap validates that `.context` exists or creates it only when `--init` is explicit, delegates host entrypoint merge to `install`, optionally delegates skill file rendering to `skill export`, and writes a generated start-here guide under `.context/out/`.
 
 ## State / Storage
-- Skill pack: `.cmap/skills/cmap/**`
+- Skill pack: `.cmap/skills/cmap/**` (generated local artifact; ignored by git)
 - Bootstrap guide: `.context/out/start-here.md`
 - Host entrypoints and backups are owned by the `host` module.
 
@@ -67,7 +68,7 @@ Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bo
 - Host-specific hints can differ, but core cmap boundaries must stay consistent.
 
 ## Traps
-- Do not auto-install into every IDE's global skill directory; export a project-local pack and explain host-specific usage.
+- Do not auto-install into every IDE's global skill directory from `skill export`; export a project-local pack that can be copied or installed globally when the user wants a cross-project cmap skill.
 - Do not let skill content become another source of module responsibilities or decisions.
 - Do not auto-create `.context` during default bootstrap; require explicit `--init` for new-project setup.
 
