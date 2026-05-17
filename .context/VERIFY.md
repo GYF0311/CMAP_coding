@@ -32,7 +32,7 @@ confidence: ai-drafted
 |---|---|---|
 | cli | `pnpm test tests/integration/m1.test.ts` | Commands return expected stdout and exit codes. |
 | context | `pnpm dev init --auto` in a temp project | Generated files stay skeletal and do not invent module semantics. |
-| verify | `pnpm dev verify` | Errors are real structural problems; warnings are actionable. |
+| verify | `pnpm dev verify` | Errors are real structural problems; warnings include non-English `.context` heading anchors and are actionable. |
 | verify coverage | `pnpm dev verify --coverage --changed-files src/commands/verify.ts` | Reports changed-file module coverage and relation validity. |
 | verify CI report | `pnpm test tests/integration/m15-ci-benchmark.test.ts` | `verify --ci --format markdown` emits a stable CI report. |
 | host | `pnpm dev install --host both` in a temp project | Existing host rules are preserved outside the cmap marker block. |
@@ -67,7 +67,7 @@ confidence: ai-drafted
 | Codex workflow UX | `pnpm test tests/integration/m17-hooks-ingest-codex.test.ts` | `codex start --write-brief --write-pack`, `codex finish --apply-routine`, and `codex handoff` preserve candidate-only semantic boundaries. |
 | hooks assist session brief | `pnpm test tests/integration/m9-hooks-assist.test.ts` | Assist `UserPromptSubmit` writes `.context/out/session-brief.md` and generated route usage stats. |
 | release smoke | `pnpm smoke` | Builds `dist/cli.js` and runs real commands in a temp project. |
-| verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, and module TODO residue are detected. |
+| verify L0 drift | `pnpm test tests/integration/verify-l0.test.ts` | MAP module docs, entrypoint drift, module TODO residue, and non-English `.context` structural headings are detected. |
 | verify commands and pending | `pnpm test tests/integration/verify-l0.test.ts` | Missing package verification scripts and pending overload warnings are detected. |
 | brief and Obsidian export | `pnpm test tests/integration/m6-brief-obsidian.test.ts` | Brief output, Obsidian module notes, relation wikilinks, and URI printing are covered. |
 | agent MapPatch gate | `pnpm test tests/integration/m7-update-agent.test.ts` | Dry-run, routine apply, high-risk inbox routing, rollback, and `finish --agent` request generation are covered. |

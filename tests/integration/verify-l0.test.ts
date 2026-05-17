@@ -64,6 +64,68 @@ TODO(ai-fill)
     expect(result.stdout).toContain(".context/modules/chat.md contains TODO(ai-fill)");
   });
 
+  test("warns about non-English structural context headings and suggests batch rewrite for large fixes", async () => {
+    const cwd = await createTempProject("verify-heading-policy");
+    await runCmap(["init", "--auto"], cwd);
+    await mkdir(path.join(cwd, "src", "chat"), { recursive: true });
+    await mkdir(path.join(cwd, ".context", "modules"), { recursive: true });
+
+    const mapPath = path.join(cwd, ".context", "MAP.md");
+    const map = await readFile(mapPath, "utf8");
+    await writeFile(mapPath, `${map}\n## 项目目的\n正文可以中文。\n`, "utf8");
+
+    await writeFile(
+      path.join(cwd, ".context", "modules", "chat.md"),
+      `---
+context_type: module
+module: chat
+paths:
+  - src/chat
+aliases:
+  - chat
+confidence: ai-drafted
+---
+# Module: chat
+
+## 职责
+正文可以中文。
+
+## 关键契约
+正文可以中文。
+
+## 读什么
+正文可以中文。
+
+## 验证
+正文可以中文。
+
+## 数据流
+正文可以中文。
+
+## 状态存储
+正文可以中文。
+
+## 约束
+正文可以中文。
+
+## 陷阱
+正文可以中文。
+
+## 何时更新
+正文可以中文。
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["verify"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain(".context/MAP.md has non-English structural heading(s): ## 项目目的");
+    expect(result.stdout).toContain(".context/modules/chat.md has non-English structural heading(s): ## 职责");
+    expect(result.stdout).toContain("Keep .context headings in stable English anchors; write Chinese prose in the body.");
+    expect(result.stdout).toContain("Found 10 non-English .context structural heading(s); use a scripted batch rewrite with a dry run instead of editing headings one by one.");
+  });
+
   test("warns when VERIFY.md omits package verification scripts", async () => {
     const cwd = await createTempProject("verify-missing-script");
     await writeFile(path.join(cwd, "package.json"), JSON.stringify({ scripts: { test: "vitest run", build: "vite build" } }), "utf8");

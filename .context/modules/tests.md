@@ -70,6 +70,7 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert inbox promotion rejects evidence paths that escape the project root.
 - Assert graph projections, graph explanation, and graph-mode route output.
 - Assert CI Markdown verify output and benchmark threshold failure behavior.
+- Assert `verify` warns on non-English canonical `.context` structural headings and suggests batch dry-run rewrites when the set is large.
 - Assert context pack budget enforcement, route-neighborhood selection, and secret-looking value redaction.
 - Assert HTML view redaction covers auth headers, cloud SDK credential fields, and PEM private key blocks without over-redacting innocent identifiers.
 - Assert `view export --include-inbox` surfaces structured `cmap.candidate.v1` files from `.context/inbox/candidates/*.json`.

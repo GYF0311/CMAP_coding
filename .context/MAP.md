@@ -35,7 +35,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 |---|---|---|---|---|
 | cli | command registration, option parsing, exit-code boundary | `src/cli.ts`, `src/commands` | `.context/modules/cli.md` | cli, command, 命令, version, init, install |
 | context | `.context` templates, deterministic policy v2 loading, and project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
-| verify | deterministic L0 structure checks, freshness/stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
+| verify | deterministic L0 structure checks, `.context` heading-anchor checks, freshness/stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
 | host | AGENTS/CLAUDE non-destructive entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
 | skill | project-local Skill/reference export and bootstrap onboarding | `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/skill` | `.context/modules/skill.md` | skill, bootstrap, IDE, AGENTS, CLAUDE, start-here, 接入 |
 | route | direct module routing, generated route usage stats, and bounded reviewed-relation context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
@@ -91,7 +91,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 ## Module Relationships
 - `cli` dispatches to command modules and owns process exit behavior.
 - `context` provides templates, deterministic policy v2 defaults/loading, and project signal scanning used by `init`.
-- `verify` reads `.context` files created by `context`, validates deterministic structure, checks stale/freshness warnings, and can render stable CI Markdown reports.
+- `verify` reads `.context` files created by `context`, validates deterministic structure, warns on non-English structural heading anchors, checks stale/freshness warnings, and can render stable CI Markdown reports.
 - `host` generates entrypoint text used by `install`, merging cmap marker blocks by default so existing project rules outside the block are preserved.
 - `skill` exports a project-local instruction pack and bootstraps onboarding by delegating non-destructive host install plus optional skill export/start-here generation; new projects must opt in with `bootstrap --init`.
 - `route` reads the shared module index, recommends direct modules, expands bounded reviewed-relation context, surfaces module-owned verification commands, and records generated route usage stats when policy allows; it must not propose nonexistent modules, treat related context as direct matches, or consume unpromoted relation candidates as route facts.

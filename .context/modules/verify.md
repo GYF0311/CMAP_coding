@@ -33,6 +33,8 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Check required files exist.
 - Parse frontmatter and warn on missing `context_type`.
 - Check required headings in canonical files.
+- Warn when canonical `.context` H1/H2 structural headings use Chinese or other non-English anchors; body prose may still be Chinese.
+- Suggest scripted dry-run batch rewrites when many structural headings need normalization.
 - Require `CHECKPOINT.md` with the current checkpoint headings.
 - Warn on generated placeholder residue.
 - Check module frontmatter paths stay inside the project and exist.
@@ -97,4 +99,4 @@ Read-only.
 - `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 
 ## When to Update This Doc
-When adding new L0/L1 checks, stale/freshness checks, inbox checks, or changing error/warning semantics.
+When adding new L0/L1 checks, heading policy checks, stale/freshness checks, inbox checks, or changing error/warning semantics.

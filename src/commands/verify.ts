@@ -51,6 +51,8 @@ const requiredHeadings: Record<string, string[]> = {
   "CHECKPOINT.md": ["# Current Checkpoint", "## Current Task", "## Next Step"],
   "VERIFY.md": ["# Verification", "## Required Commands", "## Manual Verification"]
 };
+const headingPolicyFiles = ["BRIEF.md", "MAP.md", "STATUS.md", "CHECKPOINT.md", "DECISIONS.md", "VERIFY.md"];
+const batchHeadingRewriteThreshold = 10;
 
 export async function runVerify(cwd: string, options: VerifyOptions): Promise<number> {
   const report = await verifyContext(cwd, options);
@@ -86,6 +88,7 @@ export async function verifyContext(cwd: string, options: VerifyOptions = {}): P
     await checkMarkdownFile(path.join(contextRoot, relative), relative, report);
   }
 
+  await checkStructuralHeadingPolicy(contextRoot, report);
   await checkMapModuleDocs(contextRoot, report);
   const modules = await loadModuleIndex(cwd);
   await checkModuleReferences(cwd, contextRoot, modules, report);
@@ -135,6 +138,62 @@ async function checkMarkdownFile(filePath: string, relative: string, report: Ver
   if (raw.includes("TODO(ai-fill)")) {
     report.issues.push({ level: "warning", message: `.context/${relative} contains TODO(ai-fill)` });
   }
+}
+
+async function checkStructuralHeadingPolicy(contextRoot: string, report: VerifyReport): Promise<void> {
+  const findings: Array<{ relative: string; headings: string[] }> = [];
+
+  for (const relative of headingPolicyFiles) {
+    const filePath = path.join(contextRoot, relative);
+    if (!(await fileExists(filePath))) {
+      continue;
+    }
+    const headings = nonEnglishStructuralHeadings(await readFile(filePath, "utf8"));
+    if (headings.length > 0) {
+      findings.push({ relative: `.context/${relative}`, headings });
+    }
+  }
+
+  const modulesRoot = path.join(contextRoot, "modules");
+  if (await fileExists(modulesRoot)) {
+    let entries: string[] = [];
+    try {
+      entries = await readdir(modulesRoot);
+    } catch {
+      entries = [];
+    }
+    for (const entry of entries.filter((item) => item.endsWith(".md")).sort()) {
+      const relative = `.context/modules/${entry}`;
+      const headings = nonEnglishStructuralHeadings(await readFile(path.join(modulesRoot, entry), "utf8"));
+      if (headings.length > 0) {
+        findings.push({ relative, headings });
+      }
+    }
+  }
+
+  for (const finding of findings) {
+    report.issues.push({
+      level: "warning",
+      message: `${finding.relative} has non-English structural heading(s): ${finding.headings.join(", ")}. Keep .context headings in stable English anchors; write Chinese prose in the body.`
+    });
+  }
+
+  const total = findings.reduce((sum, finding) => sum + finding.headings.length, 0);
+  if (total >= batchHeadingRewriteThreshold) {
+    report.issues.push({
+      level: "warning",
+      message: `Found ${total} non-English .context structural heading(s); use a scripted batch rewrite with a dry run instead of editing headings one by one.`
+    });
+  }
+}
+
+function nonEnglishStructuralHeadings(raw: string): string[] {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.match(/^(#{1,2})\s+(.+?)\s*$/))
+    .filter((match): match is RegExpMatchArray => Boolean(match))
+    .filter((match) => /[\u3400-\u9fff]/.test(match[2] ?? ""))
+    .map((match) => `${match[1]} ${match[2].trim()}`);
 }
 
 async function checkModuleReferences(

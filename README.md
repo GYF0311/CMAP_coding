@@ -133,7 +133,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap checkpoint write --task ... --next ...` | Update `.context/CHECKPOINT.md` from explicit handoff fields. |
 | `cmap checkpoint close\|clear` | Close or clear the current `.context/CHECKPOINT.md`. |
 | `cmap checkpoint --goal ... --next ...` | Legacy-compatible update of `.context/STATUS.md`. |
-| `cmap verify [--changed]` | Check context structure. |
+| `cmap verify [--changed]` | Check context structure, heading anchors, and changed-file coverage. |
 | `cmap verify --ci --format markdown` | Print a stable CI-friendly Markdown report for GitHub Actions or PR logs. |
 | `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
 | `cmap finish --agent --task ...` | Write a local MapPatch request artifact under `.context/out/`. |
