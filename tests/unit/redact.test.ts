@@ -11,6 +11,7 @@ function withSummary(summary: string): CmapViewData {
     project: { id: "test", name: "test" },
     overview: { currentTask: summary, lastVerified: "" },
     verify: { requiredCommands: [], manualChecks: [] },
+    contextFiles: [],
     summary: { moduleCount: 0, evidenceCount: 0, candidateCount: 0, warningCount: 0 },
     modules: [],
     evidence: [],

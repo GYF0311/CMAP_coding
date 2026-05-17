@@ -73,9 +73,11 @@ For AI agent:
 4. Run \`cmap route "<task>"\`.
 5. Read routed module docs.
 6. Run \`cmap verify --changed\` before done.
+7. When editing \`.context\`, keep section headings in English and write body prose in the project's human language.
 
 For human:
 - Run \`cmap view export --out _cmap-view\`
+- Add \`--ui-lang zh-CN\` for Chinese UI labels or \`--include-support\` for generated support layers.
 - Open \`_cmap-view/index.html\`
 `;
 }

@@ -45,6 +45,9 @@ describe("M4/M5 adopt/add-module/doctor/hooks", () => {
     expect(moduleDoc).toContain("confidence: candidate");
     expect(moduleDoc).toContain("- src/features/chat");
     expect(moduleDoc).toContain("- 聊天");
+    expect(moduleDoc).toContain("## Heading Contract");
+    expect(moduleDoc).toContain("## Key Contracts");
+    expect(moduleDoc).toContain("## Read Next");
     await expect(readFile(path.join(cwd, ".context/MAP.md"), "utf8")).resolves.toBe(mapBefore);
   });
 

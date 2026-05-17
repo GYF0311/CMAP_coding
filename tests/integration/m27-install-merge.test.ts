@@ -28,6 +28,7 @@ describe("non-destructive install", () => {
     expect(agents).toContain("<!-- cmap:end -->");
     expect(agents).toContain("cmap route \"<task>\"");
     expect(agents).toContain("## Git Safety Rules");
+    expect(agents).toContain("section headings in stable English anchors");
     expect(claude).toContain("cmap verify --changed");
     expect(claude).toContain("## Git Safety Rules");
 

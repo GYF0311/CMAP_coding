@@ -18,8 +18,8 @@ Current v0.2 direction is **Trust Boundary + Human Review Layer**:
 
 - Graph means a deterministic projection of reviewed canonical module relations, not an import graph.
 - Route uses canonical module docs and reviewed relations only; unpromoted candidates can be surfaced for review but must not affect `route.modules`, `route.contextModules`, or benchmark scoring.
-- HTML view is the English human review layer for maps, evidence, freshness, and candidates.
-- i18n / zh-CN / locale mirrors are paused; future translation work should be a separate candidate workflow, not a second maintained fact store.
+- HTML view is the human review layer for maps, evidence, freshness, and candidates; UI labels default to English and can be exported in Chinese with `--ui-lang zh-CN`.
+- i18n / zh-CN / locale mirrors remain paused; UI label localization must not become a second maintained fact store.
 - Old import graph, route v2, and pack v2 plans are paused historical ideas, not the active roadmap.
 
 ## Install
@@ -88,6 +88,8 @@ cmap verify --ci --format markdown
 cmap obsidian export
 cmap obsidian export --check
 cmap view export --out _cmap-view
+cmap view export --ui-lang zh-CN --out _cmap-view
+cmap view export --include-support --out _cmap-view
 cmap view export --check --out _cmap-view
 cmap skill export --host codex
 cmap skill export --check
@@ -160,6 +162,8 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap obsidian open <module>` | Print an `obsidian://` URI for a module note. |
 | `cmap obsidian pull --dry-run` | Detect candidate edits from exported Obsidian notes without changing `.context`. |
 | `cmap view export --out _cmap-view` | Export a read-only single-file HTML project-map review dashboard. |
+| `cmap view export --ui-lang zh-CN --out _cmap-view` | Export the same reviewed `.context` facts with Chinese UI labels. |
+| `cmap view export --include-support --out _cmap-view` | Include generated evidence, inbox candidates, and freshness support layers. |
 | `cmap view export --check --out _cmap-view` | Fail when the HTML review dashboard is missing or stale. |
 | `cmap relate request --task ... --changed ...` | Generate an AI RelationPatch request prompt/template. |
 | `cmap relate ingest --from <json> --dry-run` | Validate AI relation candidates without writing inbox files. |

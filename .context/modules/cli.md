@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-16T01:33:55+08:00
+updated_at: 2026-05-17T22:06:00+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -64,6 +64,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `evidence append/list/migrate` and `freshness snapshot/diff/mark-reviewed/review` while keeping generated-store and freshness policy in command modules.
 - Register `inbox status/triage/promote/reject/archive` while keeping candidate governance, explicit rejection, and low-risk apply policy in command modules.
 - Register `view export/open` while keeping HTML collection/render/check behavior in `view`.
+- Register `view export --ui-lang en|zh-CN` and `--include-support` while keeping localization presentation-only.
 - Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
 - Register `codex start/finish/guard/handoff` as explicit Codex workflow commands without relying on strict hook parity.
 - Register `skill export` and `bootstrap --init` as host-neutral IDE onboarding commands without embedding skill template rendering in `cli.ts`.

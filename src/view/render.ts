@@ -1,15 +1,20 @@
 import { type CmapViewData } from "./schema.js";
-import { enMessages, type ViewMessages } from "./messages.js";
+import { type ViewMessages, type ViewUiLang, viewMessages } from "./messages.js";
 
-export function renderViewHtml(data: CmapViewData): string {
+export type RenderViewOptions = {
+  uiLang?: ViewUiLang;
+};
+
+export function renderViewHtml(data: CmapViewData, options: RenderViewOptions = {}): string {
+  const messages = viewMessages(options.uiLang ?? "en");
   const safeData = redactViewData(data);
   const json = escapeScriptJson(JSON.stringify(safeData, null, 2));
   return `<!doctype html>
-<html lang="en">
+<html lang="${escapeAttr(options.uiLang ?? "en")}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${escapeHtml(safeData.project.name)} ${escapeHtml(enMessages.htmlTitleSuffix)}</title>
+  <title>${escapeHtml(safeData.project.name)} ${escapeHtml(messages.htmlTitleSuffix)}</title>
   <style>
     :root { color-scheme: light; --ink: #19201f; --muted: #63706c; --line: #d9dfdc; --wash: #f5f7f6; --accent: #145c4b; --warn: #8a4b00; }
     * { box-sizing: border-box; }
@@ -31,6 +36,13 @@ export function renderViewHtml(data: CmapViewData): string {
     .pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; margin: 2px 4px 2px 0; color: var(--muted); font-size: 12px; }
     .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .compact-list { margin: 6px 0 10px; padding-left: 18px; }
+    .section-stack { display: grid; gap: 12px; }
+    .context-file, .module-detail { margin: 10px 0; }
+    .markdown-block { white-space: normal; overflow-wrap: anywhere; }
+    .markdown-block pre, pre.markdown-raw { white-space: pre-wrap; overflow-x: auto; background: var(--wash); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+    .markdown-block ul { margin: 6px 0 10px; padding-left: 18px; }
+    dialog { max-width: min(920px, calc(100vw - 32px)); width: 860px; border: 1px solid var(--line); border-radius: 8px; padding: 16px; }
+    dialog::backdrop { background: rgba(15, 23, 42, 0.28); }
     button { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; background: #fff; color: var(--ink); font: inherit; font-size: 12px; cursor: pointer; }
     button:hover { border-color: var(--accent); color: var(--accent); }
     .is-hidden { display: none !important; }
@@ -43,50 +55,59 @@ export function renderViewHtml(data: CmapViewData): string {
 </head>
 <body>
   <header>
-    <h1>${escapeHtml(safeData.project.name)} ${escapeHtml(enMessages.htmlTitleSuffix)}</h1>
-    <p class="meta">Schema ${escapeHtml(safeData.schema)} · Generated ${escapeHtml(safeData.generatedAt)} · Root ${escapeHtml(safeData.projectRootName)}</p>
-    <p class="meta">${escapeHtml(enMessages.canonicalSource)}: .context/ · ${escapeHtml(enMessages.generatedSource)}: .context/generated/${safeData.sourceCommit ? ` · ${escapeHtml(enMessages.sourceCommit)} ${escapeHtml(safeData.sourceCommit)}` : ""}</p>
+    <h1>${escapeHtml(safeData.project.name)} ${escapeHtml(messages.htmlTitleSuffix)}</h1>
+    <p class="meta">${escapeHtml(messages.schema)} ${escapeHtml(safeData.schema)} · ${escapeHtml(messages.generatedAt)} ${escapeHtml(safeData.generatedAt)} · ${escapeHtml(messages.root)} ${escapeHtml(safeData.projectRootName)}</p>
+    <p class="meta">${escapeHtml(messages.canonicalSource)}: .context/ · ${escapeHtml(messages.generatedSource)}: .context/generated/${safeData.sourceCommit ? ` · ${escapeHtml(messages.sourceCommit)} ${escapeHtml(safeData.sourceCommit)}` : ""}</p>
     <div class="grid">
-      ${stat(enMessages.modules, safeData.summary.moduleCount)}
-      ${stat(enMessages.evidence, safeData.summary.evidenceCount)}
-      ${stat(enMessages.candidates, safeData.summary.candidateCount)}
-      ${stat(enMessages.warnings, safeData.summary.warningCount)}
+      ${stat(messages.modules, safeData.summary.moduleCount)}
+      ${stat(messages.evidence, safeData.summary.evidenceCount)}
+      ${stat(messages.candidates, safeData.summary.candidateCount)}
+      ${stat(messages.warnings, safeData.summary.warningCount)}
     </div>
   </header>
   <main>
-    <section class="toolbar" aria-label="${escapeAttr(enMessages.reviewFilters)}">
-      <input id="view-search" type="search" placeholder="${escapeAttr(enMessages.searchPlaceholder)}">
-      <label><input id="filter-stale" type="checkbox"> ${escapeHtml(enMessages.stale)}</label>
-      <label><input id="filter-candidates" type="checkbox"> ${escapeHtml(enMessages.hasCandidates)}</label>
-      <label><input id="filter-high-risk" type="checkbox"> ${escapeHtml(enMessages.highRisk)}</label>
-      <label><input id="filter-generated" type="checkbox"> ${escapeHtml(enMessages.generatedEvidenceFilter)}</label>
+    <section class="toolbar" aria-label="${escapeAttr(messages.reviewFilters)}">
+      <input id="view-search" type="search" placeholder="${escapeAttr(messages.searchPlaceholder)}">
+      <label><input id="filter-stale" type="checkbox"> ${escapeHtml(messages.stale)}</label>
+      <label><input id="filter-candidates" type="checkbox"> ${escapeHtml(messages.hasCandidates)}</label>
+      <label><input id="filter-high-risk" type="checkbox"> ${escapeHtml(messages.highRisk)}</label>
+      <label><input id="filter-generated" type="checkbox"> ${escapeHtml(messages.generatedEvidenceFilter)}</label>
     </section>
     <section>
-      <h2>${escapeHtml(enMessages.overview)}</h2>
-      ${renderOverview(safeData, enMessages)}
+      <h2>${escapeHtml(messages.overview)}</h2>
+      ${renderOverview(safeData, messages)}
     </section>
     <section>
-      <h2>${escapeHtml(enMessages.warnings)}</h2>
-      ${safeData.warnings.length > 0 ? `<div class="panel warning"><ul>${safeData.warnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : `<p class="meta">${escapeHtml(enMessages.noWarnings)}</p>`}
+      <h2>${escapeHtml(messages.warnings)}</h2>
+      ${safeData.warnings.length > 0 ? `<div class="panel warning"><ul>${safeData.warnings.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : `<p class="meta">${escapeHtml(messages.noWarnings)}</p>`}
     </section>
     <section>
-      <h2>${escapeHtml(enMessages.modules)}</h2>
-      <div class="modules">${safeData.modules.map((module) => renderModule(module, enMessages)).join("")}</div>
+      <h2>${escapeHtml(messages.modules)}</h2>
+      <div class="modules">${safeData.modules.map((module) => renderModule(module, messages)).join("")}</div>
     </section>
     <section>
-      <h2>${escapeHtml(enMessages.canonicalRelations)}</h2>
-      ${renderCanonicalRelations(safeData, enMessages)}
+      <h2>${escapeHtml(messages.canonicalRelations)}</h2>
+      ${renderCanonicalRelations(safeData, messages)}
     </section>
     <section>
-      <h2>${escapeHtml(enMessages.verification)}</h2>
-      ${renderVerification(safeData, enMessages)}
+      <h2>${escapeHtml(messages.verification)}</h2>
+      ${renderVerification(safeData, messages)}
     </section>
-    ${safeData.included.freshness ? `<section><h2>${escapeHtml(enMessages.freshness)}</h2>${renderFreshness(safeData, enMessages)}</section>` : ""}
-    ${safeData.included.generated ? `<section><h2>${escapeHtml(enMessages.generatedEvidence)}</h2>${renderEvidence(safeData, enMessages)}</section>` : ""}
-    ${safeData.included.inbox ? `<section><h2>${escapeHtml(enMessages.reviewCandidates)}</h2>${renderCandidates(safeData, enMessages)}</section><section><h2>${escapeHtml(enMessages.relationCandidates)}</h2>${renderRelationCandidates(safeData, enMessages)}</section>` : ""}
-    <dialog id="module-dialog"><button type="button" data-close-dialog>${escapeHtml(enMessages.close)}</button><h2 id="module-dialog-title">${escapeHtml(enMessages.module)}</h2><pre id="module-dialog-body"></pre></dialog>
+    <section>
+      <h2>${escapeHtml(messages.contextFiles)}</h2>
+      ${renderContextFiles(safeData, messages)}
+    </section>
+    <section>
+      <h2>${escapeHtml(messages.supportLayers)}</h2>
+      <p class="meta">${escapeHtml(messages.supportLayersHint)}</p>
+    </section>
+    ${safeData.included.freshness ? `<section><h2>${escapeHtml(messages.freshness)}</h2>${renderFreshness(safeData, messages)}</section>` : ""}
+    ${safeData.included.generated ? `<section><h2>${escapeHtml(messages.generatedEvidence)}</h2>${renderEvidence(safeData, messages)}</section>` : ""}
+    ${safeData.included.inbox ? `<section><h2>${escapeHtml(messages.reviewCandidates)}</h2>${renderCandidates(safeData, messages)}</section><section><h2>${escapeHtml(messages.relationCandidates)}</h2>${renderRelationCandidates(safeData, messages)}</section>` : ""}
+    <dialog id="module-dialog"><button type="button" data-close-dialog>${escapeHtml(messages.close)}</button><h2 id="module-dialog-title">${escapeHtml(messages.moduleDetails)}</h2><div id="module-dialog-body"></div></dialog>
+    <div hidden>${safeData.modules.map((module) => `<template data-module-detail="${escapeAttr(module.id)}">${renderModuleDetail(module, messages)}</template>`).join("")}</div>
     <script type="application/json" id="cmap-view-data">${json}</script>
-    <script>${renderClientScript()}</script>
+    <script>${renderClientScript(messages)}</script>
   </main>
 </body>
 </html>
@@ -129,6 +150,9 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
     relationText,
     incomingText,
     module.responsibilities.join(" "),
+    module.keyContracts.join(" "),
+    module.readNext.join(" "),
+    module.sections.map((section) => `${section.heading} ${section.body}`).join(" "),
     module.verifyCommands.join(" "),
     module.relatedCandidates.map((candidate) => `${candidate.id} ${candidate.summary}`).join(" ")
   ].join(" ");
@@ -138,9 +162,11 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
   return `<article class="module" data-search="${escapeAttr(searchable)}" data-stale="${isStale ? "true" : "false"}" data-has-candidate="${hasCandidate ? "true" : "false"}" data-high-risk="false" data-generated="${hasGenerated ? "true" : "false"}" data-module-id="${escapeAttr(module.id)}">
     <h3>${escapeHtml(module.name)}</h3>
     <p class="meta"><code>${escapeHtml(module.id)}</code> · ${escapeHtml(module.status)} · ${escapeHtml(module.docPath)}</p>
-    <p>${module.aliases.map((alias) => `<span class="pill">${escapeHtml(alias)}</span>`).join("")}</p>
+    <p><strong>${escapeHtml(messages.aliases)}:</strong> ${module.aliases.map((alias) => `<span class="pill">${escapeHtml(alias)}</span>`).join("") || escapeHtml(messages.notAvailable)}</p>
     ${module.description ? `<p><strong>${escapeHtml(messages.purpose)}:</strong> ${escapeHtml(module.description)}</p>` : ""}
     ${module.responsibilities.length > 0 ? `<div><strong>${escapeHtml(messages.responsibilities)}:</strong><ul class="compact-list">${module.responsibilities.slice(0, 4).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}
+    ${module.keyContracts.length > 0 ? `<div><strong>${escapeHtml(messages.keyContracts)}:</strong><ul class="compact-list">${module.keyContracts.slice(0, 3).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul></div>` : ""}
+    ${module.readNext.length > 0 ? `<p><strong>${escapeHtml(messages.readNext)}:</strong> ${module.readNext.slice(0, 3).map(renderInlineMarkdown).join(", ")}</p>` : ""}
     <p><strong>${escapeHtml(messages.paths)}:</strong> ${escapeHtml(module.paths.join(", ") || messages.notAvailable)}</p>
     <p><strong>${escapeHtml(messages.relations)}:</strong> ${escapeHtml(relationText)}</p>
     <p><strong>${escapeHtml(messages.incomingRelations)}:</strong> ${escapeHtml(incomingText)}</p>
@@ -148,9 +174,35 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
     ${module.verifyCommands.length > 0 ? `<p><strong>${escapeHtml(messages.moduleVerify)}:</strong> ${module.verifyCommands.map((command) => `<code>${escapeHtml(command)}</code>`).join(", ")}</p>` : ""}
     ${module.relatedCandidates.length > 0 ? `<p><strong>${escapeHtml(messages.relatedCandidates)}:</strong> ${module.relatedCandidates.map((candidate) => `<span class="pill">${escapeHtml(candidate.id)} · ${escapeHtml(candidate.type)}</span>`).join("")}</p>` : ""}
     <p><strong>${escapeHtml(messages.freshnessLabel)}:</strong> ${escapeHtml(module.freshness.state)} · ${escapeHtml(module.freshness.lastReviewedAt)}</p>
-    ${renderCommandButtons(module.suggestedCommands)}
+    ${renderCommandButtons(module.suggestedCommands, messages)}
     <button type="button" data-open-module="${escapeAttr(module.id)}">${escapeHtml(messages.details)}</button>
   </article>`;
+}
+
+function renderModuleDetail(module: CmapViewData["modules"][number], messages: ViewMessages): string {
+  const sections = module.sections.length > 0
+    ? module.sections.map((section) => `<section class="module-detail"><h3>${escapeHtml(section.heading)}</h3>${renderMarkdownBlock(section.body)}</section>`).join("")
+    : `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
+  return `<div class="section-stack">
+    <p class="meta"><code>${escapeHtml(module.docPath)}</code></p>
+    ${sections}
+    <section class="module-detail">
+      <h3>${escapeHtml(messages.paths)}</h3>
+      <p>${escapeHtml(module.paths.join(", ") || messages.notAvailable)}</p>
+    </section>
+  </div>`;
+}
+
+function renderContextFiles(data: CmapViewData, messages: ViewMessages): string {
+  if (data.contextFiles.length === 0) {
+    return `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
+  }
+  return `<div class="section-stack">${data.contextFiles.map((file) => `<details class="panel context-file">
+    <summary><strong>${escapeHtml(file.path)}</strong> · ${escapeHtml(file.title)}</summary>
+    ${file.sections.length > 0
+      ? file.sections.map((section) => `<section><h3>${escapeHtml(section.heading)}</h3>${renderMarkdownBlock(section.body)}</section>`).join("")
+      : `<pre class="markdown-raw">${escapeHtml(file.body)}</pre>`}
+  </details>`).join("")}</div>`;
 }
 
 function renderCanonicalRelations(data: CmapViewData, messages: ViewMessages): string {
@@ -211,14 +263,14 @@ function renderCandidates(data: CmapViewData, messages: ViewMessages): string {
   if (data.candidates.length === 0) {
     return `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
   }
-  return `<table><thead><tr><th>${escapeHtml(messages.id)}</th><th>${escapeHtml(messages.type)}</th><th>${escapeHtml(messages.risk)}</th><th>${escapeHtml(messages.moduleColumn)}</th><th>${escapeHtml(messages.summary)}</th><th>${escapeHtml(messages.command)}</th></tr></thead><tbody>${data.candidates.map((candidate) => `<tr data-search="${escapeAttr([candidate.id, candidate.type, candidate.risk, candidate.moduleId, candidate.summary].join(" "))}" data-has-candidate="true" data-high-risk="${candidate.risk === "high" ? "true" : "false"}"><td>${escapeHtml(candidate.id)}</td><td>${escapeHtml(candidate.type)}</td><td>${escapeHtml(candidate.risk)}</td><td>${escapeHtml(candidate.moduleId)}</td><td>${escapeHtml(candidate.summary)}</td><td>${renderCommandButtons(candidate.suggestedCommands)}</td></tr>`).join("")}</tbody></table>`;
+  return `<table><thead><tr><th>${escapeHtml(messages.id)}</th><th>${escapeHtml(messages.type)}</th><th>${escapeHtml(messages.risk)}</th><th>${escapeHtml(messages.moduleColumn)}</th><th>${escapeHtml(messages.summary)}</th><th>${escapeHtml(messages.command)}</th></tr></thead><tbody>${data.candidates.map((candidate) => `<tr data-search="${escapeAttr([candidate.id, candidate.type, candidate.risk, candidate.moduleId, candidate.summary].join(" "))}" data-has-candidate="true" data-high-risk="${candidate.risk === "high" ? "true" : "false"}"><td>${escapeHtml(candidate.id)}</td><td>${escapeHtml(candidate.type)}</td><td>${escapeHtml(candidate.risk)}</td><td>${escapeHtml(candidate.moduleId)}</td><td>${escapeHtml(candidate.summary)}</td><td>${renderCommandButtons(candidate.suggestedCommands, messages)}</td></tr>`).join("")}</tbody></table>`;
 }
 
 function renderRelationCandidates(data: CmapViewData, messages: ViewMessages): string {
   if (data.relationCandidates.length === 0) {
     return `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
   }
-  return `<table><thead><tr><th>${escapeHtml(messages.id)}</th><th>${escapeHtml(messages.relation)}</th><th>${escapeHtml(messages.from)}</th><th>${escapeHtml(messages.to)}</th><th>${escapeHtml(messages.summary)}</th><th>${escapeHtml(messages.command)}</th></tr></thead><tbody>${data.relationCandidates.map((candidate) => `<tr data-search="${escapeAttr([candidate.id, candidate.relation, candidate.from, candidate.to, candidate.summary].join(" "))}" data-has-candidate="true" data-high-risk="false"><td>${escapeHtml(candidate.id)}<br><span class="pill">${escapeHtml(messages.candidateNonCanonical)}</span></td><td>${escapeHtml(candidate.relation)}</td><td>${escapeHtml(candidate.from)}</td><td>${escapeHtml(candidate.to)}</td><td>${escapeHtml(candidate.summary)}</td><td>${renderCommandButtons(candidate.suggestedCommands)}</td></tr>`).join("")}</tbody></table>`;
+  return `<table><thead><tr><th>${escapeHtml(messages.id)}</th><th>${escapeHtml(messages.relation)}</th><th>${escapeHtml(messages.from)}</th><th>${escapeHtml(messages.to)}</th><th>${escapeHtml(messages.summary)}</th><th>${escapeHtml(messages.command)}</th></tr></thead><tbody>${data.relationCandidates.map((candidate) => `<tr data-search="${escapeAttr([candidate.id, candidate.relation, candidate.from, candidate.to, candidate.summary].join(" "))}" data-has-candidate="true" data-high-risk="false"><td>${escapeHtml(candidate.id)}<br><span class="pill">${escapeHtml(messages.candidateNonCanonical)}</span></td><td>${escapeHtml(candidate.relation)}</td><td>${escapeHtml(candidate.from)}</td><td>${escapeHtml(candidate.to)}</td><td>${escapeHtml(candidate.summary)}</td><td>${renderCommandButtons(candidate.suggestedCommands, messages)}</td></tr>`).join("")}</tbody></table>`;
 }
 
 function renderRelationExplanation(
@@ -237,11 +289,89 @@ function renderRelationExplanation(
   </div>`;
 }
 
-function renderCommandButtons(commands: Array<{ label: string; command: string }>): string {
+function renderCommandButtons(commands: Array<{ label: string; command: string }>, messages: ViewMessages): string {
   if (commands.length === 0) {
     return "";
   }
-  return `<div class="actions">${commands.map((item) => `<button type="button" data-copy-command="${escapeAttr(item.command)}">${escapeHtml(item.label)}</button>`).join("")}</div>`;
+  return `<div class="actions">${commands.map((item) => `<button type="button" data-copy-command="${escapeAttr(item.command)}">${escapeHtml(commandLabel(item.label, messages))}</button>`).join("")}</div>`;
+}
+
+function commandLabel(label: string, messages: ViewMessages): string {
+  if (label === "Review module") {
+    return messages.reviewModule;
+  }
+  if (label === "Mark reviewed") {
+    return messages.markReviewed;
+  }
+  if (label === "Dry run") {
+    return messages.dryRun;
+  }
+  return label;
+}
+
+function renderMarkdownBlock(value: string): string {
+  const blocks: string[] = [];
+  const lines = value.split(/\r?\n/);
+  let paragraph: string[] = [];
+  let list: string[] = [];
+  let code: string[] | undefined;
+
+  function flushParagraph(): void {
+    if (paragraph.length > 0) {
+      blocks.push(`<p>${renderInlineMarkdown(paragraph.join(" "))}</p>`);
+      paragraph = [];
+    }
+  }
+  function flushList(): void {
+    if (list.length > 0) {
+      blocks.push(`<ul>${list.map((item) => `<li>${renderInlineMarkdown(item)}</li>`).join("")}</ul>`);
+      list = [];
+    }
+  }
+  function flushCode(): void {
+    if (code) {
+      blocks.push(`<pre><code>${escapeHtml(code.join("\n"))}</code></pre>`);
+      code = undefined;
+    }
+  }
+
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      if (code) {
+        flushCode();
+      } else {
+        flushParagraph();
+        flushList();
+        code = [];
+      }
+      continue;
+    }
+    if (code) {
+      code.push(line);
+      continue;
+    }
+    const bullet = line.match(/^\s*[-*]\s+(.+?)\s*$/);
+    if (bullet) {
+      flushParagraph();
+      list.push(bullet[1]);
+      continue;
+    }
+    if (!line.trim()) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+    flushList();
+    paragraph.push(line.trim());
+  }
+  flushParagraph();
+  flushList();
+  flushCode();
+  return `<div class="markdown-block">${blocks.join("") || `<p class="meta">Not available.</p>`}</div>`;
+}
+
+function renderInlineMarkdown(value: string): string {
+  return escapeHtml(value).replace(/`([^`]+)`/g, "<code>$1</code>");
 }
 
 export function redactViewData(data: CmapViewData): CmapViewData {
@@ -278,7 +408,7 @@ function escapeScriptJson(value: string): string {
   return value.replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
 }
 
-function renderClientScript(): string {
+function renderClientScript(messages: ViewMessages): string {
   return `(function () {
   const dataEl = document.getElementById("cmap-view-data");
   const data = dataEl ? JSON.parse(dataEl.textContent || "{}") : {};
@@ -312,7 +442,7 @@ function renderClientScript(): string {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         await navigator.clipboard.writeText(command);
       }
-      target.textContent = "Copied";
+      target.textContent = ${JSON.stringify(messages.copied)};
     }
     const moduleId = target.getAttribute("data-open-module");
     if (moduleId) {
@@ -320,9 +450,11 @@ function renderClientScript(): string {
       const dialog = document.getElementById("module-dialog");
       const title = document.getElementById("module-dialog-title");
       const body = document.getElementById("module-dialog-body");
-      if (module && dialog && title && body) {
+      const template = Array.from(document.querySelectorAll("template[data-module-detail]"))
+        .find((item) => item.getAttribute("data-module-detail") === moduleId);
+      if (module && dialog && title && body && template) {
         title.textContent = module.name || module.id;
-        body.textContent = JSON.stringify(module, null, 2);
+        body.replaceChildren(template.content.cloneNode(true));
         dialog.showModal && dialog.showModal();
       }
     }

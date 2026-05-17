@@ -28,6 +28,7 @@ describe("skill export and bootstrap", () => {
     expect(skill).toContain("description:");
     expect(skill).toContain("CMAP Project Map Skill");
     expect(skill).toContain("Canonical Facts");
+    expect(skill).toContain("stable English anchors");
     expect(skill).toContain("AGENTS.md");
     expect(commands).toContain("cmap route \"<task>\"");
     expect(commands).not.toContain("--lang");
@@ -91,6 +92,8 @@ describe("skill export and bootstrap", () => {
     expect(skill).toContain("CMAP Project Map Skill");
     expect(startHere).toContain("This project uses CMAP.");
     expect(startHere).toContain("cmap route \"<task>\"");
+    expect(startHere).toContain("keep section headings in English");
+    expect(startHere).toContain("--ui-lang zh-CN");
     expect(startHere).not.toContain("--lang");
   });
 

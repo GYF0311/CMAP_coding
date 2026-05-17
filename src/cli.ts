@@ -480,8 +480,10 @@ view
   .option("--include-generated", "Include generated evidence")
   .option("--include-inbox", "Include inbox candidates")
   .option("--include-freshness", "Include generated freshness data")
+  .option("--include-support", "Include generated evidence, inbox candidates, and freshness data")
+  .option("--ui-lang <lang>", "UI language for labels: en or zh-CN", "en")
   .option("--check", "Check whether the view export is up to date without writing files")
-  .action(async (options: { out?: string; singleFile?: boolean; includeGenerated?: boolean; includeInbox?: boolean; includeFreshness?: boolean; check?: boolean }) => {
+  .action(async (options: { out?: string; singleFile?: boolean; includeGenerated?: boolean; includeInbox?: boolean; includeFreshness?: boolean; includeSupport?: boolean; uiLang?: string; check?: boolean }) => {
     const code = await runViewExport(process.cwd(), options);
     process.exitCode = code;
   });

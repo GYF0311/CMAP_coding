@@ -42,6 +42,9 @@ Trusted:
 - \`.context/VERIFY.md\`
 - \`.context/modules/*.md\`
 
+Writing rule:
+- Keep canonical section headings in stable English anchors; body text can be Chinese or the project's preferred human language.
+
 Non-canonical:
 - \`.context/out/\`
 - \`.context/inbox/\`
@@ -67,6 +70,8 @@ See \`boundaries.md\`.
 - \`cmap brief "<task>" --out .context/out/brief.md\` - write an AI coding brief.
 - \`cmap pack "<task>" --out .context/out/pack.md\` - write a bounded context pack.
 - \`cmap view export --out _cmap-view\` - export the human review page.
+- \`cmap view export --ui-lang zh-CN --out _cmap-view\` - export Chinese UI labels without changing canonical facts.
+- \`cmap view export --include-support --out _cmap-view\` - include generated/freshness/inbox support layers.
 - \`cmap finish --agent --task "..."\` - write a closeout/update request.
 - \`cmap update --agent --from <file> --apply-routine\` - apply policy-approved routine updates and route semantic changes to inbox.
 - \`cmap verify --changed\` - verify project map consistency for changed files.
@@ -83,6 +88,10 @@ See \`boundaries.md\`.
 - \`.context/DECISIONS.md\`
 - \`.context/VERIFY.md\`
 - \`.context/modules/*.md\`
+
+## Writing Contract
+- Keep \`.context\` section headings in stable English anchors such as \`Purpose\`, \`Responsibilities\`, \`Key Contracts\`, \`Read Next\`, and \`Tests / Verification\`.
+- Write the body text in the project's human language when that makes review clearer.
 
 ## Non-canonical
 - \`.context/out/\`

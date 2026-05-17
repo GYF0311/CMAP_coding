@@ -33,6 +33,15 @@ export const CmapViewDataSchema = z.object({
     })),
     manualChecks: z.array(z.string())
   }),
+  contextFiles: z.array(z.object({
+    path: z.string(),
+    title: z.string(),
+    body: z.string(),
+    sections: z.array(z.object({
+      heading: z.string(),
+      body: z.string()
+    }))
+  })),
   summary: z.object({
     moduleCount: z.number().int().nonnegative(),
     evidenceCount: z.number().int().nonnegative(),
@@ -50,6 +59,12 @@ export const CmapViewDataSchema = z.object({
     paths: z.array(z.string()),
     description: z.string().optional(),
     responsibilities: z.array(z.string()),
+    keyContracts: z.array(z.string()),
+    readNext: z.array(z.string()),
+    sections: z.array(z.object({
+      heading: z.string(),
+      body: z.string()
+    })),
     relations: z.array(z.object({
       type: z.string(),
       target: z.string(),

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-05-17T22:06:00+08:00
 confidence: ai-drafted
 module: context
 paths:
@@ -29,6 +29,7 @@ Create and describe `.context` files and deterministic maintenance policy withou
 
 ## Responsibilities
 - Provide Markdown templates with frontmatter.
+- Keep generated canonical `.context` templates on stable English section headings while allowing body text to use the project's human language.
 - Include `CHECKPOINT.md` as the explicit current handoff template.
 - Create default directory names.
 - Include non-canonical `.context/inbox/` and `.context/out/` directories for candidate facts and generated task outputs.
@@ -53,6 +54,7 @@ Writes `.context/**` through `init`; reads `.context/policy.yml` through `loadCo
 
 ## Constraints
 - Templates may contain placeholders but must not assert guessed project facts.
+- Canonical section headings are parser anchors and should stay English; Chinese or other local-language prose belongs in the body.
 - Scanner may use package scripts as deterministic signals only.
 - Policy defaults may enable routine/generated writes, but semantic and decision updates must remain disabled by default.
 

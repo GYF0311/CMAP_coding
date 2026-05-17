@@ -34,6 +34,9 @@ confidence: candidate
 ---
 # Module: ${name}
 
+## Heading Contract
+Keep section headings in stable English anchors. Body text can be Chinese or the project's preferred human language.
+
 ## Purpose
 TODO(ai-fill)
 
@@ -41,6 +44,12 @@ TODO(ai-fill)
 ${paths.map((item) => `- ${item}`).join("\n")}
 
 ## Responsibilities
+TODO(ai-fill)
+
+## Key Contracts
+TODO(ai-fill)
+
+## Read Next
 TODO(ai-fill)
 
 ## Depends On

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-16T12:13:42+08:00
+updated_at: 2026-05-17T22:06:00+08:00
 confidence: ai-drafted
 module: skill
 paths:
@@ -41,6 +41,7 @@ Export portable cmap skill/reference instructions and bootstrap project onboardi
 - Support explicit new-project onboarding with `cmap bootstrap --init --host both --skill`, which creates the `.context` skeleton before installing entrypoints.
 - Refuse default bootstrap before `.context` exists and clearly recommend `cmap bootstrap --init --host both --skill` for new projects.
 - Keep skill content as guidance only; it must point back to `.context` as the trusted project memory.
+- Include the `.context` writing contract: stable English section headings, project-language body prose.
 
 ## Depends On
 - `host` for non-destructive `AGENTS.md` / `CLAUDE.md` install.
@@ -65,6 +66,7 @@ Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bo
 - Skill export is a discoverability/reference layer, not a canonical fact layer.
 - Bootstrap must not overwrite existing host rules; it relies on marker merge.
 - Do not revive `--lang`, locale config, translation mirrors, or `.context/i18n` through skill/bootstrap.
+- `view export --ui-lang zh-CN` localizes Review HTML UI labels only; it is not a skill/bootstrap localization path.
 - Host-specific hints can differ, but core cmap boundaries must stay consistent.
 
 ## Traps

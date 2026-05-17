@@ -13,6 +13,7 @@ import { type CmapViewData, viewDataSchemaId } from "./schema.js";
 
 const MAX_EVIDENCE = 50;
 const MAX_CANDIDATES = 100;
+const CANONICAL_CONTEXT_FILES = ["MAP.md", "CHECKPOINT.md", "STATUS.md", "DECISIONS.md", "VERIFY.md"];
 const execFileAsync = promisify(execFile);
 
 type InboxCandidateView = CmapViewData["candidates"][number];
@@ -39,6 +40,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
     ? await collectInboxCandidates(cwd, warnings)
     : { candidates: [], relationCandidates: [] };
   await checkRelationData(modules, warnings);
+  checkModuleHeadingPolicy(modules, warnings);
 
   return {
     schema: viewDataSchemaId,
@@ -52,6 +54,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
     },
     overview: await collectOverview(cwd),
     verify: await collectVerify(cwd),
+    contextFiles: await collectContextFiles(cwd),
     summary: {
       moduleCount: modules.length,
       evidenceCount: evidence.length,
@@ -96,7 +99,10 @@ function toModuleView(
     aliases: module.aliases,
     paths: module.pathsInclude,
     description: extractModuleDescription(module.body),
-    responsibilities: extractBulletSection(module.body, "responsibilities"),
+    responsibilities: extractBulletSection(module.body, ["Responsibilities", "职责"]),
+    keyContracts: extractBulletSection(module.body, ["Key Contracts", "Contracts", "Constraints", "关键契约", "约束"]),
+    readNext: extractBulletSection(module.body, ["Read Next", "Read First", "读什么", "阅读入口"]),
+    sections: parseMarkdownSectionsList(module.body),
     relations: Object.entries(module.relations).flatMap(([type, targets]) => targets.map((target) => ({
       type,
       target,
@@ -154,20 +160,24 @@ function toRelatedCandidate(candidate: {
 
 function extractModuleDescription(body: string): string | undefined {
   const sections = parseMarkdownSections(body);
-  const preferred = sections.get("purpose");
+  const preferred = firstSection(sections, ["Purpose", "职责", "Responsibilities", "Overview", "简介"]);
   const summary = firstNonEmptyParagraph(preferred ?? body);
   return summary;
 }
 
 function parseMarkdownSections(body: string): Map<string, string> {
-  const sections = new Map<string, string>();
+  return new Map(parseMarkdownSectionsList(body).map((section) => [section.heading.toLocaleLowerCase(), section.body]));
+}
+
+function parseMarkdownSectionsList(body: string): Array<{ heading: string; body: string }> {
+  const sections: Array<{ heading: string; body: string }> = [];
   let current: string | undefined;
   let buffer: string[] = [];
   for (const line of body.split(/\r?\n/)) {
     const match = line.match(/^##\s+(.+?)\s*$/);
     if (match) {
       if (current) {
-        sections.set(current.toLocaleLowerCase(), buffer.join("\n"));
+        sections.push({ heading: current, body: buffer.join("\n").trim() });
       }
       current = match[1].trim();
       buffer = [];
@@ -178,9 +188,19 @@ function parseMarkdownSections(body: string): Map<string, string> {
     }
   }
   if (current) {
-    sections.set(current.toLocaleLowerCase(), buffer.join("\n"));
+    sections.push({ heading: current, body: buffer.join("\n").trim() });
   }
   return sections;
+}
+
+function firstSection(sections: Map<string, string>, headings: string[]): string | undefined {
+  for (const heading of headings) {
+    const section = sections.get(heading.toLocaleLowerCase());
+    if (section) {
+      return section;
+    }
+  }
+  return undefined;
 }
 
 function firstNonEmptyParagraph(value: string): string | undefined {
@@ -191,8 +211,9 @@ function firstNonEmptyParagraph(value: string): string | undefined {
     .filter((paragraph) => !paragraph.startsWith("#"))[0];
 }
 
-function extractBulletSection(body: string, heading: string): string[] {
-  const section = parseMarkdownSections(body).get(heading.toLocaleLowerCase());
+function extractBulletSection(body: string, headings: string[]): string[] {
+  const sections = parseMarkdownSections(body);
+  const section = firstSection(sections, headings);
   if (!section) {
     return [];
   }
@@ -203,7 +224,8 @@ function extractBulletSection(body: string, heading: string): string[] {
 }
 
 function extractVerificationCommands(body: string): string[] {
-  const section = parseMarkdownSections(body).get("tests / verification");
+  const sections = parseMarkdownSections(body);
+  const section = firstSection(sections, ["Tests / Verification", "Verification", "验证"]);
   if (!section) {
     return [];
   }
@@ -211,6 +233,40 @@ function extractVerificationCommands(body: string): string[] {
     .split(/\r?\n/)
     .map((line) => line.match(/^\s*-\s+`([^`]+)`/)?.[1]?.trim())
     .filter((line): line is string => Boolean(line));
+}
+
+function checkModuleHeadingPolicy(modules: ContextModule[], warnings: string[]): void {
+  const offenders = modules
+    .filter((module) => parseMarkdownSectionsList(module.body).some((section) => /[\u3400-\u9fff]/.test(section.heading)))
+    .map((module) => module.id);
+  if (offenders.length > 0) {
+    warnings.push(`Module heading policy: keep .context/modules/*.md section headings in English; body text may be Chinese. Non-English headings found in ${offenders.join(", ")}.`);
+  }
+}
+
+async function collectContextFiles(cwd: string): Promise<CmapViewData["contextFiles"]> {
+  const files: CmapViewData["contextFiles"] = [];
+  for (const relative of CANONICAL_CONTEXT_FILES) {
+    const raw = await maybeReadContextFile(cwd, relative);
+    if (!raw) {
+      continue;
+    }
+    const parsed = matter(raw);
+    files.push({
+      path: `.context/${relative}`,
+      title: firstMarkdownTitle(parsed.content) ?? relative,
+      body: parsed.content.trim(),
+      sections: parseMarkdownSectionsList(parsed.content)
+    });
+  }
+  return files;
+}
+
+function firstMarkdownTitle(body: string): string | undefined {
+  return body
+    .split(/\r?\n/)
+    .map((line) => line.match(/^#\s+(.+?)\s*$/)?.[1]?.trim())
+    .find((line): line is string => Boolean(line));
 }
 
 async function maybeReadFreshness(cwd: string, warnings: string[]): Promise<FreshnessIndex | undefined> {
@@ -422,12 +478,12 @@ async function collectOverview(cwd: string): Promise<CmapViewData["overview"]> {
     maybeReadContextFile(cwd, "CHECKPOINT.md")
   ]);
   return {
-    purpose: firstText(section(map, "Purpose")) ?? firstText(section(map, "Project Purpose")),
-    activeGoal: firstText(section(status, "Active Goal")),
-    currentTask: firstText(section(checkpoint, "Current Task")),
-    nextStep: firstText(section(checkpoint, "Next Step")) ?? firstText(section(status, "Next Steps")),
-    verified: firstText(section(checkpoint, "Verified")),
-    lastVerified: firstText(section(status, "Last Verified"))
+    purpose: firstText(sectionAny(map, ["Purpose", "Project Purpose", "项目目的"])),
+    activeGoal: firstText(sectionAny(status, ["Active Goal", "当前目标"])),
+    currentTask: firstText(sectionAny(checkpoint, ["Current Task", "当前任务"])),
+    nextStep: firstText(sectionAny(checkpoint, ["Next Step", "下一步"])) ?? firstText(sectionAny(status, ["Next Steps", "下一步"])),
+    verified: firstText(sectionAny(checkpoint, ["Verified", "已验证"])),
+    lastVerified: firstText(sectionAny(status, ["Last Verified", "最近验证"]))
   };
 }
 
@@ -437,8 +493,8 @@ async function collectVerify(cwd: string): Promise<CmapViewData["verify"]> {
     return { requiredCommands: [], manualChecks: [] };
   }
   return {
-    requiredCommands: parseRequiredCommands(section(raw, "Required Commands") ?? ""),
-    manualChecks: bulletItems(section(raw, "Manual Verification") ?? "")
+    requiredCommands: parseRequiredCommands(sectionAny(raw, ["Required Commands", "必跑命令"]) ?? ""),
+    manualChecks: bulletItems(sectionAny(raw, ["Manual Verification", "Manual Checks", "人工检查"]) ?? "")
   };
 }
 
@@ -468,6 +524,16 @@ function section(raw: string | undefined, heading: string): string | undefined {
     body.push(line);
   }
   return body.join("\n").trim() || undefined;
+}
+
+function sectionAny(raw: string | undefined, headings: string[]): string | undefined {
+  for (const heading of headings) {
+    const body = section(raw, heading);
+    if (body) {
+      return body;
+    }
+  }
+  return undefined;
 }
 
 function firstText(raw: string | undefined): string | undefined {

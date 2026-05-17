@@ -75,6 +75,11 @@ TODO(ai-fill)
       `${frontmatter(input, "map")}
 # Project Map
 
+## Writing Rules
+- Keep section headings in stable English anchors.
+- Body text can use the project's preferred human language.
+- Keep frontmatter keys, module ids, commands, and code identifiers in English.
+
 ## Purpose
 TODO(ai-fill)
 

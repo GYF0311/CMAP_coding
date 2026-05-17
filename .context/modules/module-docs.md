@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-10T18:15:00+08:00
+updated_at: 2026-05-17T22:06:00+08:00
 confidence: ai-drafted
 module: module-docs
 paths:
@@ -26,6 +26,8 @@ Create a candidate module documentation file for AI/user completion.
 - Validate module names.
 - Create `.context/modules/<name>.md`.
 - Include provided paths and aliases.
+- Include a heading contract in new candidate docs: section headings stay English; body text can be project-language prose.
+- Include `Key Contracts` and `Read Next` sections so Review HTML can show human-readable module cards.
 - Mark new docs as `confidence: candidate`.
 - Avoid editing `MAP.md`.
 

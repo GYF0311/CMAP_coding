@@ -212,6 +212,11 @@ confidence: 0.9
     expect(fullData?.evidence[0].summary).toBe("Generated evidence should be opt-in.");
     expect(fullData?.candidates[0].id).toBe("view-alias");
     expect(fullData?.modules[0].freshness.state).toBe("baseline");
+
+    const support = await runCmap(["view", "export", "--include-support", "--out", ".context/out/support.html"], cwd);
+    expect(support).toMatchObject({ code: 0 });
+    const supportData = await readEmbeddedViewData(path.join(cwd, ".context/out/support.html"));
+    expect(supportData?.included).toEqual({ generated: true, inbox: true, freshness: true });
   });
 
   test("renders review controls, filters, copy commands, and module detail hooks", async () => {
@@ -335,6 +340,76 @@ confidence: 0.9
     expect(html).toContain("Incoming Relations");
     expect(html).toContain("Module Verify");
     expect(html).toContain("Related Candidates");
+    expect(html).toContain("Module Details");
+    expect(viewModule?.sections).toContainEqual(expect.objectContaining({ heading: "Responsibilities" }));
+  });
+
+  test("localized UI renders Chinese module body sections without reviving i18n mirrors", async () => {
+    const cwd = await createViewProject("m19-zh-ui");
+    await writeFile(
+      path.join(cwd, ".context/modules/view.md"),
+      `---
+context_type: module
+module: view
+name: View
+paths:
+  - src/view
+aliases:
+  - view
+  - 审阅页
+confidence: ai-drafted
+---
+# 模块：View
+
+## 职责
+把项目地图渲染成给人看的审阅页。
+
+## 关键契约
+- 只读取可信 .context。
+- 不读取 .context/i18n 镜像。
+
+## 读什么
+- \`src/view/render.ts\`
+- \`.context/modules/view.md\`
+
+## 验证
+- \`pnpm test tests/integration/m19-view-export.test.ts\`
+`,
+      "utf8"
+    );
+    await writeFile(
+      path.join(cwd, ".context/MAP.md"),
+      `---
+context_type: map
+project: zh-ui
+---
+# Project Map
+
+## 项目目的
+给 AI 和人类一个中文正文的项目地图。
+`,
+      "utf8"
+    );
+
+    const result = await runCmap(["view", "export", "--ui-lang", "zh-CN", "--out", ".context/out/view.html"], cwd);
+
+    expect(result).toMatchObject({ code: 0 });
+    const html = await expectFile(path.join(cwd, ".context/out/view.html"));
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/view.html"));
+    const viewModule = data?.modules.find((module) => module.id === "view");
+    expect(html).toContain("<html lang=\"zh-CN\">");
+    expect(html).toContain("概览");
+    expect(html).toContain("关键契约");
+    expect(html).toContain("读什么");
+    expect(html).toContain("审阅模块");
+    expect(html).not.toContain("Review module</button>");
+    expect(html).toContain("把项目地图渲染成给人看的审阅页。");
+    expect(viewModule?.description).toBe("把项目地图渲染成给人看的审阅页。");
+    expect(viewModule?.keyContracts).toContain("只读取可信 .context。");
+    expect(viewModule?.readNext).toContain("`src/view/render.ts`");
+    expect(data?.overview.purpose).toBe("给 AI 和人类一个中文正文的项目地图。");
+    expect(data?.warnings.join("\n")).toContain("Module heading policy");
+    expect(data).not.toHaveProperty("locale");
   });
 
   test("view export rejects the retired --lang option", async () => {
@@ -442,6 +517,20 @@ Render a human review dashboard.
     expect(check.stdout).toContain("View output is up to date.");
   });
 
+  test("view export --ui-lang participates in stale checks", async () => {
+    const cwd = await createViewProject("m19-check-ui-lang");
+    const output = ".context/out/view.html";
+
+    const exported = await runCmap(["view", "export", "--ui-lang", "zh-CN", "--out", output], cwd);
+    const check = await runCmap(["view", "export", "--ui-lang", "zh-CN", "--out", output, "--check"], cwd);
+    const wrongLangCheck = await runCmap(["view", "export", "--out", output, "--check"], cwd);
+
+    expect(exported).toMatchObject({ code: 0 });
+    expect(check).toMatchObject({ code: 0 });
+    expect(wrongLangCheck.code).toBe(1);
+    expect(wrongLangCheck.stdout).toContain("View output is stale.");
+  });
+
   test("overview and verification data are parsed into the view contract", async () => {
     const cwd = await createViewProject("m19-overview");
     await writeFile(
@@ -508,8 +597,11 @@ context_type: verify
     expect(data?.overview.nextStep).toBe("Run full verification.");
     expect(data?.verify.requiredCommands[0]).toMatchObject({ purpose: "Tests", command: "pnpm test" });
     expect(data?.verify.manualChecks).toContain("Open the HTML view and inspect Overview.");
+    expect(data?.contextFiles.map((file) => file.path)).toContain(".context/MAP.md");
+    expect(data?.contextFiles.map((file) => file.path)).toContain(".context/VERIFY.md");
     expect(html).toContain("Ship the review dashboard.");
     expect(html).toContain("pnpm test");
+    expect(html).toContain("Canonical Context Files");
   });
 
   test("caps generated evidence at 50 and inbox candidates at 100", async () => {

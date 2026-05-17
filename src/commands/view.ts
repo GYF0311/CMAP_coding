@@ -8,6 +8,7 @@ import { projectRelative, resolveInsideRoot } from "../fs/safe-path.js";
 import { collectViewData } from "../view/collect.js";
 import { viewHtmlMatches } from "../view/check.js";
 import { renderViewHtml } from "../view/render.js";
+import { normalizeViewUiLang } from "../view/messages.js";
 
 type ViewExportOptions = {
   out?: string;
@@ -16,6 +17,8 @@ type ViewExportOptions = {
   includeGenerated?: boolean;
   includeInbox?: boolean;
   includeFreshness?: boolean;
+  includeSupport?: boolean;
+  uiLang?: string;
 };
 
 type ViewOpenOptions = {
@@ -27,12 +30,14 @@ const DEFAULT_VIEW_DIR = "_cmap-view";
 
 export async function runViewExport(cwd: string, options: ViewExportOptions): Promise<number> {
   const target = await resolveInsideRoot(cwd, outputPath(options));
+  const uiLang = normalizeViewUiLang(options.uiLang);
+  const includeSupport = Boolean(options.includeSupport);
   const data = await collectViewData(cwd, {
-    includeGenerated: Boolean(options.includeGenerated),
-    includeInbox: Boolean(options.includeInbox),
-    includeFreshness: Boolean(options.includeFreshness)
+    includeGenerated: includeSupport || Boolean(options.includeGenerated),
+    includeInbox: includeSupport || Boolean(options.includeInbox),
+    includeFreshness: includeSupport || Boolean(options.includeFreshness)
   });
-  const expectedHtml = renderViewHtml(data);
+  const expectedHtml = renderViewHtml(data, { uiLang });
   if (options.check) {
     if (!(await fileExists(target))) {
       process.stdout.write(`View output missing. Run cmap view export --out ${options.out ?? DEFAULT_VIEW_DIR}.\n`);

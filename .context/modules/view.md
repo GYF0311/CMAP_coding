@@ -1,7 +1,7 @@
 ---
 context_type: module
 module: view
-updated_at: 2026-05-15T22:40:42+08:00
+updated_at: 2026-05-17T22:06:00+08:00
 paths:
   - src/view
   - src/commands/view.ts
@@ -37,22 +37,26 @@ confidence: ai-drafted
 # Module: view
 
 ## Purpose
-Render a read-only, single-file English HTML review dashboard from trusted `.context` project facts plus clearly marked generated support layers.
+Render a read-only, single-file HTML review dashboard from trusted `.context` project facts plus clearly marked generated support layers, with selectable English or Chinese UI labels.
 
 ## Boundaries
 - Owns `cmap view export/open` command handlers and the vanilla HTML/CSS/JS-free view renderer.
 - Emits `cmap.view_data.v1` as embedded JSON for deterministic checks and future UI iteration.
-- Default export shows canonical Overview, Modules, Canonical Relations, Verification, and Warnings.
-- HTML output is fixed to English UI (`html lang="en"`). Future translation work should be a separate product slice, not part of the current view command surface.
+- Default export shows canonical Overview, Modules, Canonical Relations, Verification, canonical context files, and Warnings.
+- HTML UI labels default to English and can be exported with Chinese labels via `--ui-lang zh-CN`.
+- UI label localization is presentation-only; it must not revive `.context/i18n`, locale config, translation mirrors, `init --lang`, `view --lang`, or a second maintained fact store.
 - Module descriptions come from canonical `.context/modules/*.md`; view does not read translation mirrors or locale config.
+- Module cards surface human-readable responsibilities, key contracts, read-next hints, paths, relations, and verification.
+- Module details render the reviewed module Markdown sections as structured HTML instead of dumping raw JSON.
+- Top-level canonical context files are visible in the HTML export; support layers remain opt-in.
 - Reads optional `relation_explanations` from module frontmatter and renders `why`, `produces`, and `impact` without changing the canonical `relations: string[]` schema.
-- `--include-generated`, `--include-inbox`, and `--include-freshness` gate generated/support-layer detail sections.
+- `--include-generated`, `--include-inbox`, `--include-freshness`, and the convenience `--include-support` gate generated/support-layer detail sections.
 - Treats generated evidence, legacy inbox Markdown, structured inbox candidates, freshness metadata, and relation candidates as support signals only.
 - Reads structured `cmap.candidate.v1` JSON files from `.context/inbox/candidates/*.json` so candidate-store output is visible in the human review dashboard.
 - Marks relation candidates as Candidate / Non-canonical and never offers browser-side apply/promote.
 - Missing support layers must degrade to warnings and "Not available", not hard failures.
 - `--check` compares normalized full HTML, not only embedded JSON, so renderer/template drift is caught while volatile `generatedAt` is ignored.
-- Provides local-only review controls: search, stale/candidate/high-risk/generated filters, copy-command buttons, and a module detail dialog.
+- Provides local-only review controls: search, stale/candidate/high-risk/generated filters, copy-command buttons, canonical context browsing, and a module detail dialog.
 - Module details expose reviewed responsibilities, incoming relations, relation explanations, module-owned verification commands, and related candidates from existing `.context` data.
 - Suggested commands remain copy-only; the browser view never applies or promotes candidates.
 

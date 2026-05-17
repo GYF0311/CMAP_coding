@@ -1,10 +1,13 @@
-export type ViewMessages = typeof enMessages;
+export type ViewUiLang = "en" | "zh-CN";
 
 export const enMessages = {
   htmlTitleSuffix: "cmap view",
   canonicalSource: "Canonical source",
   generatedSource: "Generated source",
   sourceCommit: "Source commit",
+  schema: "Schema",
+  generatedAt: "Generated",
+  root: "Root",
   modules: "Modules",
   evidence: "Evidence",
   candidates: "Candidates",
@@ -19,12 +22,16 @@ export const enMessages = {
   noWarnings: "No warnings.",
   canonicalRelations: "Canonical Relations",
   verification: "Verification",
+  contextFiles: "Canonical Context Files",
+  supportLayers: "Support Layers",
+  supportLayersHint: "Generated evidence, freshness, and inbox candidates are hidden by default. Re-export with --include-support or the specific include flags to show them.",
   freshness: "Freshness",
   generatedEvidence: "Generated Evidence",
   reviewCandidates: "Review Candidates",
   relationCandidates: "Relation Candidates",
   close: "Close",
   module: "Module",
+  moduleDetails: "Module Details",
   purpose: "Purpose",
   activeGoal: "Active Goal",
   currentTask: "Current Task",
@@ -33,8 +40,11 @@ export const enMessages = {
   lastVerified: "Last Verified",
   notAvailable: "Not available",
   paths: "Paths",
+  aliases: "Aliases",
   relations: "Relations",
   responsibilities: "Responsibilities",
+  keyContracts: "Key Contracts",
+  readNext: "Read Next",
   incomingRelations: "Incoming Relations",
   moduleVerify: "Module Verify",
   relatedCandidates: "Related Candidates",
@@ -71,5 +81,107 @@ export const enMessages = {
   reviewModule: "Review module",
   markReviewed: "Mark reviewed",
   dryRun: "Dry run",
-  none: "None"
+  none: "None",
+  copied: "Copied"
 };
+
+export type ViewMessages = typeof enMessages;
+
+export const zhMessages: ViewMessages = {
+  htmlTitleSuffix: "cmap 审阅页",
+  canonicalSource: "可信来源",
+  generatedSource: "生成来源",
+  sourceCommit: "来源提交",
+  schema: "Schema",
+  generatedAt: "生成时间",
+  root: "项目根目录",
+  modules: "模块",
+  evidence: "证据",
+  candidates: "候选",
+  warnings: "提醒",
+  reviewFilters: "审阅筛选",
+  searchPlaceholder: "搜索模块、候选和证据",
+  stale: "过期",
+  hasCandidates: "有候选",
+  highRisk: "高风险",
+  generatedEvidenceFilter: "生成证据",
+  overview: "概览",
+  noWarnings: "没有提醒。",
+  canonicalRelations: "可信模块关系",
+  verification: "验证",
+  contextFiles: "可信 .context 文件",
+  supportLayers: "辅助层",
+  supportLayersHint: "生成证据、freshness 和 inbox 候选默认隐藏。重新导出时加 --include-support，或按需加具体 include 选项即可显示。",
+  freshness: "Freshness",
+  generatedEvidence: "生成证据",
+  reviewCandidates: "审阅候选",
+  relationCandidates: "关系候选",
+  close: "关闭",
+  module: "模块",
+  moduleDetails: "模块详情",
+  purpose: "职责",
+  activeGoal: "当前目标",
+  currentTask: "当前任务",
+  nextStep: "下一步",
+  verified: "已验证",
+  lastVerified: "最近验证",
+  notAvailable: "暂无",
+  paths: "负责路径",
+  aliases: "别名",
+  relations: "关系",
+  responsibilities: "职责",
+  keyContracts: "关键契约",
+  readNext: "读什么",
+  incomingRelations: "被哪些模块引用",
+  moduleVerify: "模块验证",
+  relatedCandidates: "相关候选",
+  relationWhy: "原因",
+  relationProduces: "产物",
+  relationImpact: "影响",
+  relationExplanation: "关系说明",
+  noRelationExplanation: "暂无",
+  freshnessLabel: "Freshness",
+  from: "从",
+  relation: "关系",
+  to: "到",
+  expected: "预期",
+  when: "何时运行",
+  command: "命令",
+  manualChecks: "人工检查",
+  requiredCommandsUnavailable: "暂无必跑命令。",
+  manualChecksUnavailable: "暂无人工检查。",
+  pendingCandidates: "有待处理候选",
+  baselineOnly: "仅基线",
+  reviewedState: "已审阅",
+  moduleColumn: "模块",
+  state: "状态",
+  lastReview: "最近审阅",
+  pendingCandidatesColumn: "待处理候选",
+  created: "创建时间",
+  summary: "摘要",
+  files: "文件",
+  id: "ID",
+  type: "类型",
+  risk: "风险",
+  candidateNonCanonical: "候选 / 非可信事实",
+  details: "查看详情",
+  reviewModule: "审阅模块",
+  markReviewed: "标记已审阅",
+  dryRun: "Dry run",
+  none: "无",
+  copied: "已复制"
+};
+
+export function normalizeViewUiLang(value: string | undefined): ViewUiLang {
+  if (!value || value === "en") {
+    return "en";
+  }
+  if (value === "zh-CN") {
+    return "zh-CN";
+  }
+  throw new Error(`Invalid UI language "${value}". Expected en or zh-CN.`);
+}
+
+export function viewMessages(lang: ViewUiLang): ViewMessages {
+  return lang === "zh-CN" ? zhMessages : enMessages;
+}
