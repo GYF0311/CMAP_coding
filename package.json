@@ -1,6 +1,6 @@
 {
   "name": "cmap",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Repo-local project memory map CLI for AI coding",
   "license": "MIT",
   "repository": {

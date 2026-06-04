@@ -16,7 +16,7 @@ Keep cmap on Trust Boundary + Human Review Layer while making real-project onboa
 
 `cmap skill export` writes an English project-local instruction pack under `.cmap/skills/cmap/` and supports `--check` for stale detection. `cmap bootstrap` still refuses to invent `.context` by default, but now recommends `cmap bootstrap --init --host both --skill` for new projects; explicit `--init` creates the skeleton before delegating to non-destructive install, optional skill export, and `.context/out/start-here.md` generation.
 
-Package version was bumped to `0.2.2` for the Closeout Orchestration Patch release line.
+Package version was bumped to `0.3.0` for the Source Intelligence Upgrade release line.
 
 `AGENTS.md` and `CLAUDE.md` were dogfooded through non-destructive install, so the original project rules are preserved and the new cmap marker block includes Git Safety Rules.
 
@@ -60,7 +60,7 @@ Verify structural heading policy is implemented and verified locally. Commit/pus
 - Review HTML localized UI / context rendering: `src/view/*`, `src/commands/view.ts`, `src/cli.ts`, `tests/integration/m19-view-export.test.ts`, and docs/templates that teach English headings with project-language body prose.
 - Verify heading policy: `src/commands/verify.ts`, `tests/integration/verify-l0.test.ts`, and docs/context describing non-English `.context` heading warnings.
 - Unified producers: `src/commands/reconcile.ts`, `src/commands/obsidian.ts`, `tests/integration/m6-brief-obsidian.test.ts`.
-- v0.2.2 closeout: `src/commands/finish.ts`, `src/commands/freshness.ts`, `src/core/freshness.ts`, `tests/integration/m29-finish-view-reminder.test.ts`, `tests/integration/m30-freshness-lock.test.ts`, version metadata, and context docs.
+- v0.3.0 source intelligence release: `src/source-intelligence/**`, `src/commands/source.ts`, `src/commands/symbol.ts`, `src/commands/impact.ts`, `src/commands/benchmark.ts`, source-aware brief/view support, `tests/integration/source-intelligence*.test.ts`, version metadata, and context docs.
 
 ## Risks
 `_cmap-view`, `_cmap`, `.context/generated/*`, `.context/out/*`, and `.cmap/skills/*` remain generated/ignored local artifacts. Candidate requests are intentionally non-canonical until reviewed. `module.alias.request` has `target: unresolved` by design and must be converted manually after source inspection. Freshness locking is intentionally a simple file lock; stale lock files fail with a clear timeout instead of being auto-deleted. `--ui-lang zh-CN` localizes only Review HTML labels; it must not revive `.context/i18n`, locale config, or translation mirrors.

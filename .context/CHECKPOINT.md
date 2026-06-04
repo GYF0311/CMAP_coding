@@ -1,18 +1,19 @@
 ---
 context_type: checkpoint
 status: active
-updated_at: '2026-06-04T09:56:02Z'
+updated_at: '2026-06-04T10:09:49Z'
 source: manual
 ---
 # Current Checkpoint
 
 ## Current Task
-CMAP Source Intelligence Upgrade implementation closeout
+CMAP 0.3.0 Source Intelligence local deployment closeout
 
 ## Current Hypothesis
 Source intelligence is now implemented as a generated evidence layer below CMAP's Trust Boundary. CLI source graph results remain candidate/generated evidence; reviewed `.context` memory is still the canonical layer.
 
 ## Changed Files
+- Version bump to `0.3.0` in `package.json` and version test.
 - Source intelligence core under `src/source-intelligence/**`
 - CLI commands in `src/commands/source.ts`, `src/commands/symbol.ts`, `src/commands/impact.ts`, and `src/commands/benchmark.ts`
 - Brief/View integration in `src/commands/brief.ts` and `src/view/**`
@@ -34,7 +35,7 @@ Source intelligence is now implemented as a generated evidence layer below CMAP'
 - `.context/generated/source-index/` is local generated evidence and intentionally ignored; regenerate with `pnpm dev source index`.
 
 ## Next Step
-Commit and push the Source Intelligence Upgrade implementation. After that, dogfood the CLI on a second repository before considering MCP wrapper work.
+Rebuild the linked local CLI, verify `cmap version` reports `0.3.0`, commit the version bump, and push. After that, dogfood the CLI on a second repository before considering MCP wrapper work.
 
 ## Do Not Redo
 The competitor source research is already consolidated under `docs/planning/source-intelligence-upgrade-2026-06/research/`, with raw subagent notes under `agent-notes/`. Review Agent findings and fixes are recorded in `dev-notes/p2-final-review-agent.md`; do not restart from scratch if follow-up issues appear.
