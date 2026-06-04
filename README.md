@@ -58,8 +58,15 @@ Daily task:
 
 ```bash
 cmap route "多人对话页面消息发不出去" --max-context 4
+cmap source index
+cmap source status
+cmap source architecture --json
+cmap symbol find "sendMessage" --json
+cmap impact file src/features/chat/send.ts --json
+cmap impact diff --files src/features/chat/send.ts --json
+cmap impact symbol "src/features/chat/send.ts#sendMessage" --json
 cmap checkpoint write --task "多人对话页面消息发不出去" --next "Read routed module docs"
-cmap brief "多人对话页面消息发不出去" --max-context 4 --out .context/out/brief.md
+cmap brief "多人对话页面消息发不出去" --max-context 4 --with-source-evidence --source-budget 700 --out .context/out/brief.md
 cmap pack "多人对话页面消息发不出去" --budget 1200 --format markdown --out .context/out/pack.md
 cmap finish
 cmap finish --agent --task "多人对话页面消息发不出去"
@@ -97,6 +104,7 @@ cmap bootstrap --host both --skill
 cmap relate request --task "多人对话页面消息发不出去" --changed src/commands/route.ts --out .context/out/relation-request.md
 cmap relate ingest --from .context/out/relation-patch.json --dry-run
 cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
+cmap benchmark source-intelligence --file bench/source-intelligence.jsonl --min-f1 80
 cmap reconcile --adapter gsd-v1 --from .planning
 ```
 
@@ -126,7 +134,18 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap codex guard --changed` | Run changed/stale/freshness/inbox guard checks for Codex handoff. |
 | `cmap route "<task>" --max-context 4` | Recommend direct modules, bounded related context files, and suggested verification commands. |
 | `cmap route "<task>" --graph` | Enable explicit graph-aware route explanation while keeping direct matches separate from related context. |
+| `cmap source index` | Build generated/non-canonical TS/JS source evidence under `.context/generated/source-index/`. |
+| `cmap source status` | Inspect generated source-index freshness without changing canonical `.context` facts. |
+| `cmap source architecture` | Render generated/non-canonical architecture advisory with entrypoints, hot files, hub symbols, unresolved areas, and optional `--include-candidates` hints. |
+| `cmap symbol find <query>` | Find generated source symbols with freshness and non-canonical labels. |
+| `cmap symbol explain <query>` | Explain one generated source symbol with callers, callees, imports, omitted counts, and confidence. |
+| `cmap symbol callers <query>` | List generated callers for one source symbol. |
+| `cmap symbol callees <query>` | List generated callees for one source symbol. |
+| `cmap impact file <path>` | Report generated/non-canonical file impact, likely tests, related modules, freshness, and confidence. |
+| `cmap impact diff --files <csv>` | Aggregate generated/non-canonical impact for changed source files or git diff/staged changes. |
+| `cmap impact symbol <query>` | Report generated/non-canonical symbol impact with callers, callees, likely tests, and file-impact fallback. |
 | `cmap brief "<task>" --max-context 4` | Render an AI coding brief from route, checkpoint/status, bounded context pack, and module docs. |
+| `cmap brief "<task>" --with-source-evidence` | Append generated source evidence after reviewed route/module context. |
 | `cmap pack "<task>" --budget 1200 --format markdown` | Render a redacted, budgeted context pack from the routed graph neighborhood. |
 | `cmap status` | Print `.context/STATUS.md`. |
 | `cmap checkpoint read` | Print `.context/CHECKPOINT.md`, falling back to `.context/STATUS.md`. |
@@ -173,6 +192,7 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap graph explain <module>` | Explain one module's files and typed graph relations. |
 | `cmap benchmark route --file bench/tasks.jsonl` | Measure route top-k and context-pack accuracy against JSONL task fixtures. |
 | `cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0` | Fail CI when route quality falls below explicit thresholds. |
+| `cmap benchmark source-intelligence --file bench/source-intelligence.jsonl` | Measure generated source-evidence precision/recall/F1 plus token/tool-call proxies against JSONL fixtures. |
 | `cmap reconcile --adapter gsd-v1\|gsd-v2 --from <dir>` | Dry-run candidate facts from external workflow artifacts. |
 | `cmap add-module <name>` | Create a candidate module doc. |
 | `cmap cp copy/move/delete/restore` | Move existing line blocks with backups for destructive edits. |
@@ -187,6 +207,9 @@ cmap CLI does not generate trusted project semantics.
 - CLI creates skeletons, scans deterministic signals, routes by aliases, and checks structure.
 - Route graph expansion is a context-pack hint only. Related modules are not treated as direct task matches.
 - `graph build` projects canonical module relations reviewed in `.context/modules/*.md`; it does not infer imports, symbols, tests, or ownership from source code.
+- Source intelligence commands read and write generated evidence under `.context/generated/source-index/**`; they do not create a canonical source graph.
+- Generated source evidence can reduce broad file reads for symbol and impact questions, but stale or surprising evidence should become review material or an inbox candidate before any canonical `.context` update.
+- `benchmark source-intelligence` scores generated source evidence and reports `falseCanonicalWrites=0`; it is a measurement proxy, not proof that source facts are reviewed project memory.
 - Unpromoted inbox/relation candidates are non-canonical. They may appear as warnings or review material, but route and benchmark must not score from them.
 - `--max-context` only limits selected context modules and derived verify suggestions; it does not change module scoring.
 - `pack` only includes routed graph-neighborhood context; it does not scan or embed the whole repository.
@@ -215,10 +238,22 @@ CI can enforce benchmark thresholds with:
 cmap benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
 ```
 
+## Source Intelligence Benchmark Fixtures
+
+`bench/source-intelligence.jsonl` supports:
+
+- `task`: human-readable benchmark task.
+- `query`: source file path or symbol query.
+- `expected_files`: generated impact files that should be found.
+- `expected_symbols`: generated symbol qualified names that should be found.
+
+The benchmark reports precision, recall, F1, freshness warnings, token/tool-call proxy savings, and a `falseCanonicalWrites=0` boundary check.
+
 ## Verify
 
 ```bash
 pnpm test
+pnpm test tests/integration/source-intelligence.test.ts tests/integration/source-intelligence-package.test.ts tests/integration/source-intelligence-symbol.test.ts tests/integration/source-intelligence-brief-view.test.ts tests/integration/source-intelligence-p2.test.ts tests/integration/source-intelligence-benchmark.test.ts
 pnpm typecheck
 pnpm build
 pnpm dev verify --ci --format markdown
@@ -227,4 +262,5 @@ pnpm dev verify --freshness
 pnpm dev obsidian export --check
 pnpm smoke
 pnpm dev benchmark route --file bench/tasks.jsonl --min-top1 80 --min-top3 80 --min-context 80 --max-bad 0
+pnpm dev benchmark source-intelligence --file bench/source-intelligence.jsonl --min-f1 80
 ```

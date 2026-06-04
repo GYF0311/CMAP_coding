@@ -20,6 +20,7 @@ relations:
     - handoff
     - module-docs
     - verify
+    - source-intelligence
 ---
 # Module: brief
 
@@ -37,6 +38,8 @@ Render an AI coding brief from route results, route context pack, current checkp
 - Include direct routed module docs and graph-related context module docs in a single AI-readable brief.
 - Include suggested verification commands extracted from selected module docs.
 - Respect `--max-context` by using the already-bounded route context pack.
+- Optionally append generated/non-canonical source evidence after reviewed route/module context with `--with-source-evidence`.
+- Bound generated source snippets with `--source-budget` and surface omitted/truncated metadata.
 - Optionally include `obsidian://` links for selected context modules.
 - Write to `.context/out/brief.md` or another explicit project-relative output path.
 
@@ -45,13 +48,14 @@ Render an AI coding brief from route results, route context pack, current checkp
 - `handoff`
 - `module-docs`
 - `verify`
+- `source-intelligence`
 
 ## Used By
 - `cmap brief "<task>"`
 - AI coding session startup prompts.
 
 ## Data Flow
-Task text -> route result and context pack -> checkpoint/status excerpt -> selected module docs -> Markdown brief -> stdout or `.context/out/*`.
+Task text -> route result and context pack -> checkpoint/status excerpt -> selected module docs -> optional generated source evidence -> Markdown brief -> stdout or `.context/out/*`.
 
 ## State / Storage
 Writes only explicit output files, usually under `.context/out/`. It does not modify canonical facts.
@@ -62,6 +66,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 - Do not let `brief` summarize hidden transcript state or invent module responsibilities.
 - Related context modules in a brief are for inspection; they are not automatically edit targets.
 - Smaller `--max-context` values intentionally omit related module docs and their derived verification commands.
+- Generated source evidence remains below reviewed context and must not overwrite or summarize canonical module facts.
 
 ## Traps
 - If module aliases are weak, `brief` will package the wrong docs; fix aliases or module docs instead of adding semantic guessing.
@@ -71,6 +76,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
+- `pnpm test tests/integration/source-intelligence-brief-view.test.ts`
 - `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md`
 
 ## When to Update This Doc

@@ -2,7 +2,7 @@
 import { Command, CommanderError } from "commander";
 import { runAddModule } from "./commands/add-module.js";
 import { runAdopt } from "./commands/adopt.js";
-import { runBenchmarkRoute } from "./commands/benchmark.js";
+import { runBenchmarkRoute, runBenchmarkSourceIntelligence } from "./commands/benchmark.js";
 import { runBrief } from "./commands/brief.js";
 import { runBootstrap } from "./commands/bootstrap.js";
 import { runCheckpoint } from "./commands/checkpoint.js";
@@ -26,7 +26,10 @@ import { runReconcile } from "./commands/reconcile.js";
 import { runRelateIngest, runRelatePromote, runRelateRequest } from "./commands/relate.js";
 import { runRoute } from "./commands/route.js";
 import { runSkillExport } from "./commands/skill.js";
+import { runSourceArchitecture, runSourceIndex, runSourceStatus } from "./commands/source.js";
 import { runStatus } from "./commands/status.js";
+import { runImpactDiff, runImpactFile, runImpactSymbol } from "./commands/impact.js";
+import { runSymbolCallees, runSymbolCallers, runSymbolExplain, runSymbolFind } from "./commands/symbol.js";
 import { runUpdate, runUpdateRollback } from "./commands/update.js";
 import { runVerify } from "./commands/verify.js";
 import { runViewExport, runViewOpen } from "./commands/view.js";
@@ -106,6 +109,111 @@ graph
     await runGraphExplain(process.cwd(), module);
   });
 
+const source = program.command("source").description("Build and inspect generated source intelligence evidence");
+source
+  .command("index")
+  .description("Build .context/generated/source-index from TS/JS source files")
+  .option("--json", "Output machine-readable JSON")
+  .action(async (options: { json?: boolean }) => {
+    await runSourceIndex(process.cwd(), options);
+  });
+source
+  .command("status")
+  .description("Inspect generated source-index freshness")
+  .option("--json", "Output machine-readable JSON")
+  .action(async (options: { json?: boolean }) => {
+    await runSourceStatus(process.cwd(), options);
+  });
+source
+  .command("architecture")
+  .description("Render generated/non-canonical source architecture advisory")
+  .option("--json", "Output machine-readable JSON")
+  .option("--limit <n>", "Maximum items per section", "10")
+  .option("--max-items <n>", "Maximum items per section")
+  .option("--module <id>", "Limit advisory to files mapped to one reviewed CMAP module")
+  .option("--include-candidates", "Include candidate-only architecture hints")
+  .action(async (options: { json?: boolean; limit?: string; maxItems?: string; module?: string; includeCandidates?: boolean }) => {
+    await runSourceArchitecture(process.cwd(), options);
+  });
+
+const impact = program.command("impact").description("Query generated source impact evidence");
+impact
+  .command("file")
+  .description("Report generated/non-canonical impact for a source file")
+  .argument("<path>", "Project-relative source file")
+  .option("--json", "Output machine-readable JSON")
+  .option("--max-depth <n>", "Maximum traversal depth", "2")
+  .option("--max-results <n>", "Maximum results per section", "50")
+  .option("--no-write-evidence", "Do not write a generated evidence record")
+  .action(async (filePath: string, options: { json?: boolean; maxDepth?: string; maxResults?: string; writeEvidence?: boolean }) => {
+    await runImpactFile(process.cwd(), filePath, {
+      ...options,
+      noWriteEvidence: options.writeEvidence === false
+    });
+  });
+impact
+  .command("diff")
+  .description("Report generated/non-canonical impact for changed source files")
+  .option("--json", "Output machine-readable JSON")
+  .option("--files <csv>", "Comma-separated changed source files")
+  .option("--base <ref>", "Git base ref for git diff --name-only", "HEAD")
+  .option("--staged", "Use staged git diff")
+  .option("--max-depth <n>", "Maximum traversal depth", "2")
+  .option("--max-results <n>", "Maximum results per section", "50")
+  .action(async (options: { json?: boolean; files?: string; base?: string; staged?: boolean; maxDepth?: string; maxResults?: string }) => {
+    await runImpactDiff(process.cwd(), options);
+  });
+impact
+  .command("symbol")
+  .description("Report generated/non-canonical impact for one symbol")
+  .argument("<query>", "Symbol name, id, or qualified name")
+  .option("--json", "Output machine-readable JSON")
+  .option("--max-depth <n>", "Maximum traversal depth", "2")
+  .option("--max-results <n>", "Maximum results per section", "50")
+  .action(async (query: string, options: { json?: boolean; maxDepth?: string; maxResults?: string }) => {
+    await runImpactSymbol(process.cwd(), query, options);
+  });
+
+const symbol = program.command("symbol").description("Query generated source symbols and call graph evidence");
+symbol
+  .command("find")
+  .description("Find symbols in the generated source index")
+  .argument("<query>", "Symbol name, id, or qualified name")
+  .option("--json", "Output machine-readable JSON")
+  .option("--kind <kind>", "Filter by symbol kind")
+  .option("--exported-only", "Only include exported symbols")
+  .option("--limit <n>", "Maximum symbols to return", "20")
+  .action(async (query: string, options: { json?: boolean; kind?: string; exportedOnly?: boolean; limit?: string }) => {
+    await runSymbolFind(process.cwd(), query, options);
+  });
+symbol
+  .command("explain")
+  .description("Explain one generated source symbol")
+  .argument("<query>", "Symbol name, id, or qualified name")
+  .option("--json", "Output machine-readable JSON")
+  .option("--limit <n>", "Maximum callers, callees, and imports to return", "20")
+  .action(async (query: string, options: { json?: boolean; limit?: string }) => {
+    await runSymbolExplain(process.cwd(), query, options);
+  });
+symbol
+  .command("callers")
+  .description("List generated callers for one symbol")
+  .argument("<query>", "Symbol name, id, or qualified name")
+  .option("--json", "Output machine-readable JSON")
+  .option("--limit <n>", "Maximum callers to return", "20")
+  .action(async (query: string, options: { json?: boolean; limit?: string }) => {
+    await runSymbolCallers(process.cwd(), query, options);
+  });
+symbol
+  .command("callees")
+  .description("List generated callees for one symbol")
+  .argument("<query>", "Symbol name, id, or qualified name")
+  .option("--json", "Output machine-readable JSON")
+  .option("--limit <n>", "Maximum callees to return", "20")
+  .action(async (query: string, options: { json?: boolean; limit?: string }) => {
+    await runSymbolCallees(process.cwd(), query, options);
+  });
+
 const freshness = program.command("freshness").description("Maintain generated freshness review metadata");
 freshness
   .command("snapshot")
@@ -144,7 +252,18 @@ program
   .option("--obsidian", "Include Obsidian open links for routed module notes")
   .option("--vault-name <name>", "Obsidian vault name for obsidian:// links", "corpus")
   .option("--max-context <n>", "Maximum context modules to include in the brief", "6")
-  .action(async (task: string, options: { out?: string; obsidian?: boolean; vaultName?: string; maxContext?: string }) => {
+  .option("--with-source-evidence", "Append generated/non-canonical source evidence after reviewed context")
+  .option("--source-budget <tokens>", "Approximate token budget for generated source snippets", "700")
+  .option("--source-target <query>", "Prefer source files/symbols matching this query")
+  .action(async (task: string, options: {
+    out?: string;
+    obsidian?: boolean;
+    vaultName?: string;
+    maxContext?: string;
+    withSourceEvidence?: boolean;
+    sourceBudget?: string;
+    sourceTarget?: string;
+  }) => {
     await runBrief(process.cwd(), task, options);
   });
 
@@ -533,6 +652,18 @@ benchmark
   .option("--max-bad <percent>", "Fail when bad-module hit rate is above this percent")
   .action(async (options: { file?: string; minTop1?: string; minTop3?: string; minContext?: string; maxBad?: string }) => {
     const code = await runBenchmarkRoute(process.cwd(), options);
+    process.exitCode = code;
+  });
+benchmark
+  .command("source-intelligence")
+  .description("Measure generated source intelligence precision, recall, F1, and token/tool-call proxies")
+  .option("--file <path>", "Project-relative JSONL file", "bench/source-intelligence.jsonl")
+  .option("--json", "Output machine-readable JSON")
+  .option("--min-precision <percent>", "Fail when precision is below this percent")
+  .option("--min-recall <percent>", "Fail when recall is below this percent")
+  .option("--min-f1 <percent>", "Fail when F1 is below this percent")
+  .action(async (options: { file?: string; json?: boolean; minPrecision?: string; minRecall?: string; minF1?: string }) => {
+    const code = await runBenchmarkSourceIntelligence(process.cwd(), options);
     process.exitCode = code;
   });
 

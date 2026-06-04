@@ -9,6 +9,11 @@ import { generatedRoot, listModuleEvidence, type ModuleEvidence } from "../core/
 import { readFreshnessIndex, type FreshnessIndex } from "../core/freshness.js";
 import { loadModuleIndex, loadProjectInfo, type ContextModule } from "../core/module-index.js";
 import { projectRelative } from "../fs/safe-path.js";
+import { readRecentSourceEvidenceRecords } from "../source-intelligence/brief.js";
+import { currentSourceFileStates } from "../source-intelligence/freshness.js";
+import { summarizeSourceFreshness } from "../source-intelligence/impact.js";
+import { computeSourceIndexMetrics } from "../source-intelligence/metrics.js";
+import { readSourceIndex } from "../source-intelligence/store.js";
 import { type CmapViewData, viewDataSchemaId } from "./schema.js";
 
 const MAX_EVIDENCE = 50;
@@ -36,6 +41,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
   };
   const freshness = included.freshness ? await maybeReadFreshness(cwd, warnings) : undefined;
   const evidence = included.generated ? await collectEvidence(cwd, modules, warnings) : [];
+  const sourceEvidence = await collectSourceEvidence(cwd, included.generated || included.freshness, warnings);
   const { candidates, relationCandidates } = included.inbox
     ? await collectInboxCandidates(cwd, warnings)
     : { candidates: [], relationCandidates: [] };
@@ -61,6 +67,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
       candidateCount: candidates.length + relationCandidates.length,
       warningCount: warnings.length
     },
+    sourceEvidence,
     modules: modules.map((module) => toModuleView(module, modules, freshness, candidates, relationCandidates)),
     evidence,
     candidates,
@@ -306,6 +313,79 @@ async function collectEvidence(
       files: entry.files.slice(0, 8),
       commands: entry.commands?.slice(0, 4) ?? []
     }));
+}
+
+async function collectSourceEvidence(
+  cwd: string,
+  included: boolean,
+  warnings: string[]
+): Promise<CmapViewData["sourceEvidence"]> {
+  const base: CmapViewData["sourceEvidence"] = {
+    included,
+    available: false,
+    generated: true,
+    canonical: false,
+    label: "generated source evidence; non-canonical",
+    records: [],
+    omittedRecords: 0,
+    unreadableRecords: []
+  };
+  if (!included) {
+    return base;
+  }
+
+  const recent = await readRecentSourceEvidenceRecords(cwd, { limit: 10 });
+  base.records = recent.records.map((record) => ({
+    id: record.id,
+    createdAt: record.createdAt,
+    kind: record.kind,
+    summary: record.summary,
+    files: record.files.slice(0, 10),
+    confidence: record.confidence,
+    freshnessStatus: record.freshnessStatus,
+    truncated: record.truncated
+  }));
+  base.omittedRecords = recent.omitted;
+  base.unreadableRecords = recent.unreadable;
+
+  try {
+    const index = await readSourceIndex(cwd);
+    if (!index) {
+      warnings.push("Source index: Not available");
+      return base;
+    }
+    const metrics = computeSourceIndexMetrics(index);
+    const currentFiles = await currentSourceFileStates(cwd, index);
+    const freshness = summarizeSourceFreshness(index, { cwd, currentFiles });
+    return {
+      ...base,
+      available: true,
+      index: {
+        generatedAt: index.meta.generatedAt,
+        gitHead: index.meta.gitHead,
+        files: metrics.files,
+        symbols: metrics.symbols,
+        edges: metrics.edges,
+        unresolvedRefs: metrics.unresolvedRefs,
+        parseErrors: metrics.parseErrors
+      },
+      freshness: {
+        status: freshness.status,
+        indexedAt: freshness.indexedAt,
+        gitHead: freshness.gitHead,
+        fresh: freshness.counts.fresh,
+        stale: freshness.counts.stale,
+        missing: freshness.counts.missing,
+        error: freshness.counts.error,
+        staleFiles: freshness.staleFiles.slice(0, 10),
+        missingFiles: freshness.missingFiles.slice(0, 10),
+        notes: freshness.explanations
+      }
+    };
+  } catch {
+    warnings.push("Source index: unreadable generated support layer");
+    return base;
+  }
 }
 
 async function collectInboxCandidates(

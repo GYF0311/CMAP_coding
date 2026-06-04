@@ -35,6 +35,7 @@ relations:
     - hooks-doctor
     - verify
     - skill
+    - source-intelligence
 ---
 # Module: cli
 
@@ -58,6 +59,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `checkpoint` actions while keeping the legacy option-only STATUS update path compatible.
 - Register `benchmark route` as a public evaluation command.
 - Register `benchmark route` quality threshold flags while keeping metric evaluation in `benchmark`.
+- Register `source index/status/architecture`, `symbol find/explain/callers/callees`, `impact file/diff/symbol`, and `benchmark source-intelligence` while keeping source analysis logic in `source-intelligence` and benchmark scoring in `benchmark`.
 - Register `reconcile` as a dry-run external artifact adapter command.
 - Register `update --agent` and `update rollback` while keeping MapPatch v2 policy out of `cli.ts`.
 - Register `policy show/validate` while keeping deterministic policy loading and validation in command modules.
@@ -82,6 +84,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - `pack` for budgeted task context packages.
 - `handoff` for status and checkpoint command behavior.
 - `benchmark` for route fixture evaluation.
+- `source-intelligence` for generated source index, symbol query, and impact command handlers.
 - `obsidian-adapter` for Obsidian view commands.
 - `reconcile-adapter` for external workflow candidate reports.
 - `update-agent` for MapPatch intake and routine context maintenance.

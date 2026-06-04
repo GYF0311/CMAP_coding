@@ -101,6 +101,7 @@ export function renderViewHtml(data: CmapViewData, options: RenderViewOptions = 
       <h2>${escapeHtml(messages.supportLayers)}</h2>
       <p class="meta">${escapeHtml(messages.supportLayersHint)}</p>
     </section>
+    ${safeData.sourceEvidence?.included ? `<section><h2>Source Evidence</h2>${renderSourceEvidenceSupport(safeData, messages)}</section>` : ""}
     ${safeData.included.freshness ? `<section><h2>${escapeHtml(messages.freshness)}</h2>${renderFreshness(safeData, messages)}</section>` : ""}
     ${safeData.included.generated ? `<section><h2>${escapeHtml(messages.generatedEvidence)}</h2>${renderEvidence(safeData, messages)}</section>` : ""}
     ${safeData.included.inbox ? `<section><h2>${escapeHtml(messages.reviewCandidates)}</h2>${renderCandidates(safeData, messages)}</section><section><h2>${escapeHtml(messages.relationCandidates)}</h2>${renderRelationCandidates(safeData, messages)}</section>` : ""}
@@ -257,6 +258,46 @@ function renderEvidence(data: CmapViewData, messages: ViewMessages): string {
     return `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
   }
   return `<table><thead><tr><th>${escapeHtml(messages.moduleColumn)}</th><th>${escapeHtml(messages.created)}</th><th>${escapeHtml(messages.summary)}</th><th>${escapeHtml(messages.files)}</th></tr></thead><tbody>${data.evidence.map((entry) => `<tr data-search="${escapeAttr([entry.moduleId, entry.summary, entry.files.join(" ")].join(" "))}" data-generated="true"><td>${escapeHtml(entry.moduleId)}</td><td>${escapeHtml(entry.createdAt)}</td><td>${escapeHtml(entry.summary)}</td><td>${escapeHtml(entry.files.join(", "))}</td></tr>`).join("")}</tbody></table>`;
+}
+
+function renderSourceEvidenceSupport(data: CmapViewData, messages: ViewMessages): string {
+  const source = data.sourceEvidence ?? {
+    included: false,
+    available: false,
+    generated: true,
+    canonical: false,
+    label: "generated source evidence; non-canonical",
+    records: [],
+    omittedRecords: 0,
+    unreadableRecords: []
+  };
+  if (!source.available && source.records.length === 0) {
+    return `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
+  }
+  const summary = source.index
+    ? `<table><tbody>
+      <tr><th>Label</th><td><span class="pill">Generated / Non-canonical</span> ${escapeHtml(source.label)}</td></tr>
+      <tr><th>Generated at</th><td>${escapeHtml(source.index.generatedAt ?? messages.notAvailable)}</td></tr>
+      <tr><th>Git head</th><td>${escapeHtml(source.index.gitHead ?? messages.notAvailable)}</td></tr>
+      <tr><th>Metrics</th><td>${escapeHtml(`files=${source.index.files}, symbols=${source.index.symbols}, edges=${source.index.edges}, unresolvedRefs=${source.index.unresolvedRefs}, parseErrors=${source.index.parseErrors}`)}</td></tr>
+    </tbody></table>`
+    : `<p class="meta">Source index summary: ${escapeHtml(messages.notAvailable)}.</p>`;
+  const freshness = source.freshness
+    ? `<table><tbody>
+      <tr><th>Status</th><td>${escapeHtml(source.freshness.status)}</td></tr>
+      <tr><th>Indexed at</th><td>${escapeHtml(source.freshness.indexedAt ?? messages.notAvailable)}</td></tr>
+      <tr><th>Counts</th><td>${escapeHtml(`fresh=${source.freshness.fresh}, stale=${source.freshness.stale}, missing=${source.freshness.missing}, error=${source.freshness.error}`)}</td></tr>
+      <tr><th>Stale files</th><td>${escapeHtml(source.freshness.staleFiles.join(", ") || messages.none)}</td></tr>
+      <tr><th>Notes</th><td>${escapeHtml(source.freshness.notes.join(" ") || messages.none)}</td></tr>
+    </tbody></table>`
+    : `<p class="meta">Freshness: ${escapeHtml(messages.notAvailable)}.</p>`;
+  const records = source.records.length > 0
+    ? `<table><thead><tr><th>${escapeHtml(messages.id)}</th><th>${escapeHtml(messages.type)}</th><th>${escapeHtml(messages.created)}</th><th>${escapeHtml(messages.summary)}</th><th>${escapeHtml(messages.files)}</th></tr></thead><tbody>${source.records.map((record) => `<tr data-search="${escapeAttr([record.id, record.kind, record.summary, record.files.join(" ")].join(" "))}" data-generated="true"><td>${escapeHtml(record.id)}<br><span class="pill">Generated / Non-canonical</span></td><td>${escapeHtml(record.kind)}<br><span class="pill">freshness ${escapeHtml(record.freshnessStatus)}</span><span class="pill">truncated ${record.truncated ? "yes" : "no"}</span></td><td>${escapeHtml(record.createdAt)}</td><td>${escapeHtml(record.summary)}</td><td>${escapeHtml(record.files.join(", ") || messages.none)}</td></tr>`).join("")}</tbody></table>`
+    : `<p class="meta">Recent source evidence records: ${escapeHtml(messages.notAvailable)}.</p>`;
+  const omitted = source.omittedRecords > 0 || source.unreadableRecords.length > 0
+    ? `<p class="meta">Omitted records: ${source.omittedRecords}; unreadable records: ${escapeHtml(source.unreadableRecords.join(", ") || messages.none)}.</p>`
+    : "";
+  return `<div class="section-stack"><div class="panel"><h3>Source Index Summary</h3>${summary}</div><div class="panel"><h3>Source Freshness</h3>${freshness}</div><div class="panel"><h3>Recent Generated Source Evidence</h3>${records}${omitted}</div></div>`;
 }
 
 function renderCandidates(data: CmapViewData, messages: ViewMessages): string {

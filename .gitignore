@@ -16,5 +16,8 @@ _cmap-view/
 cmap-product-overview-*.png
 
 # Local review/research workspaces
-research/
+/research/
 CMAP_review/
+
+# Generated source intelligence evidence
+.context/generated/source-index/

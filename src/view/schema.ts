@@ -48,6 +48,46 @@ export const CmapViewDataSchema = z.object({
     candidateCount: z.number().int().nonnegative(),
     warningCount: z.number().int().nonnegative()
   }),
+  sourceEvidence: z.object({
+    included: z.boolean(),
+    available: z.boolean(),
+    generated: z.literal(true),
+    canonical: z.literal(false),
+    label: z.string(),
+    index: z.object({
+      generatedAt: z.string().optional(),
+      gitHead: z.string().optional(),
+      files: z.number().int().nonnegative(),
+      symbols: z.number().int().nonnegative(),
+      edges: z.number().int().nonnegative(),
+      unresolvedRefs: z.number().int().nonnegative(),
+      parseErrors: z.number().int().nonnegative()
+    }).optional(),
+    freshness: z.object({
+      status: z.string(),
+      indexedAt: z.string().optional(),
+      gitHead: z.string().optional(),
+      fresh: z.number().int().nonnegative(),
+      stale: z.number().int().nonnegative(),
+      missing: z.number().int().nonnegative(),
+      error: z.number().int().nonnegative(),
+      staleFiles: z.array(z.string()),
+      missingFiles: z.array(z.string()),
+      notes: z.array(z.string())
+    }).optional(),
+    records: z.array(z.object({
+      id: z.string(),
+      createdAt: z.string(),
+      kind: z.string(),
+      summary: z.string(),
+      files: z.array(z.string()),
+      confidence: z.number(),
+      freshnessStatus: z.string(),
+      truncated: z.boolean()
+    })),
+    omittedRecords: z.number().int().nonnegative(),
+    unreadableRecords: z.array(z.string())
+  }).optional(),
   modules: z.array(z.object({
     id: z.string(),
     name: z.string(),
