@@ -8,8 +8,7 @@ confidence: ai-drafted
 module: showcase
 paths:
   - docs/cmap-product-overview.html
-  - docs/research/coding-knowledge-graphs-2026-06/**
-  - docs/planning/source-intelligence-upgrade-2026-06/**
+  - docs/research/**
 aliases:
   - showcase
   - product overview
@@ -17,7 +16,6 @@ aliases:
   - research
   - planning
   - comparison
-  - source intelligence
   - 介绍页
   - 产品介绍
   - 思维导图
@@ -33,16 +31,14 @@ Roadmap note: `docs/cmap-product-overview.html` is an explanatory product artifa
 
 ## Code Paths
 - `docs/cmap-product-overview.html`
-- `docs/research/coding-knowledge-graphs-2026-06/**`
-- `docs/planning/source-intelligence-upgrade-2026-06/**`
+- `docs/research/**`
 
 ## Responsibilities
 - Present cmap as `.context` canonical facts plus experience layers such as Obsidian and HTML.
 - Explain the AI coding workflow from route/checkpoint/brief/pack/hooks through finish/verify/Obsidian/reconcile.
 - Provide a searchable module directory and an interactive module map for product understanding.
 - Show current dogfood evidence, shipped command families, verification status, and remaining product risks without becoming a canonical fact source.
-- Preserve external project comparison reports as reviewed research artifacts without turning competitor/source-analyzer claims into canonical cmap facts.
-- Preserve source-intelligence upgrade planning, subagent research notes, capability gap analysis, and implementation roadmap as advisory planning artifacts until implementation creates reviewed module facts.
+- Preserve reviewed research artifacts without turning competitor or source-analyzer claims into canonical cmap facts.
 
 ## Depends On
 - `.context/MAP.md`
@@ -55,15 +51,14 @@ Roadmap note: `docs/cmap-product-overview.html` is an explanatory product artifa
 - Product demonstration and feasibility discussion.
 
 ## Data Flow
-Canonical cmap facts, current implementation notes, reviewed external research, and advisory planning artifacts -> static or Markdown artifacts -> human/external-model review.
+Canonical cmap facts, current implementation notes, and reviewed research notes -> static or Markdown artifacts -> human/external-model review.
 
 ## State / Storage
-The overview, research reports, and planning manuals are static artifacts in `docs/`. They do not write project state.
+The overview and research notes are static artifacts in `docs/`. They do not write project state.
 
 ## Constraints
 - The HTML overview is a view, not the source of truth.
 - Research reports are advisory context, not canonical product facts.
-- Planning manuals are advisory until implementation lands and reviewed `.context` modules are updated.
 - Product claims should be refreshed when `.context` module responsibilities or workflow status changes.
 - External model feedback is advisory until reviewed and promoted into canonical `.context` files.
 - Future `cmap view export` output must also stay read-only and non-canonical.
@@ -72,7 +67,7 @@ The overview, research reports, and planning manuals are static artifacts in `do
 - Do not let the showcase page drift into a second product map.
 - Do not describe planned features as shipped behavior unless the page labels them clearly.
 - Do not let external source-graph project claims override CMAP's trust-boundary roadmap without explicit review.
-- Do not map a future source-intelligence module as implemented before code and tests exist.
+- Do not use showcase artifacts as a hidden second fact store.
 
 ## Tests / Verification
 - Static HTML content check with Node.

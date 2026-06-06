@@ -1,4 +1,0 @@
-{"task":"Locate the shipped source index command handler","query":"runSourceIndex","expected_symbols":["src/commands/source.ts#runSourceIndex"]}
-{"task":"Locate the shipped source status command handler","query":"runSourceStatus","expected_symbols":["src/commands/source.ts#runSourceStatus"]}
-{"task":"Locate the shipped symbol lookup helper","query":"findSymbols","expected_symbols":["src/source-intelligence/queries.ts#findSymbols"]}
-{"task":"Check generated source impact evidence for the source command file","query":"src/commands/source.ts","expected_files":["src/commands/source.ts","src/cli.ts"]}

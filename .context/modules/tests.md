@@ -44,12 +44,6 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - `tests/integration/m18-freshness-inbox-promote.test.ts`
 - `tests/integration/m24-inbox-path-escape.test.ts`
 - `tests/integration/m25-view-structured-candidates.test.ts`
-- `tests/integration/source-intelligence.test.ts`
-- `tests/integration/source-intelligence-package.test.ts`
-- `tests/integration/source-intelligence-symbol.test.ts`
-- `tests/integration/source-intelligence-brief-view.test.ts`
-- `tests/integration/source-intelligence-p2.test.ts`
-- `tests/integration/source-intelligence-benchmark.test.ts`
 - `tests/integration/cli-errors.test.ts`
 - `tests/integration/verify-l0.test.ts`
 - `tests/unit/redact.test.ts`
@@ -86,9 +80,8 @@ Prove public CLI behavior with reproducible integration tests and built-CLI smok
 - Assert Review HTML can parse Chinese legacy section headings, render structured module details, expose canonical context files, switch UI labels with `--ui-lang zh-CN`, and keep support layers opt-in.
 - Assert host entrypoints, skill export, and add-module templates remind agents to keep `.context` section headings in English while body prose can be project-language.
 - Assert Obsidian pull and reconcile keep legacy inbox reports while writing structured candidate-store JSON+Markdown.
-- Assert source intelligence builds generated TS/JS indexes, reports freshness, answers symbol/caller/callee/impact/diff/architecture queries, appends source evidence after reviewed brief context, renders source support panels, benchmarks precision/recall/F1, and never writes canonical `.context` facts directly.
 - Run built `dist/cli.js` against a real temp project through `pnpm smoke`.
-- Keep integration-test timeout high enough for full-suite CLI subprocess runs after source indexing tests are included.
+- Keep integration-test timeout high enough for full-suite CLI subprocess runs.
 
 ## Depends On
 - Vitest
@@ -129,7 +122,6 @@ Temporary directories under the system temp path.
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
 - `pnpm test tests/integration/m24-inbox-path-escape.test.ts`
 - `pnpm test tests/integration/m25-view-structured-candidates.test.ts`
-- `pnpm test tests/integration/source-intelligence.test.ts tests/integration/source-intelligence-package.test.ts tests/integration/source-intelligence-symbol.test.ts tests/integration/source-intelligence-brief-view.test.ts tests/integration/source-intelligence-p2.test.ts tests/integration/source-intelligence-benchmark.test.ts`
 - `pnpm test tests/unit/redact.test.ts`
 - `pnpm smoke`
 

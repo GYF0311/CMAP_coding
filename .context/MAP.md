@@ -3,65 +3,67 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-06-04T16:58:00+08:00
+updated_at: 2026-06-04T22:22:51+08:00
 confidence: ai-drafted
 ---
 # Project Map
 
 ## Purpose
-Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-local project map CLI for humans and AI coding agents. It maintains deterministic `.context` structure, candidate governance, safety boundaries, and an HTML review surface with selectable English/Chinese UI labels so AI coding projects remain resumable after context compression, new sessions, and module growth.
+CMAP 是一个放在仓库里的轻量项目记忆工具，服务对象是人和 AI 编码 agent。它维护确定性的 `.context` 结构、候选事实治理、安全边界，以及可导出的 Review HTML 审阅页，让项目在上下文压缩、新会话、模块变多之后仍然能被接手。
+
+核心产品功能：CMAP 是 AI 交接和模块解释层。agent 写代码时同步更新 `.context` 的模块文档、checkpoint 和 status，让下一个 agent 不必重新读大量源码，也能知道每个模块负责什么、关联哪些模块、哪些文件重要、应该怎么验证。
+
+Trust Boundary + Human Review Layer 是围绕 AI 写入上下文的一套纪律：生成证据、候选内容、已接受的模块解释要分清楚；上下文更新要能看 diff、能验证、能审阅、能回退。
+
+本地项目约定：结构标题保留稳定英文锚点，正文、模块解释、交接说明、决策记录和审阅内容默认写中文。源码级事实，例如 import、谁调用谁、符号、影响分析，交给 CodeGraph 或其他代码智能工具；CMAP 只记录耐用的项目记忆，不再维护重复的源码图谱。
 
 ## Tech Stack & Runtime
-- Runtime: Node.js >= 20
-- Language: TypeScript ESM
-- Package manager: pnpm
-- CLI framework: commander
-- Markdown/frontmatter: gray-matter
-- Tests: Vitest
-- Bundling: tsup
+- 运行环境：Node.js >= 20
+- 主要语言：TypeScript ESM
+- 包管理：pnpm
+- CLI 框架：commander
+- Markdown/frontmatter：gray-matter
+- 测试框架：Vitest
+- 打包：tsup
 
 ## Entry Points
-- CLI source: `src/cli.ts`
-- Built bin: `dist/cli.js`
-- Package bin: `cmap`
-- Tests: `tests/integration/*.test.ts`
-- Product spec: `cmap_v0.1_PRD_and_execution_manual.md`
-- User-facing README: `README.md`
-- Interactive product overview: `docs/cmap-product-overview.html`
-- External comparison research: `docs/research/coding-knowledge-graphs-2026-06/`
-- Source intelligence upgrade planning: `docs/planning/source-intelligence-upgrade-2026-06/`
-- Generated source intelligence commands and index: `src/source-intelligence/`, `src/commands/source.ts`, `src/commands/symbol.ts`, `src/commands/impact.ts`, `.context/generated/source-index/**`
-- Built CLI smoke test: `scripts/smoke-test.mjs`
+- CLI 源码入口：`src/cli.ts`
+- 构建后的可执行文件：`dist/cli.js`
+- 包命令：`cmap`
+- 集成测试：`tests/integration/*.test.ts`
+- 产品说明：`cmap_v0.1_PRD_and_execution_manual.md`
+- 用户 README：`README.md`
+- 交互式产品介绍：`docs/cmap-product-overview.html`
+- 构建后 smoke 测试：`scripts/smoke-test.mjs`
 
 ## Module Map
 | Module | Purpose | Paths | Doc | Aliases |
 |---|---|---|---|---|
-| cli | command registration, option parsing, exit-code boundary | `src/cli.ts`, `src/commands` | `.context/modules/cli.md` | cli, command, 命令, version, init, install |
-| context | `.context` templates, deterministic policy v2 loading, and project signal scanning | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
-| verify | deterministic L0 structure checks, `.context` heading-anchor checks, freshness/stale checks, and CI report formatting | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
-| host | AGENTS/CLAUDE non-destructive entrypoint generation | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
-| skill | project-local Skill/reference export and bootstrap onboarding | `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/skill` | `.context/modules/skill.md` | skill, bootstrap, IDE, AGENTS, CLAUDE, start-here, 接入 |
-| route | direct module routing, generated route usage stats, and bounded reviewed-relation context pack | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
-| graph | canonical module relation projection and typed relation explanation | `src/commands/graph.ts`, `src/core/context-graph.ts` | `.context/modules/graph.md` | graph, context graph, graph build, graph explain, 关系图, 图谱 |
-| brief | AI coding startup brief from route/checkpoint/bounded context pack/module docs | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
-| pack | budgeted redacted context pack from routed graph neighborhood | `src/commands/pack.ts` | `.context/modules/pack.md` | pack, context pack, token budget, 上下文包, 阅读包 |
-| benchmark | route benchmark over direct/context-pack JSONL fixtures with optional CI thresholds | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
-| source-intelligence | generated TS/JS source index, symbol query, source impact, source architecture advisory, and source-evidence query metrics | `src/source-intelligence`, `src/commands/source.ts`, `src/commands/symbol.ts`, `src/commands/impact.ts`, `tests/integration/source-intelligence*.test.ts` | `.context/modules/source-intelligence.md` | source intelligence, source index, symbol query, callers, callees, impact analysis, impact diff, impact symbol, architecture scan, 源码图谱, 符号查询, 调用关系, 影响分析, 谁调用, 调用谁, 改文件影响谁, 架构扫描 |
-| handoff | current status printing and explicit checkpoint handoff updates | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
-| cp | safe line-block copy/move/delete/restore with backups | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
-| finish | QA-lite context closeout report | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
-| update-agent | MapPatch v1/v2 intake, routine/generated apply policy, backup/audit, and candidate inbox routing | `src/commands/update.ts`, `src/core/map-patch.ts`, `src/fs/backup.ts` | `.context/modules/update-agent.md` | update, MapPatch, agent update, 自主维护, 自动维护, inbox, rollback |
-| evidence | generated evidence/stats store, freshness index, inbox triage/archive/promote apply, and stale maintenance checks | `src/commands/evidence.ts`, `src/commands/inbox.ts`, `src/commands/freshness.ts`, `src/core/generated-stats.ts`, `src/core/generated-store.ts`, `src/core/freshness.ts` | `.context/modules/evidence.md` | evidence, generated evidence, inbox status, stats, stale, 证据, 候选池 |
-| view | read-only HTML human review dashboard for canonical map plus generated/candidate support layers | `src/view`, `src/commands/view.ts` | `.context/modules/view.md` | view, dashboard, HTML review, human review |
-| relation-candidates | AI RelationPatch intake, validation, inbox writing, and candidate-only promote dry-run | `src/commands/relate.ts`, `src/core/relation-patch.ts`, `src/context/relation-schema.ts` | `.context/modules/relation-candidates.md` | relate, relation candidate, RelationPatch, 关系候选 |
-| obsidian-adapter | Obsidian-friendly markdown export, open/pull, and view drift check | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
-| reconcile-adapter | dry-run candidate facts from external workflow artifacts | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
-| showcase | interactive product overview and external-review research/planning artifacts | `docs/cmap-product-overview.html`, `docs/research/coding-knowledge-graphs-2026-06/**`, `docs/planning/source-intelligence-upgrade-2026-06/**` | `.context/modules/showcase.md` | showcase, product overview, HTML, research, planning, comparison, source intelligence, 介绍页, 产品介绍, 思维导图, 竞品研究, 升级规划 |
-| memory-lite | explicit work log and idea append commands | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
-| adoption | existing-project adoption workspace and candidate scanning | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
-| module-docs | candidate module document creation | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
-| hooks-doctor | hook templates, Codex-first lifecycle render/ingest, lifecycle tests, session brief generation, hook reminder/observe/assist/strict output, and diagnostics | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, strict, 诊断 |
-| tests | integration and built-CLI smoke coverage for CLI milestones | `tests`, `scripts/smoke-test.mjs` | `.context/modules/tests.md` | test, vitest, smoke, 自测, 集成测试, 行为测试 |
+| cli | 注册命令、解析参数、管理退出码边界 | `src/cli.ts`, `src/commands` | `.context/modules/cli.md` | cli, command, 命令, version, init, install |
+| context | 生成 `.context` 模板，加载确定性 policy，并扫描项目初始信号 | `src/context` | `.context/modules/context.md` | context, template, skeleton, .context, policy, 模板, 骨架 |
+| verify | 检查 `.context` 结构、标题锚点、freshness/stale 状态，并输出 CI 报告 | `src/commands/verify.ts` | `.context/modules/verify.md` | verify, check, drift, 校验, 检查, placeholder |
+| host | 非破坏式生成 AGENTS/CLAUDE 入口说明 | `src/host`, `src/commands/install.ts` | `.context/modules/host.md` | install, AGENTS, CLAUDE, host, 入口 |
+| skill | 导出项目本地 Skill/reference，并提供 bootstrap 接入流程 | `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/skill` | `.context/modules/skill.md` | skill, bootstrap, IDE, AGENTS, CLAUDE, start-here, 接入 |
+| route | 根据任务文本定位模块，并给出受控的相关模块阅读包 | `src/commands/route.ts` | `.context/modules/route.md` | route, aliases, routing, 路由, 模块定位 |
+| graph | 从已审阅模块关系生成项目关系投影和关系解释 | `src/commands/graph.ts`, `src/core/context-graph.ts` | `.context/modules/graph.md` | graph, context graph, graph build, graph explain, 关系图, 图谱 |
+| brief | 根据 route、checkpoint、模块文档和验证提醒生成 AI 开工包 | `src/commands/brief.ts` | `.context/modules/brief.md` | brief, AI brief, 开工包, AI 开工包 |
+| pack | 根据路由邻域生成有 token 预算和脱敏处理的上下文包 | `src/commands/pack.ts` | `.context/modules/pack.md` | pack, context pack, token budget, 上下文包, 阅读包 |
+| benchmark | 用 JSONL fixture 评测 route 命中率和相关上下文命中率 | `src/commands/benchmark.ts`, `bench` | `.context/modules/benchmark.md` | benchmark, bench, 评测, 命中率, top-k |
+| handoff | 读取当前状态，并显式写入 checkpoint 交接信息 | `src/commands/status.ts`, `src/commands/checkpoint.ts` | `.context/modules/handoff.md` | status, checkpoint, handoff, 续接, 主线, 上下文 |
+| cp | 安全复制、移动、删除、恢复行块，并保留备份 | `src/commands/cp.ts`, `src/fs` | `.context/modules/cp.md` | cp, copy, move, delete, restore, line block, 行块, 搬运, 备份 |
+| finish | 任务收尾时生成轻量上下文检查报告 | `src/commands/finish.ts` | `.context/modules/finish.md` | finish, closeout, report, 收尾, 上下文收尾 |
+| update-agent | 接收 MapPatch，按 policy 自动处理 routine/generated 更新，并把语义变更送入候选池 | `src/commands/update.ts`, `src/core/map-patch.ts`, `src/fs/backup.ts` | `.context/modules/update-agent.md` | update, MapPatch, agent update, 自主维护, 自动维护, inbox, rollback |
+| evidence | 管理生成证据、统计、freshness、候选池 triage/archive/promote 和 stale 检查 | `src/commands/evidence.ts`, `src/commands/inbox.ts`, `src/commands/freshness.ts`, `src/core/generated-stats.ts`, `src/core/generated-store.ts`, `src/core/freshness.ts` | `.context/modules/evidence.md` | evidence, generated evidence, inbox status, stats, stale, 证据, 候选池 |
+| view | 导出只读 HTML 审阅页，展示可信地图和候选/生成支持层 | `src/view`, `src/commands/view.ts` | `.context/modules/view.md` | view, dashboard, HTML review, human review |
+| relation-candidates | 接收 AI 关系候选，验证后写入 inbox，并支持候选态 promote dry-run | `src/commands/relate.ts`, `src/core/relation-patch.ts`, `src/context/relation-schema.ts` | `.context/modules/relation-candidates.md` | relate, relation candidate, RelationPatch, 关系候选 |
+| obsidian-adapter | 导出 Obsidian 友好的 Markdown 视图，支持 open/pull/check | `src/commands/obsidian.ts`, `_cmap` | `.context/modules/obsidian-adapter.md` | obsidian, graph, 图谱, 关系图谱, 可视化, export |
+| reconcile-adapter | 从外部工作流产物生成 dry-run 候选事实报告 | `src/commands/reconcile.ts` | `.context/modules/reconcile-adapter.md` | reconcile, adapter, GSD adapter, gsd-v1, gsd-v2, 候选事实 |
+| showcase | 保存产品介绍页和轻量研究材料，辅助人类/外部模型理解 | `docs/cmap-product-overview.html`, `docs/research/**` | `.context/modules/showcase.md` | showcase, product overview, HTML, research, planning, comparison, 介绍页, 产品介绍, 思维导图, 竞品研究 |
+| memory-lite | 显式追加工作日志和临时想法 | `src/commands/log.ts`, `src/commands/idea.ts` | `.context/modules/memory-lite.md` | log, idea, 工作日志, 灵感, inbox |
+| adoption | 接管已有项目时生成候选扫描结果，不直接写入可信地图 | `src/commands/adopt.ts`, `src/context/adoption-scanner.ts` | `.context/modules/adoption.md` | adopt, adoption, existing project, 接管, 候选模块 |
+| module-docs | 创建候选模块文档，不直接修改 MAP | `src/commands/add-module.ts` | `.context/modules/module-docs.md` | add-module, module doc, module template, 模块文档 |
+| hooks-doctor | 管理 hook 模板、Codex 生命周期渲染/摄入、诊断和 session brief 生成 | `src/commands/hooks.ts`, `src/hooks`, `src/commands/doctor.ts`, `src/commands/install.ts` | `.context/modules/hooks-doctor.md` | hooks, doctor, reminder, maintain, observe, assist, strict, 诊断 |
+| tests | 用集成测试和构建后 smoke 测试保护 CLI 行为 | `tests`, `scripts/smoke-test.mjs` | `.context/modules/tests.md` | test, vitest, smoke, 自测, 集成测试, 行为测试 |
 
 ## Natural Language Route
 | User Words | Module | Read First |
@@ -75,8 +77,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 | graph、context graph、graph build、graph explain、图谱、关系图 | graph | `.context/modules/graph.md`, `src/commands/graph.ts`, `src/core/context-graph.ts` |
 | brief、AI brief、开工包、AI 开工包、启动包 | brief | `.context/modules/brief.md`, `src/commands/brief.ts`, `.context/CHECKPOINT.md`, `.context/STATUS.md` |
 | pack、context pack、token budget、上下文包、阅读包、token 预算 | pack | `.context/modules/pack.md`, `src/commands/pack.ts`, `.context/CHECKPOINT.md`, `.context/VERIFY.md` |
-| benchmark、bench、route benchmark、source benchmark、source-intelligence benchmark、评测、命中率、top-k | benchmark | `.context/modules/benchmark.md`, `src/commands/benchmark.ts`, `bench/tasks.jsonl`, `bench/source-intelligence.jsonl` |
-| source intelligence、source index、symbol、callers、callees、impact、architecture scan、源码图谱、符号查询、谁调用、调用谁、影响分析、架构扫描 | source-intelligence | `.context/modules/source-intelligence.md`, `src/source-intelligence/`, `src/commands/source.ts`, `src/commands/symbol.ts`, `src/commands/impact.ts` |
+| benchmark、bench、route benchmark、评测、命中率、top-k | benchmark | `.context/modules/benchmark.md`, `src/commands/benchmark.ts`, `bench/tasks.jsonl` |
 | checkpoint、status、续接、上下文压缩、当前主线 | handoff | `.context/modules/handoff.md`, `src/commands/checkpoint.ts`, `src/commands/status.ts` |
 | cp、copy、move、delete、restore、行块、搬运、备份 | cp | `.context/modules/cp.md`, `src/commands/cp.ts`, `src/fs/line-block.ts` |
 | finish、收尾、closeout、context review | finish | `.context/modules/finish.md`, `src/commands/finish.ts` |
@@ -86,7 +87,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 | relate、RelationPatch、relation candidate、关系候选、关系补丁 | relation-candidates | `.context/modules/relation-candidates.md`, `src/commands/relate.ts`, `src/core/relation-patch.ts`, `src/context/relation-schema.ts` |
 | obsidian、图谱、关系图谱、可视化、export、vault | obsidian-adapter | `.context/modules/obsidian-adapter.md`, `src/commands/obsidian.ts` |
 | reconcile、GSD adapter、gsd-v1、gsd-v2、外部产物、候选事实 | reconcile-adapter | `.context/modules/reconcile-adapter.md`, `src/commands/reconcile.ts` |
-| 产品介绍、展示页、HTML、思维导图、DeepSeek handoff、竞品研究、项目对比、升级规划、source intelligence | showcase | `.context/modules/showcase.md`, `docs/cmap-product-overview.html`, `docs/research/coding-knowledge-graphs-2026-06/`, `docs/planning/source-intelligence-upgrade-2026-06/` |
+| 产品介绍、展示页、HTML、思维导图、DeepSeek handoff、竞品研究、项目对比、升级规划 | showcase | `.context/modules/showcase.md`, `docs/cmap-product-overview.html`, `docs/research/` |
 | log、idea、工作日志、灵感、ideas inbox | memory-lite | `.context/modules/memory-lite.md`, `src/commands/log.ts`, `src/commands/idea.ts` |
 | adopt、接管已有项目、候选模块、ADOPTION | adoption | `.context/modules/adoption.md`, `src/commands/adopt.ts` |
 | add-module、新模块文档、module template | module-docs | `.context/modules/module-docs.md`, `src/commands/add-module.ts` |
@@ -103,8 +104,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 - `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs. It is a canonical module-relation projection, not an import graph or test ownership graph.
 - `brief` packages route result, bounded route context pack, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
 - `pack` renders a redacted, budgeted task context pack from route's graph neighborhood, checkpoint/status, decisions, verify source, module docs, and inbox warnings.
-- `benchmark` runs JSONL task fixtures through route scoring or generated source-intelligence scoring, reports top-k/context-pack or precision/recall/F1 plus token/tool-call proxy metrics, and can fail CI on explicit threshold regressions.
-- `source-intelligence` builds generated TS/JS source evidence, answers symbol and impact queries, produces source architecture advisory output, and feeds optional source evidence into `brief`, `view`, and `benchmark` without writing canonical facts.
+- `benchmark` runs JSONL task fixtures through route scoring, reports top-k/context-pack metrics, and can fail CI on explicit threshold regressions.
 - `handoff` reads `STATUS.md`, writes task-local `CHECKPOINT.md`, and keeps the legacy explicit `STATUS.md` update path compatible.
 - `cp` uses shared fs helpers to preserve line blocks and create backups for destructive line edits.
 - `finish` reads changed file hints through the shared module index and produces a closeout report; with `--agent` it writes a MapPatch request artifact under `.context/out/` but does not apply it.
@@ -112,7 +112,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 - `evidence` appends bounded generated support evidence under `.context/generated/`, records generated module activity and route usage stats, maintains freshness snapshots, prints inbox backlog status, groups candidates for triage, previews/applies low-risk promotion with backup/audit/verify, archives reviewed candidates, and gives `verify --stale` / `verify --freshness` deterministic signals before semantic facts are promoted.
 - `obsidian-adapter` exports `.context` modules into `_cmap/<project>/` notes with Properties and body wikilinks for Obsidian Graph, and can check whether the ignored view layer is stale.
 - `reconcile-adapter` scans external workflow Markdown and writes only dry-run candidate reports or inbox entries.
-- `showcase` turns current product facts, workflow framing, reviewed external comparison research, and source-intelligence planning artifacts into static artifacts for human and external-model review.
+- `showcase` turns current product facts, workflow framing, and lightweight research notes into static artifacts for human and external-model review.
 - `memory-lite` appends explicit logs and ideas without changing canonical map files.
 - `adoption` creates `ADOPTION.md` with deterministic candidate signals but leaves MAP as untrusted placeholders.
 - `module-docs` creates candidate module docs without editing MAP.
@@ -121,7 +121,7 @@ Implement cmap v0.2 Trust Boundary + Human Review Layer: a host-neutral, repo-lo
 
 ## Data Flow
 User command -> `src/cli.ts` -> command handler -> filesystem reads/writes under cwd -> text or JSON report. For `init`, package scripts are scanned only as deterministic signals for `VERIFY.md`; project semantics stay in AI/user-written markdown. `route` first scores direct matches, then builds a `--max-context` bounded context pack from module relations and documented verification commands. `brief` reads `CHECKPOINT.md` first and falls back to `STATUS.md`; it writes task-local output under `.context/out/`. `pack` uses the routed graph neighborhood to build a redacted budgeted context pack without reading the whole repository. `finish --agent` writes a local MapPatch request; `update --agent` processes filled MapPatch JSON and auto-applies only policy-approved checkpoint/generated operations while routing semantic candidates to inbox. `obsidian export` writes view-layer notes under `_cmap/<project>/`; `obsidian export --check` compares expected view files without writing.
-Generated evidence and stats are support layers: `evidence append`, MapPatch v2 `evidence.append`, and `hooks stop --profile assist` write `.context/generated/evidence/**`; `route`, `hooks test`, and Codex `hooks ingest` assist prompt events update `.context/generated/stats/route-usage.json`; `source index`, source query metrics, source impact evidence, and benchmark source-intelligence metrics write `.context/generated/source-index/**`; `freshness` writes `.context/generated/freshness.json`; `inbox status`, `inbox triage`, `inbox promote --dry-run|--apply`, `inbox archive`, `verify --stale`, and `verify --freshness` keep review backlog and source/doc drift visible without promoting semantic facts beyond explicitly allowed low-risk metadata.
+Generated evidence and stats are support layers: `evidence append`, MapPatch v2 `evidence.append`, and `hooks stop --profile assist` write `.context/generated/evidence/**`; `route`, `hooks test`, and Codex `hooks ingest` assist prompt events update `.context/generated/stats/route-usage.json`; `freshness` writes `.context/generated/freshness.json`; `inbox status`, `inbox triage`, `inbox promote --dry-run|--apply`, `inbox archive`, `verify --stale`, and `verify --freshness` keep review backlog and source/doc drift visible without promoting semantic facts beyond explicitly allowed low-risk metadata. CodeGraph owns local source facts such as import/call/symbol/impact relations; cmap may consult those facts during work, but does not store them as trusted project memory.
 
 ## State / Storage
 - Project memory: `.context/`
@@ -133,7 +133,7 @@ Generated evidence and stats are support layers: `evidence append`, MapPatch v2 
 - Generated evidence store: `.context/generated/evidence/**/*.jsonl`
 - Generated stats: `.context/generated/stats/*.json`
 - Generated freshness index: `.context/generated/freshness.json`
-- Generated source index and source query evidence: `.context/generated/source-index/**`
+- External source-fact layer: `.codegraph/` when CodeGraph is enabled; generated by CodeGraph and not canonical cmap memory
 - Generated assist startup brief: `.context/out/session-brief.md`
 - Codex project-local lifecycle hook settings: `.codex/hooks.json`
 - Generated graph projections: `.context/graph/*.json`
@@ -143,10 +143,7 @@ Generated evidence and stats are support layers: `evidence append`, MapPatch v2 
 - Reversible canonical-write backups: `.context/backups/`
 - Obsidian view export: `_cmap/<project>/`
 - Product overview artifact: `docs/cmap-product-overview.html`
-- External comparison research artifacts: `docs/research/coding-knowledge-graphs-2026-06/**`
-- Source intelligence upgrade planning artifacts: `docs/planning/source-intelligence-upgrade-2026-06/**`
 - Route benchmark fixtures: `bench/tasks.jsonl`
-- Source intelligence benchmark fixtures: `bench/source-intelligence.jsonl`
 - GitHub Actions quality gate: `.github/workflows/cmap.yml`
 - External workflow candidates: `.context/inbox/`
 - Host entrypoints: `AGENTS.md`, `CLAUDE.md`
@@ -160,6 +157,7 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 
 ## Risk Areas
 - Accidentally letting CLI generate trusted project semantics.
+- Treating `.context` as magically true because it exists. Module explanations are often AI-authored during coding; they are accepted working memory only when their diff, evidence, and verification make sense.
 - Over-expanding templates until `.context` becomes noisy.
 - `verify` producing too many warnings and making users ignore it.
 - Future `cp`/delete behavior must preserve data and avoid irreversible deletion.
@@ -172,15 +170,15 @@ Obsidian integration is file-based only: `cmap obsidian export` writes Markdown 
 - `update --agent` is a policy gate for external AI proposals, not a model call or autonomous daemon.
 - `update-agent` must not auto-write `MAP.md`, `DECISIONS.md`, module responsibilities, module relationships, or code files.
 - Generated evidence must stay clearly marked and must not be treated as a replacement for reviewed module purpose, boundaries, or decisions.
-- Source intelligence evidence can be stale, ambiguous, truncated, or wrong; it must stay generated/non-canonical and must not auto-update `MAP.md`, module docs, route scoring, or reviewed relation facts.
+- Source-level facts can be stale, ambiguous, truncated, or wrong; use CodeGraph for import/call/symbol/impact questions, and keep cmap focused on reviewed module explanations, handoff, decisions, and verification records.
 - Relation candidates may be shown for review, but route and benchmark must not score from unpromoted candidates.
 - Translation/i18n/locale mirrors are paused and not part of the current command surface. Review HTML UI label localization is presentation-only and must not create a hidden second fact store.
 - Import graph, route v2, and pack v2 are paused historical ideas; the current roadmap is Review HTML and relation explanations on top of reviewed project maps.
 
 ## Verification Summary
-Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`; source intelligence behavior is covered by `tests/integration/source-intelligence*.test.ts`; context pack budget/redaction behavior is covered by `tests/integration/m16-context-pack.test.ts`; inbox evidence path safety is covered by `tests/integration/m24-inbox-path-escape.test.ts`; structured candidate visibility in HTML view is covered by `tests/integration/m25-view-structured-candidates.test.ts`; HTML view behavior is covered by `tests/integration/m19-view-export.test.ts`; HTML view secret redaction is covered by `tests/unit/redact.test.ts`.
+Run `pnpm test`, `pnpm typecheck`, and `pnpm build` before claiming implementation status. For CLI behavior, prefer integration tests that spawn `tsx src/cli.ts` in temporary project directories. Brief/Obsidian behavior is covered by `tests/integration/m6-brief-obsidian.test.ts`; MapPatch/update-agent behavior is covered by `tests/integration/m7-update-agent.test.ts`; generated evidence, inbox status, and stale checks are covered by `tests/integration/m8-evidence-stale-inbox.test.ts`; route context pack behavior is covered by `tests/integration/m10-route-context-pack.test.ts`; context size controls are covered by `tests/integration/m11-context-size-controls.test.ts`; route benchmark context metrics are covered by `tests/integration/m12-route-benchmark-context.test.ts`; context pack budget/redaction behavior is covered by `tests/integration/m16-context-pack.test.ts`; inbox evidence path safety is covered by `tests/integration/m24-inbox-path-escape.test.ts`; structured candidate visibility in HTML view is covered by `tests/integration/m25-view-structured-candidates.test.ts`; HTML view behavior is covered by `tests/integration/m19-view-export.test.ts`; HTML view secret redaction is covered by `tests/unit/redact.test.ts`.
 
 ## Handoff Notes
-Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, generated TS/JS source intelligence, symbol callers/callees, file/diff/symbol impact, source architecture advisory, source-aware brief/view support, source-intelligence benchmark metrics, budgeted/redacted `pack`, Obsidian view-layer export/check/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, MapPatch v1/v2 policy gate, generated/canonical evidence separation, generated stats store, freshness v2, controlled low-risk inbox promotion with project-root evidence path validation, structured candidate visibility in the HTML review view, strengthened HTML secret redaction, observe/assist hook evidence collection, assist hook session brief generation, Codex-first lifecycle render/ingest, Claude hook lifecycle render/test compatibility, deterministic graph projections, graph explanation, route context packing from reviewed module relations plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, GitHub Actions quality gate, and refreshed product showcase.
+Current implementation covers v0.1 CLI commands plus explicit `CHECKPOINT.md` handoff, AI brief, budgeted/redacted `pack`, Obsidian view-layer export/check/pull dry-run, changed-file coverage checks, relation checks, route benchmarking with context-pack metrics and CI thresholds, conservative GSD v1/v2 dry-run reconciliation, MapPatch v1/v2 policy gate, generated/canonical evidence separation, generated stats store, freshness v2, controlled low-risk inbox promotion with project-root evidence path validation, structured candidate visibility in the HTML review view, strengthened HTML secret redaction, observe/assist hook evidence collection, assist hook session brief generation, Codex-first lifecycle render/ingest, Claude hook lifecycle render/test compatibility, deterministic graph projections, graph explanation, route context packing from reviewed module relations plus module-owned verification commands, `--max-context` size controls, CI Markdown verify reports, GitHub Actions quality gate, and refreshed product showcase. Source-level code facts are delegated to CodeGraph instead of being duplicated inside cmap.
 
 Next roadmap is v0.2 Trust Boundary + Human Review Layer: PR-B `cmap view export` read-only HTML dashboard, PR-C trust-boundary hygiene/lifecycle ingest/Codex workflow/generated evidence migration, PR-C2 Freshness v2, and PR-D AI Relation Candidate Workflow. Old import graph/test ownership, route v2, and pack v2 are paused historical ideas, not current work.

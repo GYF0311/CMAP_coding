@@ -1,6 +1,6 @@
 {
   "name": "cmap",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Repo-local project memory map CLI for AI coding",
   "license": "MIT",
   "repository": {
@@ -20,7 +20,7 @@
     "cmap": "dist/cli.js"
   },
   "scripts": {
-    "build": "tsup src/cli.ts --format esm --dts --external typescript",
+    "build": "tsup src/cli.ts --format esm --dts",
     "test": "vitest run",
     "dev": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
@@ -30,13 +30,13 @@
   "dependencies": {
     "commander": "14.0.3",
     "gray-matter": "4.0.3",
-    "typescript": "6.0.3",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "25.6.2",
     "tsup": "8.5.1",
     "tsx": "4.21.0",
+    "typescript": "6.0.3",
     "vitest": "4.1.5"
   },
   "packageManager": "pnpm@10.32.1"

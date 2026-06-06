@@ -23,16 +23,23 @@ describe("skill export and bootstrap", () => {
     const skill = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "SKILL.md"));
     const commands = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "commands.md"));
     const boundaries = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "boundaries.md"));
+    const multiAgent = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "multi-agent.md"));
     const examples = await expectFile(path.join(cwd, ".cmap", "skills", "cmap", "examples.md"));
     expect(skill).toContain("name: cmap");
     expect(skill).toContain("description:");
     expect(skill).toContain("CMAP Project Map Skill");
     expect(skill).toContain("Canonical Facts");
     expect(skill).toContain("stable English anchors");
+    expect(skill).toContain("multi-agent.md");
     expect(skill).toContain("AGENTS.md");
     expect(commands).toContain("cmap route \"<task>\"");
     expect(commands).not.toContain("--lang");
     expect(boundaries).toContain(".context/generated/");
+    expect(multiAgent).toContain("Coordinator Prompt");
+    expect(multiAgent).toContain("Research Agent Note");
+    expect(multiAgent).toContain("Diff-driven Content Update Prompt");
+    expect(multiAgent).toContain("CodeGraph");
+    expect(multiAgent).toContain("正文摘要默认中文");
     expect(examples).toContain("cmap verify --changed");
 
     const check = await runCmap(["skill", "export", "--host", "codex", "--check"], cwd);

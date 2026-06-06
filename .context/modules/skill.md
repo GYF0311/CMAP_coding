@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-17T22:06:00+08:00
+updated_at: 2026-06-07T00:37:31+08:00
 confidence: ai-drafted
 module: skill
 paths:
@@ -34,14 +34,15 @@ Export portable cmap skill/reference instructions and bootstrap project onboardi
 - `src/skill/templates.ts`
 
 ## Responsibilities
-- Render `.cmap/skills/cmap/` as a reusable English instructions pack with `SKILL.md`, `commands.md`, `boundaries.md`, and `examples.md`.
+- Render `.cmap/skills/cmap/` as a reusable instructions pack with `SKILL.md`, `commands.md`, `boundaries.md`, `multi-agent.md`, and `examples.md`.
 - Include `name` and `description` frontmatter in `SKILL.md` so copied global installs are visible in Codex/agent skill pickers.
+- Include multi-agent coordinator/research/synthesis/diff-content/context-updater/reviewer prompts so large-project onboarding and content updates have a repeatable review format.
 - Check whether an exported skill pack is stale without writing files.
 - Bootstrap onboarding by running non-destructive host entrypoint install, optional skill export, and `.context/out/start-here.md` generation.
 - Support explicit new-project onboarding with `cmap bootstrap --init --host both --skill`, which creates the `.context` skeleton before installing entrypoints.
 - Refuse default bootstrap before `.context` exists and clearly recommend `cmap bootstrap --init --host both --skill` for new projects.
 - Keep skill content as guidance only; it must point back to `.context` as the trusted project memory.
-- Include the `.context` writing contract: stable English section headings, project-language body prose.
+- Include the `.context` writing contract: stable English section headings, project-language body prose, and Chinese body prose when that is the project preference.
 
 ## Depends On
 - `host` for non-destructive `AGENTS.md` / `CLAUDE.md` install.
@@ -55,7 +56,7 @@ Export portable cmap skill/reference instructions and bootstrap project onboardi
 - `cmap bootstrap --host claude|codex|both --skill`
 
 ## Data Flow
-Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bootstrap validates that `.context` exists or creates it only when `--init` is explicit, delegates host entrypoint merge to `install`, optionally delegates skill file rendering to `skill export`, and writes a generated start-here guide under `.context/out/`.
+Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bootstrap validates that `.context` exists or creates it only when `--init` is explicit, delegates host entrypoint merge to `install`, optionally delegates skill file rendering to `skill export`, and writes a generated start-here guide under `.context/out/`. Multi-agent and diff-driven content update prompts stay in the exported skill pack as workflow guidance; reviewed project memory still belongs in canonical `.context` files or candidate inbox entries.
 
 ## State / Storage
 - Skill pack: `.cmap/skills/cmap/**` (generated local artifact; ignored by git)
@@ -68,6 +69,8 @@ Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bo
 - Do not revive `--lang`, locale config, translation mirrors, or `.context/i18n` through skill/bootstrap.
 - `view export --ui-lang zh-CN` localizes Review HTML UI labels only; it is not a skill/bootstrap localization path.
 - Host-specific hints can differ, but core cmap boundaries must stay consistent.
+- Multi-agent prompt templates must keep CodeGraph/source-fact boundaries separate from CMAP's durable project-memory layer.
+- Diff-driven content update templates can propose CMAP changes from changed files, but must not mechanically copy source-fact diffs into canonical project memory.
 
 ## Traps
 - Do not auto-install into every IDE's global skill directory from `skill export`; export a project-local pack that can be copied or installed globally when the user wants a cross-project cmap skill.
@@ -81,4 +84,4 @@ Skill export renders deterministic Markdown files under `.cmap/skills/cmap/`. Bo
 - `pnpm dev bootstrap --host both --skill` in a temp initialized project
 
 ## When to Update This Doc
-When skill pack structure, host hints, bootstrap behavior, or start-here output changes.
+When skill pack structure, multi-agent prompt guidance, host hints, bootstrap behavior, or start-here output changes.

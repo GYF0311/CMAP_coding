@@ -18,7 +18,6 @@ relations:
     - evidence
     - context
     - relation-candidates
-    - source-intelligence
 relation_explanations:
   depends_on:
     evidence:
@@ -33,10 +32,6 @@ relation_explanations:
       why: "view displays relation proposals as candidate-only review signals without applying them."
       produces: "Candidate relation cards and non-canonical labels in the review dashboard."
       impact: "Candidate schema or path changes may require collect/render updates and structured candidate tests."
-    source-intelligence:
-      why: "view can display generated source index/evidence support panels as non-canonical review material."
-      produces: "Source evidence, source metrics, and freshness support panels when support layers are included."
-      impact: "Source evidence schema changes may require updates in src/view/collect.ts, src/view/schema.ts, src/view/render.ts, and source-intelligence view tests."
 confidence: ai-drafted
 ---
 # Module: view
@@ -57,7 +52,7 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 - Reads optional `relation_explanations` from module frontmatter and renders `why`, `produces`, and `impact` without changing the canonical `relations: string[]` schema.
 - `--include-generated`, `--include-inbox`, `--include-freshness`, and the convenience `--include-support` gate generated/support-layer detail sections.
 - Treats generated evidence, legacy inbox Markdown, structured inbox candidates, freshness metadata, and relation candidates as support signals only.
-- Treats generated source evidence, source query metrics, source freshness, and source architecture hints as support signals only.
+- Does not render a CMAP-owned source graph. If a task needs import/call/symbol/impact facts, use CodeGraph and then update the human-readable module explanation only when the durable project understanding changed.
 - Reads structured `cmap.candidate.v1` JSON files from `.context/inbox/candidates/*.json` so candidate-store output is visible in the human review dashboard.
 - Marks relation candidates as Candidate / Non-canonical and never offers browser-side apply/promote.
 - Missing support layers must degrade to warnings and "Not available", not hard failures.
@@ -76,7 +71,6 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 ## Verification
 - `pnpm test tests/integration/m19-view-export.test.ts`
 - `pnpm test tests/integration/m25-view-structured-candidates.test.ts`
-- `pnpm test tests/integration/source-intelligence-brief-view.test.ts`
 - `pnpm test tests/unit/redact.test.ts`
 - `pnpm dev view export --out _cmap-view`
 - `pnpm dev view export --check --out _cmap-view`

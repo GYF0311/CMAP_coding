@@ -10,6 +10,14 @@
 - AI relation candidates are allowed, but remain candidate-only until reviewed.
 - Review HTML must not perform new semantic analysis; it renders the reviewed project map and support layers.
 
+## Multi-agent and Content Updates
+- 多 agent 研究默认由 coordinator 拆成独立切片；子 agent 只读源码、文档和工具输出，记录 scope、files read、source evidence、candidate conclusions、confidence、proposed context updates。
+- coordinator 负责交叉比对冲突，丢弃无证据结论，把面向人的最终汇总写成中文。
+- 源码事实用 CodeGraph 或项目配置的代码智能工具核对；CMAP 只记录审阅后的耐用项目理解，不保存 import/call/symbol/impact 事实图谱。
+- Diff 对比可用于发现哪些模块说明、状态、决策或 handoff 可能需要更新；它只产生候选内容更新，不直接把代码事实写成 canonical map。
+- `.context` H1/H2 结构标题保持 English anchors；正文、模块解释、checkpoint/status/decision 默认中文，除非项目另有明确偏好。
+- 影响模块目的、依赖、数据流或验证路径的结论，审阅后更新 `.context/MAP.md`、`.context/STATUS.md`、`.context/CHECKPOINT.md` 或 `.context/modules/*.md`；未审阅内容留在 `.context/inbox/` 或 `docs/research/`。
+
 <!-- cmap:start -->
 ## CMAP Project Map
 

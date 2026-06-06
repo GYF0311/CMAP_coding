@@ -3,20 +3,22 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-05-17T22:41:49+08:00'
+updated_at: '2026-06-04T22:22:51+08:00'
 confidence: ai-drafted
 ---
 # Status
 
 ## Active Goal
-Keep cmap on Trust Boundary + Human Review Layer while making real-project onboarding safe and the review layer useful for AI coding handoff: safe entrypoints, English skill/bootstrap discovery, freshness discipline, relation explanations, low-confidence alias candidates, Review HTML module understanding, and unified candidate inbox producers.
+让 CMAP 保持在它真正有价值的位置：AI 交接和模块解释层。agent 写代码时同步更新 `.context`，让后续 agent 能快速理解模块职责、相关模块、关键文件、当前交接状态和验证路径，而不是重新读大量源码。
+
+Trust Boundary + Human Review Layer 继续作为 AI 写入上下文的安全纪律：生成证据、候选内容、已接受的模块解释必须分层；`.context` 更新要能看 diff、能验证、能审阅、能回退。当前路线是：CMAP 负责中文项目记忆和交接，CodeGraph 负责源码事实查询。
 
 ## Done Recently
-`cmap install` now defaults to marker merge with `<!-- cmap:start -->` / `<!-- cmap:end -->`, preserving existing `AGENTS.md` / `CLAUDE.md` content outside the cmap block. `--mode print` previews without writing, `--force` is the explicit full-overwrite escape hatch, and `--backup` stores previous entrypoints under `.context/backups/install-*`.
+`cmap install` 默认使用 `<!-- cmap:start -->` / `<!-- cmap:end -->` 标记块合并，保留 `AGENTS.md` / `CLAUDE.md` 中 CMAP 块外的原有规则。`--mode print` 只预览不写入，`--force` 是明确的全量覆盖逃生口，`--backup` 会把旧入口保存到 `.context/backups/install-*`。
 
-`cmap skill export` writes an English project-local instruction pack under `.cmap/skills/cmap/` and supports `--check` for stale detection. `cmap bootstrap` still refuses to invent `.context` by default, but now recommends `cmap bootstrap --init --host both --skill` for new projects; explicit `--init` creates the skeleton before delegating to non-destructive install, optional skill export, and `.context/out/start-here.md` generation.
+`cmap skill export` 会把项目本地说明包写到 `.cmap/skills/cmap/`，并支持 `--check` 检测是否过期。`cmap bootstrap` 默认仍不会凭空创建 `.context`；新项目需要显式使用 `cmap bootstrap --init --host both --skill`，先创建骨架，再执行非破坏式入口安装、可选 skill 导出和 `.context/out/start-here.md` 生成。
 
-Package version was bumped to `0.3.0` for the Source Intelligence Upgrade release line.
+CMAP 已从重复源码事实层的方向收回。import、谁调用谁、符号、影响分析等源码级事实交给 CodeGraph 或专门的代码智能工具；CMAP 保留更轻的耐用记忆层：中文模块解释、交接、决策、状态、更新日志和验证记录。
 
 `AGENTS.md` and `CLAUDE.md` were dogfooded through non-destructive install, so the original project rules are preserved and the new cmap marker block includes Git Safety Rules.
 
@@ -34,7 +36,7 @@ Low-confidence `cmap route` output now suggests source inspection and can write 
 
 Review HTML module details now include responsibilities, incoming relations, relation explanations, module-owned verification commands, and related candidates from existing `.context` data only.
 
-Review HTML now supports a presentation-only Chinese UI shell via `view export --ui-lang zh-CN`, parses legacy Chinese module headings such as `职责` / `关键契约` / `读什么`, surfaces canonical context files, and renders module Details as structured Markdown sections instead of raw JSON. The project writing contract is now explicit: canonical `.context` section headings should stay English anchors, while body prose can use the project's human language.
+Review HTML now supports a presentation-only Chinese UI shell via `view export --ui-lang zh-CN`, parses legacy Chinese module headings such as `职责` / `关键契约` / `读什么`, surfaces canonical context files, and renders module Details as structured Markdown sections instead of raw JSON. The project writing contract is now explicit: canonical `.context` section headings should stay English anchors, while this local project's body prose should be Chinese by default.
 
 `cmap verify` now enforces that writing contract as a warning layer: it scans canonical `.context` files and module docs for non-English H1/H2 structural headings, reports exact file/title references, and emits a batch dry-run rewrite suggestion when many heading anchors need normalization.
 
@@ -45,11 +47,12 @@ Unified candidate-store producers now cover MapPatch/update, low-confidence rout
 `cmap freshness mark-reviewed` now prints that it only updates `.context/generated/freshness.json`, not canonical module docs. Freshness snapshot and mark-reviewed writes now use `.context/generated/freshness.json.lock` plus atomic temp-file rename to avoid concurrent last-write-wins and partial JSON corruption.
 
 ## Left Off
-Verify structural heading policy is implemented and verified locally. Commit/push are pending.
+重复源码事实层已删除并委托给 CodeGraph；UA/Graphify 相关项目产物已移入回收站；Review HTML 已重新导出并在 Codex 内部浏览器打开。首页概览和模块卡片现在优先显示中文正文，模块详情里的旧模块文档还需要后续逐步中文化。
 
 ## Next Steps
-1. Run final `pnpm dev verify --changed` and `git diff --check`.
-2. Commit and push the verify heading-policy slice.
+1. 后续按模块逐步中文化 `.context/modules/*.md` 正文。
+2. 继续学习 UA 的 diff/change detection 思路，但不要恢复 UA dashboard 或 CMAP 自建源码图谱。
+3. 代码变更影响耐用模块目的、依赖、数据流或验证路径时，用中文更新 CMAP。
 
 ## Changed Files
 - Entrypoint/onboarding: `AGENTS.md`, `CLAUDE.md`, `README.md`, `src/commands/install.ts`, `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/host/*`, `src/skill/*`, install/skill tests.
@@ -60,10 +63,10 @@ Verify structural heading policy is implemented and verified locally. Commit/pus
 - Review HTML localized UI / context rendering: `src/view/*`, `src/commands/view.ts`, `src/cli.ts`, `tests/integration/m19-view-export.test.ts`, and docs/templates that teach English headings with project-language body prose.
 - Verify heading policy: `src/commands/verify.ts`, `tests/integration/verify-l0.test.ts`, and docs/context describing non-English `.context` heading warnings.
 - Unified producers: `src/commands/reconcile.ts`, `src/commands/obsidian.ts`, `tests/integration/m6-brief-obsidian.test.ts`.
-- v0.3.0 source intelligence release: `src/source-intelligence/**`, `src/commands/source.ts`, `src/commands/symbol.ts`, `src/commands/impact.ts`, `src/commands/benchmark.ts`, source-aware brief/view support, `tests/integration/source-intelligence*.test.ts`, version metadata, and context docs.
+- 源码事实层回退/委托：删除 CMAP 自建 source graph、source/symbol/impact 命令、source-aware brief/view 支持和源码事实层测试/fixture。保留 CodeGraph 作为源码事实层，保留 CMAP 作为项目记忆层。
 
 ## Risks
-`_cmap-view`, `_cmap`, `.context/generated/*`, `.context/out/*`, and `.cmap/skills/*` remain generated/ignored local artifacts. Candidate requests are intentionally non-canonical until reviewed. `module.alias.request` has `target: unresolved` by design and must be converted manually after source inspection. Freshness locking is intentionally a simple file lock; stale lock files fail with a clear timeout instead of being auto-deleted. `--ui-lang zh-CN` localizes only Review HTML labels; it must not revive `.context/i18n`, locale config, or translation mirrors.
+`_cmap-view`, `_cmap`, `.context/generated/*`, `.context/out/*`, `.cmap/skills/*` 和 `.codegraph/*` 都是生成物或忽略的本地产物，不是可信项目记忆。候选请求在被审阅前都不是 canonical。`module.alias.request` 的 `target: unresolved` 是刻意设计，需要人工或后续 agent 看过源码后再转成明确模块。Freshness lock 只是简单文件锁，过期锁会明确失败，不会自动删除。`--ui-lang zh-CN` 只本地化 Review HTML 标签，不恢复 `.context/i18n`、locale config 或翻译镜像。
 
 ## Last Verified
-2026-05-17: `pnpm test tests/integration/verify-l0.test.ts` passed 8 tests; `pnpm typecheck` passed; `pnpm test` passed 31 files / 167 tests; `pnpm build` passed; `pnpm dev verify --changed` exited 0 with 7 mapped-doc warnings; `git diff --check` passed.
+2026-06-07：`pnpm typecheck` 通过；相关集成测试 6 个文件 / 36 个测试通过；`pnpm build` 通过；`pnpm dev view export --ui-lang zh-CN --check --out _cmap-view` 通过；`pnpm dev verify --changed` 退出码 0，有 70 条 changed-file mapping warning，主要来自删除旧源码事实层文件和规划文档；`git diff --check` 通过。

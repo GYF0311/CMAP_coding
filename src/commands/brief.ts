@@ -3,7 +3,6 @@ import path from "node:path";
 import { fileExists } from "../context/scanner.js";
 import { loadModuleIndex, loadProjectInfo, moduleById, moduleNoteTitle } from "../core/module-index.js";
 import { resolveInsideRoot, projectRelative } from "../fs/safe-path.js";
-import { buildSourceEvidenceBrief } from "../source-intelligence/brief.js";
 import { routeTask } from "./route.js";
 
 type BriefOptions = {
@@ -11,9 +10,6 @@ type BriefOptions = {
   obsidian?: boolean;
   vaultName?: string;
   maxContext?: string;
-  withSourceEvidence?: boolean;
-  sourceBudget?: string;
-  sourceTarget?: string;
 };
 
 export async function runBrief(cwd: string, task: string, options: BriefOptions): Promise<void> {
@@ -28,13 +24,6 @@ export async function runBrief(cwd: string, task: string, options: BriefOptions)
     .map((candidate) => moduleLookup.get(candidate.id))
     .filter((module): module is NonNullable<typeof module> => Boolean(module));
   const checkpoint = await readCurrentCheckpoint(cwd);
-  const sourceEvidence = options.withSourceEvidence
-    ? await buildSourceEvidenceBrief(cwd, {
-      task,
-      sourceBudget: options.sourceBudget,
-      sourceTarget: options.sourceTarget
-    })
-    : undefined;
   const brief = renderBrief({
     task,
     route,
@@ -42,8 +31,7 @@ export async function runBrief(cwd: string, task: string, options: BriefOptions)
     checkpoint,
     projectId: project.projectId,
     includeObsidian: Boolean(options.obsidian),
-    vaultName: options.vaultName || "corpus",
-    sourceEvidence
+    vaultName: options.vaultName || "corpus"
   });
 
   if (options.out) {
@@ -65,7 +53,6 @@ function renderBrief(input: {
   projectId: string;
   includeObsidian: boolean;
   vaultName: string;
-  sourceEvidence?: string;
 }): string {
   const lines = [
     "# AI Coding Brief",
@@ -114,10 +101,6 @@ function renderBrief(input: {
     lines.push("");
     lines.push(module.body.trim() || "_No module body._");
     lines.push("");
-  }
-
-  if (input.sourceEvidence) {
-    lines.push(input.sourceEvidence.trim(), "");
   }
 
   lines.push(

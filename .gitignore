@@ -13,6 +13,7 @@ coverage/
 _cmap/
 _cmap-view/
 .playwright-mcp/
+.codegraph/
 cmap-product-overview-*.png
 
 # Local review/research workspaces

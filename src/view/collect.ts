@@ -9,11 +9,6 @@ import { generatedRoot, listModuleEvidence, type ModuleEvidence } from "../core/
 import { readFreshnessIndex, type FreshnessIndex } from "../core/freshness.js";
 import { loadModuleIndex, loadProjectInfo, type ContextModule } from "../core/module-index.js";
 import { projectRelative } from "../fs/safe-path.js";
-import { readRecentSourceEvidenceRecords } from "../source-intelligence/brief.js";
-import { currentSourceFileStates } from "../source-intelligence/freshness.js";
-import { summarizeSourceFreshness } from "../source-intelligence/impact.js";
-import { computeSourceIndexMetrics } from "../source-intelligence/metrics.js";
-import { readSourceIndex } from "../source-intelligence/store.js";
 import { type CmapViewData, viewDataSchemaId } from "./schema.js";
 
 const MAX_EVIDENCE = 50;
@@ -33,7 +28,8 @@ export type CollectViewOptions = {
 
 export async function collectViewData(cwd: string, options: CollectViewOptions = {}): Promise<CmapViewData> {
   const warnings: string[] = [];
-  const [project, modules] = await Promise.all([loadProjectInfo(cwd), loadModuleIndex(cwd)]);
+  const [project, modules, mapRaw] = await Promise.all([loadProjectInfo(cwd), loadModuleIndex(cwd), maybeReadContextFile(cwd, "MAP.md")]);
+  const moduleDescriptions = parseModuleMapDescriptions(mapRaw);
   const included = {
     generated: Boolean(options.includeGenerated),
     inbox: Boolean(options.includeInbox),
@@ -41,7 +37,6 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
   };
   const freshness = included.freshness ? await maybeReadFreshness(cwd, warnings) : undefined;
   const evidence = included.generated ? await collectEvidence(cwd, modules, warnings) : [];
-  const sourceEvidence = await collectSourceEvidence(cwd, included.generated || included.freshness, warnings);
   const { candidates, relationCandidates } = included.inbox
     ? await collectInboxCandidates(cwd, warnings)
     : { candidates: [], relationCandidates: [] };
@@ -67,8 +62,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
       candidateCount: candidates.length + relationCandidates.length,
       warningCount: warnings.length
     },
-    sourceEvidence,
-    modules: modules.map((module) => toModuleView(module, modules, freshness, candidates, relationCandidates)),
+    modules: modules.map((module) => toModuleView(module, modules, moduleDescriptions, freshness, candidates, relationCandidates)),
     evidence,
     candidates,
     relationCandidates,
@@ -79,6 +73,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
 function toModuleView(
   module: ContextModule,
   modules: ContextModule[],
+  moduleDescriptions: Map<string, string>,
   freshness: FreshnessIndex | undefined,
   candidates: InboxCandidateView[],
   relationCandidates: RelationCandidateView[]
@@ -105,7 +100,7 @@ function toModuleView(
     risk: module.risk ?? "Not available",
     aliases: module.aliases,
     paths: module.pathsInclude,
-    description: extractModuleDescription(module.body),
+    description: moduleDescriptions.get(module.id) ?? extractModuleDescription(module.body),
     responsibilities: extractBulletSection(module.body, ["Responsibilities", "职责"]),
     keyContracts: extractBulletSection(module.body, ["Key Contracts", "Contracts", "Constraints", "关键契约", "约束"]),
     readNext: extractBulletSection(module.body, ["Read Next", "Read First", "读什么", "阅读入口"]),
@@ -313,79 +308,6 @@ async function collectEvidence(
       files: entry.files.slice(0, 8),
       commands: entry.commands?.slice(0, 4) ?? []
     }));
-}
-
-async function collectSourceEvidence(
-  cwd: string,
-  included: boolean,
-  warnings: string[]
-): Promise<CmapViewData["sourceEvidence"]> {
-  const base: CmapViewData["sourceEvidence"] = {
-    included,
-    available: false,
-    generated: true,
-    canonical: false,
-    label: "generated source evidence; non-canonical",
-    records: [],
-    omittedRecords: 0,
-    unreadableRecords: []
-  };
-  if (!included) {
-    return base;
-  }
-
-  const recent = await readRecentSourceEvidenceRecords(cwd, { limit: 10 });
-  base.records = recent.records.map((record) => ({
-    id: record.id,
-    createdAt: record.createdAt,
-    kind: record.kind,
-    summary: record.summary,
-    files: record.files.slice(0, 10),
-    confidence: record.confidence,
-    freshnessStatus: record.freshnessStatus,
-    truncated: record.truncated
-  }));
-  base.omittedRecords = recent.omitted;
-  base.unreadableRecords = recent.unreadable;
-
-  try {
-    const index = await readSourceIndex(cwd);
-    if (!index) {
-      warnings.push("Source index: Not available");
-      return base;
-    }
-    const metrics = computeSourceIndexMetrics(index);
-    const currentFiles = await currentSourceFileStates(cwd, index);
-    const freshness = summarizeSourceFreshness(index, { cwd, currentFiles });
-    return {
-      ...base,
-      available: true,
-      index: {
-        generatedAt: index.meta.generatedAt,
-        gitHead: index.meta.gitHead,
-        files: metrics.files,
-        symbols: metrics.symbols,
-        edges: metrics.edges,
-        unresolvedRefs: metrics.unresolvedRefs,
-        parseErrors: metrics.parseErrors
-      },
-      freshness: {
-        status: freshness.status,
-        indexedAt: freshness.indexedAt,
-        gitHead: freshness.gitHead,
-        fresh: freshness.counts.fresh,
-        stale: freshness.counts.stale,
-        missing: freshness.counts.missing,
-        error: freshness.counts.error,
-        staleFiles: freshness.staleFiles.slice(0, 10),
-        missingFiles: freshness.missingFiles.slice(0, 10),
-        notes: freshness.explanations
-      }
-    };
-  } catch {
-    warnings.push("Source index: unreadable generated support layer");
-    return base;
-  }
 }
 
 async function collectInboxCandidates(
@@ -625,6 +547,42 @@ function firstText(raw: string | undefined): string | undefined {
     .map((item) => item.replace(/^[-*]\s+/, "").trim())
     .find((item) => item && !item.startsWith("|") && !/^---+$/.test(item));
   return line || undefined;
+}
+
+function parseModuleMapDescriptions(raw: string | undefined): Map<string, string> {
+  const result = new Map<string, string>();
+  const table = sectionAny(raw, ["Module Map", "模块地图", "模块表"]);
+  if (!table) {
+    return result;
+  }
+  const rows = table
+    .split(/\r?\n/)
+    .filter((line) => line.trim().startsWith("|"))
+    .map(parseTableRow)
+    .filter((cells) => cells.length > 0 && !cells.every((cell) => /^-+$/.test(cell)));
+  if (rows.length < 2) {
+    return result;
+  }
+  const header = rows[0].map((cell) => cell.toLocaleLowerCase());
+  const moduleIndex = firstHeaderIndex(header, ["module", "模块"]);
+  const purposeIndex = firstHeaderIndex(header, ["purpose", "职责", "说明"]);
+  if (moduleIndex === -1 || purposeIndex === -1) {
+    return result;
+  }
+  for (const cells of rows.slice(1)) {
+    const moduleId = uncode(cells[moduleIndex] ?? "");
+    const purpose = uncode(cells[purposeIndex] ?? "");
+    if (moduleId && purpose) {
+      result.set(moduleId, purpose);
+    }
+  }
+  return result;
+}
+
+function firstHeaderIndex(header: string[], candidates: string[]): number {
+  return candidates
+    .map((candidate) => header.indexOf(candidate))
+    .find((index) => index !== -1) ?? -1;
 }
 
 function bulletItems(raw: string): string[] {
