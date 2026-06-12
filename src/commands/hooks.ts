@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import { fileExists } from "../context/scanner.js";
 import { CmapCommandError } from "../errors.js";
 import { recordRouteUsage } from "../core/generated-stats.js";
+import { renderDriftBlock } from "../core/drift.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
 import { resolveInsideRoot, projectRelative } from "../fs/safe-path.js";
 import { claudeLifecycleSettings, codexLifecycleSettings, type HookMode } from "../hooks/templates.js";
@@ -394,6 +395,10 @@ async function writeSessionBrief(cwd: string, task: string, route: RouteReport):
       lines.push(`- \`${command}\``);
     }
   }
+  const driftBlock = route.drift ? renderDriftBlock(route.drift) : "";
+  if (driftBlock) {
+    lines.push("", driftBlock);
+  }
   lines.push(
     "",
     "## Boundaries",
@@ -504,6 +509,10 @@ function renderRouteAdditionalContext(route: RouteReport): string {
     for (const command of route.verifyCommands.slice(0, 4)) {
       lines.push(`- ${command}`);
     }
+  }
+  const driftBlock = route.drift ? renderDriftBlock(route.drift) : "";
+  if (driftBlock) {
+    lines.push("", driftBlock);
   }
   return lines.join("\n");
 }

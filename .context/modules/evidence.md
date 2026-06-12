@@ -10,10 +10,12 @@ paths:
   - src/commands/evidence.ts
   - src/commands/inbox.ts
   - src/commands/freshness.ts
+  - src/commands/drift.ts
   - src/core/candidate-store.ts
   - src/core/generated-store.ts
   - src/core/generated-stats.ts
   - src/core/freshness.ts
+  - src/core/drift.ts
   - src/fs/safe-path.ts
 aliases:
   - evidence
@@ -27,6 +29,8 @@ aliases:
   - archive
   - stale
   - freshness
+  - drift
+  - sourceSignals
   - hooks assist
   - 证据
   - 候选池
@@ -58,7 +62,11 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 ## Code Paths
 - `src/commands/evidence.ts`
 - `src/commands/inbox.ts`
+- `src/commands/freshness.ts`
+- `src/commands/drift.ts`
 - `src/core/candidate-store.ts`
+- `src/core/freshness.ts`
+- `src/core/drift.ts`
 - `src/fs/safe-path.ts`
 
 ## Responsibilities
@@ -66,7 +74,9 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - List and migrate legacy generated evidence blocks out of module docs.
 - Record deterministic module activity stats under `.context/generated/stats/module-activity.json` when policy allows `stats.update`.
 - Record deterministic route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
-- Maintain `.context/generated/freshness.json` snapshots and freshness review markers.
+- Maintain `.context/generated/freshness.json` snapshots, freshness review markers, and commit-aware drift `sourceSignals`.
+- Keep `drift check` read-only; only `drift snapshot`, `drift mark-reviewed`, and `drift migrate` write the freshness index.
+- Compute drift from committed, staged, unstaged, untracked, rename/delete, pending candidate, and test signals without creating a second source-fact store.
 - Treat the first freshness snapshot as a baseline, not a human semantic review; `mark-reviewed` is the explicit review marker.
 - Serialize freshness snapshot and mark-reviewed writes with `.context/generated/freshness.json.lock` and atomic temp-file rename.
 - Explain that `freshness mark-reviewed` updates generated review metadata only and never edits canonical module docs.
@@ -106,6 +116,10 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `cmap freshness mark-reviewed --module <id> --evidence "..."`
 - `cmap freshness review --module <id>`
 - `cmap freshness review --all --out .context/out/freshness-review.md`
+- `cmap drift check --module <id> --json`
+- `cmap drift snapshot --module <id>`
+- `cmap drift mark-reviewed --module <id> --evidence "..."`
+- `cmap drift migrate`
 - `cmap inbox status`
 - `cmap inbox triage`
 - `cmap inbox promote <id> --dry-run`
@@ -120,14 +134,14 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `cmap hooks ingest --host codex --event UserPromptSubmit --mode assist`
 
 ## Data Flow
-User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry. External AI/update/reconcile outputs, Obsidian pull diffs, and low-confidence route requests write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
+User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry and may show read-only drift blocks without writing freshness/sourceSignals. `drift check` reads git plus freshness metadata in memory; `drift snapshot` stores the same sourceSignals shape under `.context/generated/freshness.json`. External AI/update/reconcile outputs, Obsidian pull diffs, and low-confidence route requests write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
 
 ## State / Storage
 - Writes `.context/generated/evidence/modules/*.jsonl`.
 - Writes `.context/generated/evidence/verification.jsonl`.
 - Writes `.context/generated/stats/module-activity.json` when `stats.update` is enabled.
 - Writes `.context/generated/stats/route-usage.json` when `stats.update` is enabled.
-- Writes `.context/generated/freshness.json` when snapshotting or marking reviewed freshness state.
+- Writes `.context/generated/freshness.json` when snapshotting, marking reviewed freshness/drift state, migrating v1 to v2, or explicitly storing drift sourceSignals.
 - Creates `.context/generated/freshness.json.lock` briefly while updating the freshness index; stale locks cause a timeout error instead of an infinite wait.
 - Reads `.context/inbox/*.md` legacy candidates, `.context/inbox/candidates/*.json` structured candidates, and `.context/inbox/relations/*.json` relation candidates for backlog counts.
 - Reads route-authored `module.alias.request` candidates as medium-risk unresolved prompts.
@@ -161,6 +175,7 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m9-hooks-assist.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
+- `pnpm test tests/integration/m26-drift.test.ts`
 - `pnpm test tests/integration/m30-freshness-lock.test.ts`
 - `pnpm test tests/integration/m24-inbox-path-escape.test.ts`
 - `pnpm test tests/integration/m21-candidate-store.test.ts`
@@ -171,6 +186,7 @@ User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store 
 - `pnpm dev freshness diff`
 - `pnpm dev freshness review --module route`
 - `pnpm dev freshness review --all --out .context/out/freshness-review.md`
+- `pnpm dev drift check --module route --json`
 - `pnpm dev inbox status`
 - `pnpm dev inbox triage`
 - `pnpm dev inbox promote <id> --dry-run`

@@ -2,6 +2,7 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileExists } from "../context/scanner.js";
 import { writeCandidateDrafts, type CmapCandidate } from "../core/candidate-store.js";
+import { computeDriftReport, renderDriftBlock, type DriftReport } from "../core/drift.js";
 import type { ContextModule } from "../core/module-index.js";
 import { loadModuleIndex } from "../core/module-index.js";
 import { recordRouteUsage } from "../core/generated-stats.js";
@@ -49,6 +50,7 @@ export type RouteReport = {
   verifyCommands: string[];
   graphMode: boolean;
   warnings: string[];
+  drift?: DriftReport;
   aliasCandidate?: AliasCandidateSuggestion;
   aliasCandidateWrite?: AliasCandidateWriteSummary;
 };
@@ -95,6 +97,9 @@ export async function routeTask(cwd: string, task: string, options: RouteOptions
   const aliasCandidateWrite = lowConfidence && options.writeAliasCandidate
     ? await writeAliasCandidateRequest(cwd, task, ranked)
     : undefined;
+  const drift = strong.length > 0
+    ? await computeDriftReport(cwd, { moduleId: strong[0].id })
+    : undefined;
   return {
     task,
     modules: strong,
@@ -105,6 +110,7 @@ export async function routeTask(cwd: string, task: string, options: RouteOptions
     verifyCommands,
     graphMode: Boolean(options.graph),
     warnings: await relationCandidateWarnings(cwd),
+    drift,
     aliasCandidate,
     aliasCandidateWrite
   };
@@ -204,6 +210,11 @@ function formatRouteReport(report: RouteReport): string {
   lines.push("", "Read first:");
   for (const file of report.readFirst) {
     lines.push(`- ${file}`);
+  }
+
+  const driftBlock = report.drift ? renderDriftBlock(report.drift) : "";
+  if (driftBlock) {
+    lines.push("", driftBlock);
   }
 
   if (report.aliasCandidate) {
@@ -393,6 +404,7 @@ function toJsonReport(report: RouteReport): object {
     verifyCommands: report.verifyCommands,
     graphMode: report.graphMode,
     warnings: report.warnings,
+    drift: report.drift,
     aliasCandidate: report.aliasCandidate,
     aliasCandidateWrite: report.aliasCandidateWrite
   };

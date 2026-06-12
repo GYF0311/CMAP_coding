@@ -1,19 +1,31 @@
 import { createHash } from "node:crypto";
+import { execFile } from "node:child_process";
 import { mkdir, open, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import { fileExists } from "../context/scanner.js";
 import { CmapCommandError } from "../errors.js";
 import { projectRelative } from "../fs/safe-path.js";
 import { generatedRoot, latestModuleEvidenceAt } from "./generated-store.js";
 import { loadModuleIndex, type ContextModule } from "./module-index.js";
 
-export type FreshnessIndex = {
+const execFileAsync = promisify(execFile);
+
+export type FreshnessIndexV1 = {
   version: 1;
+  updatedAt: string;
+  modules: Record<string, FreshnessModuleV1>;
+};
+
+export type FreshnessIndexV2 = {
+  version: 2;
   updatedAt: string;
   modules: Record<string, FreshnessModule>;
 };
 
-export type FreshnessModule = {
+export type FreshnessIndex = FreshnessIndexV2;
+
+export type FreshnessModuleV1 = {
   doc: string;
   semanticHash: string;
   reviewState: "baseline" | "reviewed";
@@ -25,6 +37,32 @@ export type FreshnessModule = {
   }>;
   newestGeneratedEvidenceAt?: string;
   pendingInboxCandidates: string[];
+};
+
+export type SourceSignalChangedFile = {
+  path: string;
+  oldPath?: string;
+  status: "committed" | "modified" | "staged" | "untracked" | "renamed" | "deleted" | "test";
+  score: number;
+};
+
+export type SourceSignals = {
+  computedAt: string;
+  baseCommit?: string;
+  headCommit?: string;
+  driftScore: number;
+  reasons: string[];
+  changedFiles: SourceSignalChangedFile[];
+  debug?: {
+    routeExposureScore?: number;
+    moduleRiskScore?: number;
+    structureScore?: number;
+  };
+};
+
+export type FreshnessModule = FreshnessModuleV1 & {
+  lastReviewedCommit?: string;
+  sourceSignals?: SourceSignals;
 };
 
 export type FreshnessWarning = {
@@ -59,7 +97,7 @@ export function freshnessLockPath(cwd: string): string {
 export async function buildFreshnessIndex(cwd: string, previous?: FreshnessIndex): Promise<FreshnessIndex> {
   const modules = await loadModuleIndex(cwd);
   const updatedAt = new Date().toISOString();
-  const next: FreshnessIndex = { version: 1, updatedAt, modules: {} };
+  const next: FreshnessIndex = { version: 2, updatedAt, modules: {} };
   for (const module of modules) {
     next.modules[module.id] = await buildFreshnessModule(cwd, module, previous?.modules[module.id]);
   }
@@ -71,7 +109,7 @@ export async function readFreshnessIndex(cwd: string): Promise<FreshnessIndex | 
   if (!(await fileExists(target))) {
     return undefined;
   }
-  return JSON.parse(await readFile(target, "utf8")) as FreshnessIndex;
+  return normalizeFreshnessIndex(JSON.parse(await readFile(target, "utf8")) as FreshnessIndexV1 | FreshnessIndexV2);
 }
 
 export async function writeFreshnessIndex(cwd: string, index: FreshnessIndex): Promise<void> {
@@ -94,6 +132,10 @@ export async function snapshotFreshness(cwd: string): Promise<FreshnessIndex> {
   return updateFreshnessIndexLocked(cwd, (previous) => buildFreshnessIndex(cwd, previous));
 }
 
+export async function migrateFreshnessIndex(cwd: string): Promise<FreshnessIndex> {
+  return updateFreshnessIndexLocked(cwd, (previous) => buildFreshnessIndex(cwd, previous));
+}
+
 export async function markModuleReviewed(
   cwd: string,
   moduleId: string,
@@ -108,6 +150,8 @@ export async function markModuleReviewed(
     module.reviewState = "reviewed";
     module.lastSemanticReviewedAt = reviewedAtFor(module);
     module.reviewEvidence = evidence?.trim() || undefined;
+    module.lastReviewedCommit = await currentHeadCommit(cwd);
+    module.sourceSignals = undefined;
     return index;
   });
 }
@@ -335,10 +379,37 @@ async function buildFreshnessModule(
     reviewState: previous?.reviewState ?? "baseline",
     lastSemanticReviewedAt: previous?.lastSemanticReviewedAt ?? new Date().toISOString(),
     reviewEvidence: previous?.reviewEvidence,
+    lastReviewedCommit: previous?.lastReviewedCommit,
+    sourceSignals: previous?.sourceSignals,
     ownedFiles,
     newestGeneratedEvidenceAt: await latestModuleEvidenceAt(cwd, module.id),
     pendingInboxCandidates: await pendingInboxCandidatesForModule(cwd, module.id)
   };
+}
+
+function normalizeFreshnessIndex(index: FreshnessIndexV1 | FreshnessIndexV2): FreshnessIndex {
+  if (index.version === 2) {
+    return index;
+  }
+  const modules: Record<string, FreshnessModule> = {};
+  for (const [moduleId, module] of Object.entries(index.modules ?? {})) {
+    modules[moduleId] = { ...module };
+  }
+  return {
+    version: 2,
+    updatedAt: index.updatedAt,
+    modules
+  };
+}
+
+async function currentHeadCommit(cwd: string): Promise<string | undefined> {
+  try {
+    const result = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd, encoding: "utf8" });
+    const commit = result.stdout.trim();
+    return commit || undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 async function pendingInboxCandidatesForModule(cwd: string, moduleId: string): Promise<string[]> {

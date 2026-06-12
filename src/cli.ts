@@ -9,6 +9,7 @@ import { runCheckpoint } from "./commands/checkpoint.js";
 import { runCodexFinish, runCodexGuard, runCodexHandoff, runCodexStart } from "./commands/codex.js";
 import { runCpCopy, runCpDelete, runCpMove, runCpRestore } from "./commands/cp.js";
 import { runDoctor } from "./commands/doctor.js";
+import { runDriftCheck, runDriftMarkReviewed, runDriftMigrate, runDriftReview, runDriftSnapshot } from "./commands/drift.js";
 import { runFinish } from "./commands/finish.js";
 import { runFreshnessDiff, runFreshnessMarkReviewed, runFreshnessReview, runFreshnessSnapshot } from "./commands/freshness.js";
 import { runGraphBuild, runGraphExplain } from "./commands/graph.js";
@@ -134,6 +135,53 @@ freshness
   .option("--out <path>", "Write review markdown to a project-relative file")
   .action(async (options: { module?: string; all?: boolean; out?: string }) => {
     await runFreshnessReview(process.cwd(), options);
+  });
+
+const drift = program.command("drift").description("Check commit-aware freshness drift signals");
+drift
+  .command("check")
+  .description("Compute drift review signals without writing freshness metadata")
+  .option("--module <id>", "Module id")
+  .option("--json", "Output JSON")
+  .option("--write-signals", "Write sourceSignals to freshness metadata")
+  .action(async (options: { module?: string; json?: boolean; writeSignals?: boolean }) => {
+    await runDriftCheck(process.cwd(), options);
+  });
+drift
+  .command("snapshot")
+  .description("Write sourceSignals to .context/generated/freshness.json")
+  .option("--module <id>", "Module id")
+  .action(async (options: { module?: string }) => {
+    await runDriftSnapshot(process.cwd(), options);
+  });
+drift
+  .command("review")
+  .description("Render read-first material for a drifted module")
+  .option("--module <id>", "Module id")
+  .option("--out <path>", "Write review markdown to a project-relative file")
+  .action(async (options: { module?: string; out?: string }) => {
+    await runDriftReview(process.cwd(), options);
+  });
+drift
+  .command("mark-reviewed")
+  .requiredOption("--module <id>", "Module id")
+  .requiredOption("--evidence <text>", "Review evidence summary")
+  .action(async (options: { module?: string; evidence?: string }) => {
+    await runDriftMarkReviewed(process.cwd(), options);
+  });
+drift
+  .command("migrate")
+  .description("Explicitly migrate freshness metadata to v2")
+  .action(async () => {
+    await runDriftMigrate(process.cwd());
+  });
+drift
+  .command("verify", { hidden: true })
+  .description("Hidden alias for drift check")
+  .option("--module <id>", "Module id")
+  .option("--json", "Output JSON")
+  .action(async (options: { module?: string; json?: boolean }) => {
+    await runDriftCheck(process.cwd(), options);
   });
 
 program

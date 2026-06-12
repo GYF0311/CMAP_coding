@@ -35,6 +35,7 @@ Render an AI coding brief from route results, route context pack, current checkp
 - Run the same deterministic routing used by `cmap route`.
 - Read `.context/CHECKPOINT.md` as the preferred current handoff source, falling back to `.context/STATUS.md`.
 - Include direct routed module docs and graph-related context module docs in a single AI-readable brief.
+- Include route-provided read-only drift review signals when a direct module exceeds the drift threshold.
 - Include suggested verification commands extracted from selected module docs.
 - Respect `--max-context` by using the already-bounded route context pack.
 - Optionally include `obsidian://` links for selected context modules.
@@ -63,6 +64,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 - Related context modules in a brief are for inspection; they are not automatically edit targets.
 - Smaller `--max-context` values intentionally omit related module docs and their derived verification commands.
 - Source-level facts may be consulted externally through CodeGraph during a task, but `brief` itself should remain a reviewed context package, not a generated source report.
+- Drift blocks in briefs are prompts to review module cards; brief must not write freshness/sourceSignals.
 
 ## Traps
 - If module aliases are weak, `brief` will package the wrong docs; fix aliases or module docs instead of adding semantic guessing.
@@ -72,6 +74,7 @@ Writes only explicit output files, usually under `.context/out/`. It does not mo
 - `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
+- `pnpm test tests/integration/m26-drift.test.ts`
 - `pnpm dev brief "路由结果没有推荐模块" --out .context/out/brief.md`
 
 ## When to Update This Doc

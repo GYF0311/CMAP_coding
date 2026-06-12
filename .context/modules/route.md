@@ -64,6 +64,7 @@ route 是整个项目地图的"入口问询台":你用自然语言说一句要�
 
 ## Boundaries
 - 确定性匹配:alias/模块名/路径关键词打分;英文 alias 要词边界,中文 alias 可子串匹配。
+- 对直接命中的模块显示只读 drift review block;该计算不得写 `.context/generated/freshness.json` 或落 sourceSignals。
 - `--max-context` 只裁剪上下文包,不改变直接命中排序。
 - 低置信时建议 `--write-alias-candidate` 写候选,绝不发明不存在的模块。
 
@@ -73,6 +74,7 @@ route 是整个项目地图的"入口问询台":你用自然语言说一句要�
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
 - `pnpm test tests/integration/m14-graph-route.test.ts`
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`
+- `pnpm test tests/integration/m26-drift.test.ts`
 - `pnpm dev route "checkpoint 更新当前主线"`
 
 ## When to Update This Doc

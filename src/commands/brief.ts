@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileExists } from "../context/scanner.js";
 import { loadModuleIndex, loadProjectInfo, moduleById, moduleNoteTitle } from "../core/module-index.js";
+import { renderDriftBlock } from "../core/drift.js";
 import { resolveInsideRoot, projectRelative } from "../fs/safe-path.js";
 import { routeTask } from "./route.js";
 
@@ -81,6 +82,11 @@ function renderBrief(input: {
   lines.push("", "## Read First", "");
   for (const file of input.route.readFirst) {
     lines.push(`- \`${file}\``);
+  }
+
+  const driftBlock = input.route.drift ? renderDriftBlock(input.route.drift) : "";
+  if (driftBlock) {
+    lines.push("", driftBlock);
   }
 
   if (input.includeObsidian) {

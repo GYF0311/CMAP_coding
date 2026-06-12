@@ -27,6 +27,13 @@ export type ContextPolicy = {
   generatedEvidence: {
     maxEntries: number;
   };
+  drift: {
+    enabled: boolean;
+    threshold: number;
+    writeSignals: boolean;
+    testWeight: number;
+    excludeGlobs: string;
+  };
 };
 
 export type PolicyValidation = {
@@ -72,6 +79,13 @@ export const defaultContextPolicy: ContextPolicy = {
   },
   generatedEvidence: {
     maxEntries: 50
+  },
+  drift: {
+    enabled: true,
+    threshold: 0.3,
+    writeSignals: false,
+    testWeight: 0.05,
+    excludeGlobs: ".context/generated/**,dist/**,node_modules/**"
   }
 };
 
@@ -99,7 +113,7 @@ export async function validateContextPolicy(cwd: string): Promise<PolicyValidati
     if (!line.startsWith(" ") && trimmed.endsWith(":")) {
       section = trimmed.slice(0, -1);
       seenTopLevel.add(section);
-      if (!["auto_apply", "candidate_only", "blocked", "thresholds", "inbox", "generated_evidence"].includes(section)) {
+      if (!["auto_apply", "candidate_only", "blocked", "thresholds", "inbox", "generated_evidence", "drift"].includes(section)) {
         warnings.push(`unknown policy section ${section}`);
       }
       continue;
@@ -157,6 +171,13 @@ export function renderDefaultPolicy(): string {
     "  max_inbox_pending: 0",
     "  max_high_risk: 0",
     "  generated_evidence_max_entries: 50",
+    "",
+    "drift:",
+    "  enabled: true",
+    "  threshold: 0.3",
+    "  write_signals: false",
+    "  test_weight: 0.05",
+    "  exclude_globs: \".context/generated/**,dist/**,node_modules/**\"",
     ""
   ].join("\n");
 }
@@ -281,6 +302,50 @@ function assignPolicyValue(
       return;
     }
     warnings.push(`unknown policy key generated_evidence.${key}`);
+    return;
+  }
+  if (section === "drift") {
+    if (key === "enabled") {
+      if (typeof value !== "boolean") {
+        errors.push("invalid policy type drift.enabled: expected boolean");
+        return;
+      }
+      policy.drift.enabled = value;
+      return;
+    }
+    if (key === "threshold") {
+      if (typeof value !== "number") {
+        errors.push("invalid policy type drift.threshold: expected number");
+        return;
+      }
+      policy.drift.threshold = value;
+      return;
+    }
+    if (key === "write_signals") {
+      if (typeof value !== "boolean") {
+        errors.push("invalid policy type drift.write_signals: expected boolean");
+        return;
+      }
+      policy.drift.writeSignals = value;
+      return;
+    }
+    if (key === "test_weight") {
+      if (typeof value !== "number") {
+        errors.push("invalid policy type drift.test_weight: expected number");
+        return;
+      }
+      policy.drift.testWeight = value;
+      return;
+    }
+    if (key === "exclude_globs") {
+      if (typeof value !== "string") {
+        errors.push("invalid policy type drift.exclude_globs: expected string");
+        return;
+      }
+      policy.drift.excludeGlobs = value;
+      return;
+    }
+    warnings.push(`unknown policy key drift.${key}`);
   }
 }
 

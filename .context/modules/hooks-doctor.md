@@ -56,8 +56,8 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `hooks stop --profile observe` writes a non-canonical `.context/logs/hooks.jsonl` event.
 - `hooks stop --profile assist` maps changed files to modules and appends bounded generated evidence for mapped files.
 - `hooks test --event PostToolUse` writes `.context/logs/session-events.jsonl`.
-- `hooks test --event UserPromptSubmit --mode assist --prompt ...` writes `.context/out/session-brief.md` and generated route usage stats.
-- `hooks ingest --host codex --event UserPromptSubmit --mode assist` writes `.context/out/session-brief.md`, updates generated route usage stats, and returns Codex `additionalContext`.
+- `hooks test --event UserPromptSubmit --mode assist --prompt ...` writes `.context/out/session-brief.md`, generated route usage stats, and read-only drift blocks when routed modules exceed threshold.
+- `hooks ingest --host codex --event UserPromptSubmit --mode assist` writes `.context/out/session-brief.md`, updates generated route usage stats, returns Codex `additionalContext`, and does not write freshness/sourceSignals for drift.
 - `hooks ingest --host codex --event PreToolUse --mode strict` blocks direct semantic canonical context writes with Codex `permissionDecision: "deny"`.
 - `hooks ingest --host codex --event PostToolUse|Stop` records real tool/session events without mutating canonical context.
 - `codex start|finish|guard|handoff` provides the supported explicit Codex workflow while Codex hooks remain experimental/generic.
@@ -90,6 +90,7 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `cmap hooks render --host claude --mode assist`
 - `cmap hooks test --event PostToolUse --mode observe`
 - `cmap hooks test --event UserPromptSubmit --mode assist --prompt "..."`
+- `pnpm test tests/integration/m26-drift.test.ts`
 - `cmap hooks session-start`
 - `cmap hooks stop`
 - `cmap hooks stop --profile assist --changed src/commands/route.ts`
