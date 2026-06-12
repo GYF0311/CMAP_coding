@@ -6,7 +6,8 @@ import matter from "gray-matter";
 import { fileExists } from "../context/scanner.js";
 import { loadContextPolicy, validateContextPolicy } from "../context/policy.js";
 import { loadModuleIndex, mapChangedFilesToModules } from "../core/module-index.js";
-import { freshnessWarnings } from "../core/freshness.js";
+import { computeDriftReport } from "../core/drift.js";
+import { freshnessWarnings, readFreshnessIndex, type FreshnessWarning } from "../core/freshness.js";
 import { hasLegacyModuleDocEvidence } from "../core/generated-store.js";
 
 const execFileAsync = promisify(execFile);
@@ -514,11 +515,35 @@ async function checkInboxBacklog(cwd: string, contextRoot: string, report: Verif
 }
 
 async function checkFreshness(cwd: string, report: VerifyReport): Promise<void> {
-  const warnings = await freshnessWarnings(cwd);
+  const warnings = [
+    ...(await freshnessWarnings(cwd)),
+    ...(await commitAwareFreshnessWarnings(cwd))
+  ];
   report.ok.push("Freshness: generated freshness index checked");
   for (const warning of warnings) {
     report.issues.push({ level: "warning", message: warning.message });
   }
+}
+
+async function commitAwareFreshnessWarnings(cwd: string): Promise<FreshnessWarning[]> {
+  const freshness = await readFreshnessIndex(cwd);
+  const reviewedModules = new Set(
+    Object.entries(freshness?.modules ?? {})
+      .filter(([, module]) => Boolean(module.lastReviewedCommit))
+      .map(([moduleId]) => moduleId)
+  );
+  if (reviewedModules.size === 0) {
+    return [];
+  }
+
+  const report = await computeDriftReport(cwd);
+  return report.modules
+    .filter((module) => reviewedModules.has(module.moduleId))
+    .filter((module) => module.sourceSignals.driftScore >= module.threshold)
+    .map((module) => ({
+      moduleId: module.moduleId,
+      message: `Freshness: module ${module.moduleId} source changed since last semantic review (score ${module.sourceSignals.driftScore})`
+    }));
 }
 
 async function checkPolicy(cwd: string, report: VerifyReport): Promise<void> {

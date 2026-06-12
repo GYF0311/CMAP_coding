@@ -89,8 +89,10 @@ export const CmapViewDataSchema = z.object({
     })),
     freshness: z.object({
       state: z.string(),
+      badge: z.enum(["reviewed", "pending", "stale", "no signal"]),
       lastReviewedAt: z.string(),
       newestGeneratedEvidenceAt: z.string(),
+      driftScore: z.number().optional(),
       pendingInboxCandidates: z.array(z.string())
     }),
     suggestedCommands: z.array(z.object({

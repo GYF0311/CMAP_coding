@@ -1,7 +1,7 @@
 ---
 context_type: module
 module: view
-updated_at: 2026-05-17T22:06:00+08:00
+updated_at: 2026-06-13T04:28:01+08:00
 paths:
   - src/view
   - src/commands/view.ts
@@ -47,11 +47,13 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 - UI label localization is presentation-only; it must not revive `.context/i18n`, locale config, translation mirrors, `init --lang`, `view --lang`, or a second maintained fact store.
 - Module descriptions come from canonical `.context/modules/*.md`; view does not read translation mirrors or locale config.
 - Module cards surface human-readable responsibilities, key contracts, read-next hints, paths, relations, and verification.
+- Module cards surface freshness badges (`reviewed`, `pending`, `stale`, `no signal`) from existing freshness metadata when `--include-freshness` is enabled.
 - Module details render the reviewed module Markdown sections as structured HTML instead of dumping raw JSON.
 - Top-level canonical context files are visible in the HTML export; support layers remain opt-in.
 - Reads optional `relation_explanations` from module frontmatter and renders `why`, `produces`, and `impact` without changing the canonical `relations: string[]` schema.
 - `--include-generated`, `--include-inbox`, `--include-freshness`, and the convenience `--include-support` gate generated/support-layer detail sections.
 - Treats generated evidence, legacy inbox Markdown, structured inbox candidates, freshness metadata, and relation candidates as support signals only.
+- Freshness drift badges read stored `sourceSignals` and review state only; export must not compute git drift, write freshness data, or silently create missing signals.
 - Does not render a CMAP-owned source graph. If a task needs import/call/symbol/impact facts, use CodeGraph and then update the human-readable module explanation only when the durable project understanding changed.
 - Reads structured `cmap.candidate.v1` JSON files from `.context/inbox/candidates/*.json` so candidate-store output is visible in the human review dashboard.
 - Marks relation candidates as Candidate / Non-canonical and never offers browser-side apply/promote.
@@ -70,6 +72,7 @@ Render a read-only, single-file HTML review dashboard from trusted `.context` pr
 
 ## Verification
 - `pnpm test tests/integration/m19-view-export.test.ts`
+- `pnpm test tests/integration/m26-drift.test.ts`
 - `pnpm test tests/integration/m25-view-structured-candidates.test.ts`
 - `pnpm test tests/unit/redact.test.ts`
 - `pnpm dev view export --out _cmap-view`

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:28:19+08:00
+updated_at: 2026-06-13T04:28:01+08:00
 confidence: ai-drafted
 module: verify
 paths:
@@ -49,6 +49,7 @@ Run deterministic checks over `.context` and report errors/warnings without modi
 - Respect `.context/policy.yml` inbox thresholds under `--stale`.
 - Warn when a module doc appears older than one of its owned source paths under `--stale`.
 - Warn under `--freshness` when owned source files or generated evidence are newer than the last semantic review.
+- Warn under `--freshness` when a module has a semantic review commit baseline and read-only drift signals cross the configured threshold.
 - Warn under `--freshness` when a module has pending inbox candidates that need review.
 - Warn under `--freshness` when no generated freshness snapshot exists, so users know to run `cmap freshness snapshot`.
 - Classify pending freshness candidates as relation, high-risk, or routine when possible.
@@ -79,6 +80,8 @@ Read-only.
 
 ## Constraints
 - `verify` must not fix files automatically.
+- `verify --freshness` is read-only: it must not rewrite freshness snapshots, migrate old freshness files, or persist drift signals.
+- Commit-aware freshness drift is warning-only and must not turn CI red unless another check produces an error.
 - Warnings should be actionable and not expose secrets.
 
 ## Traps
@@ -96,6 +99,7 @@ Read-only.
 - `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m18-freshness-inbox-promote.test.ts`
 - `pnpm test tests/integration/m22-freshness-policy.test.ts`
+- `pnpm test tests/integration/m26-drift.test.ts`
 - `pnpm test tests/integration/m15-ci-benchmark.test.ts`
 
 ## When to Update This Doc

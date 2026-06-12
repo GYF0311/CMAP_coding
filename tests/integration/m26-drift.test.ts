@@ -4,6 +4,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { describe, expect, test } from "vitest";
 import { createTempProject, expectFile, runCmap } from "../helpers.js";
+import { readEmbeddedViewData } from "../../src/view/check.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -104,6 +105,57 @@ describe("M26 drift schema and read/write boundaries", () => {
     const invalid = await runCmap(["verify", "--policy"], cwd);
     expect(invalid.code).toBe(1);
     expect(invalid.stdout).toContain("invalid policy type drift.exclude_globs: expected string");
+  });
+
+  test("verify freshness emits commit-aware stale warnings without rewriting freshness", async () => {
+    const cwd = await createDriftProject("m26-verify-commit-aware");
+    await runCmap(["freshness", "snapshot"], cwd);
+    await runCmap(["drift", "mark-reviewed", "--module", "route", "--evidence", "Reviewed route baseline"], cwd);
+
+    const clean = await runCmap(["verify", "--freshness"], cwd);
+    expect(clean.code).toBe(0);
+    expect(clean.stdout).not.toContain("source changed since last semantic review");
+
+    const before = await readFreshnessBytes(cwd);
+    await writeFile(path.join(cwd, "src/commands/route.ts"), "export const route = 'working tree drift';\n", "utf8");
+    const stale = await runCmap(["verify", "--freshness"], cwd);
+    const after = await readFreshnessBytes(cwd);
+
+    expect(stale.code).toBe(0);
+    expect(stale.stdout).toContain("Freshness: module route source changed since last semantic review (score 0.3)");
+    expect(stale.stdout).toContain("Warnings:");
+    expect(after).toBe(before);
+  });
+
+  test("view export renders freshness drift badges from stored signals without rewriting freshness", async () => {
+    const cwd = await createDriftProject("m26-view-drift-badge");
+    await runCmap(["freshness", "snapshot"], cwd);
+
+    const baselineBefore = await readFreshnessBytes(cwd);
+    const baselineExport = await runCmap(["view", "export", "--include-freshness", "--out", ".context/out/baseline.html"], cwd);
+    const baselineAfter = await readFreshnessBytes(cwd);
+    const baselineData = await readEmbeddedViewData(path.join(cwd, ".context/out/baseline.html"));
+    const baselineRoute = baselineData?.modules.find((module) => module.id === "route");
+    expect(baselineExport.code).toBe(0);
+    expect(baselineAfter).toBe(baselineBefore);
+    expect(baselineRoute?.freshness.badge).toBe("no signal");
+
+    await runCmap(["drift", "mark-reviewed", "--module", "route", "--evidence", "Reviewed route baseline"], cwd);
+    await writeFile(path.join(cwd, "src/commands/route.ts"), "export const route = 'stored drift';\n", "utf8");
+    await runCmap(["drift", "snapshot", "--module", "route"], cwd);
+    const before = await readFreshnessBytes(cwd);
+    const view = await runCmap(["view", "export", "--include-freshness", "--out", ".context/out/stale.html"], cwd);
+    const after = await readFreshnessBytes(cwd);
+    const html = await expectFile(path.join(cwd, ".context/out/stale.html"));
+    const data = await readEmbeddedViewData(path.join(cwd, ".context/out/stale.html"));
+    const route = data?.modules.find((module) => module.id === "route");
+
+    expect(view.code).toBe(0);
+    expect(after).toBe(before);
+    expect(route?.freshness.badge).toBe("stale");
+    expect(route?.freshness.driftScore).toBe(0.3);
+    expect(html).toContain("data-drift-badge=\"stale\"");
+    expect(html).toContain(">stale</span>");
   });
 
   test("drift check is read-only and reports committed staged unstaged untracked rename delete and test signals", async () => {

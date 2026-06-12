@@ -3,6 +3,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import matter from "gray-matter";
+import { loadContextPolicy } from "../context/policy.js";
 import { fileExists } from "../context/scanner.js";
 import { parseCmapCandidate } from "../core/candidate-store.js";
 import { generatedRoot, listModuleEvidence, type ModuleEvidence } from "../core/generated-store.js";
@@ -40,6 +41,7 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
   const { candidates, relationCandidates } = included.inbox
     ? await collectInboxCandidates(cwd, warnings)
     : { candidates: [], relationCandidates: [] };
+  const freshnessDriftThreshold = included.freshness ? (await loadContextPolicy(cwd)).drift.threshold : 0.3;
   await checkRelationData(modules, warnings);
   checkModuleHeadingPolicy(modules, warnings);
 
@@ -62,7 +64,9 @@ export async function collectViewData(cwd: string, options: CollectViewOptions =
       candidateCount: candidates.length + relationCandidates.length,
       warningCount: warnings.length
     },
-    modules: modules.map((module) => toModuleView(module, modules, moduleDescriptions, freshness, candidates, relationCandidates)),
+    modules: modules.map((module) =>
+      toModuleView(module, modules, moduleDescriptions, freshness, freshnessDriftThreshold, candidates, relationCandidates)
+    ),
     evidence,
     candidates,
     relationCandidates,
@@ -75,6 +79,7 @@ function toModuleView(
   modules: ContextModule[],
   moduleDescriptions: Map<string, string>,
   freshness: FreshnessIndex | undefined,
+  freshnessDriftThreshold: number,
   candidates: InboxCandidateView[],
   relationCandidates: RelationCandidateView[]
 ): CmapViewData["modules"][number] {
@@ -115,8 +120,10 @@ function toModuleView(
     relatedCandidates,
     freshness: {
       state: freshnessModule?.reviewState ?? "Not available",
+      badge: freshnessBadge(freshnessModule, freshnessDriftThreshold),
       lastReviewedAt: freshnessModule?.lastSemanticReviewedAt ?? "Not available",
       newestGeneratedEvidenceAt: freshnessModule?.newestGeneratedEvidenceAt ?? "Not available",
+      driftScore: freshnessModule?.sourceSignals?.driftScore,
       pendingInboxCandidates: freshnessModule?.pendingInboxCandidates ?? []
     },
     suggestedCommands: [
@@ -124,6 +131,25 @@ function toModuleView(
       { label: "Mark reviewed", command: `cmap freshness mark-reviewed --module ${module.id} --evidence "Reviewed ${module.id}"` }
     ]
   };
+}
+
+function freshnessBadge(
+  freshnessModule: FreshnessIndex["modules"][string] | undefined,
+  driftThreshold: number
+): "reviewed" | "pending" | "stale" | "no signal" {
+  if (!freshnessModule) {
+    return "no signal";
+  }
+  if (freshnessModule.sourceSignals && freshnessModule.sourceSignals.driftScore >= driftThreshold) {
+    return "stale";
+  }
+  if (freshnessModule.pendingInboxCandidates.length > 0) {
+    return "pending";
+  }
+  if (freshnessModule.reviewState === "reviewed") {
+    return "reviewed";
+  }
+  return "no signal";
 }
 
 function incomingRelations(module: ContextModule, modules: ContextModule[]): CmapViewData["modules"][number]["incomingRelations"] {

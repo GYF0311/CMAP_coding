@@ -48,6 +48,11 @@ export function renderViewHtml(data: CmapViewData, options: RenderViewOptions = 
     .toolbar label, summary { cursor: pointer; }
     .modules { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
     .pill { display: inline-block; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; margin: 2px 4px 2px 0; color: var(--muted); font-size: 12px; }
+    .freshness-badge { font-weight: 650; text-transform: lowercase; }
+    .freshness-badge-reviewed { border-color: #9bc7b6; color: #145c4b; background: #eef8f3; }
+    .freshness-badge-pending { border-color: #e5c07b; color: #7c4a03; background: #fff8e8; }
+    .freshness-badge-stale { border-color: #df8f8f; color: #8f1f1f; background: #fff1f1; }
+    .freshness-badge-no-signal { border-color: var(--line); color: var(--muted); background: var(--wash); }
     .actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .compact-list { margin: 6px 0 10px; padding-left: 18px; }
     .section-stack { display: grid; gap: 12px; }
@@ -162,12 +167,14 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
     module.readNext.join(" "),
     module.sections.map((section) => `${section.heading} ${section.body}`).join(" "),
     module.verifyCommands.join(" "),
-    module.relatedCandidates.map((candidate) => `${candidate.id} ${candidate.summary}`).join(" ")
+    module.relatedCandidates.map((candidate) => `${candidate.id} ${candidate.summary}`).join(" "),
+    module.freshness.badge
   ].join(" ");
   const hasCandidate = module.freshness.pendingInboxCandidates.length > 0 || module.relatedCandidates.length > 0;
-  const isStale = module.freshness.state !== "Not available" && module.freshness.state !== "reviewed";
+  const isStale = module.freshness.badge === "stale";
   const hasGenerated = module.freshness.newestGeneratedEvidenceAt !== "Not available";
-  return `<article class="module" data-search="${escapeAttr(searchable)}" data-stale="${isStale ? "true" : "false"}" data-has-candidate="${hasCandidate ? "true" : "false"}" data-high-risk="false" data-generated="${hasGenerated ? "true" : "false"}" data-module-id="${escapeAttr(module.id)}">
+  const driftScore = module.freshness.driftScore === undefined ? "" : ` · ${escapeHtml(messages.driftScore)} ${escapeHtml(String(module.freshness.driftScore))}`;
+  return `<article class="module" data-search="${escapeAttr(searchable)}" data-stale="${isStale ? "true" : "false"}" data-has-candidate="${hasCandidate ? "true" : "false"}" data-high-risk="false" data-generated="${hasGenerated ? "true" : "false"}" data-drift-badge="${escapeAttr(module.freshness.badge)}" data-module-id="${escapeAttr(module.id)}">
     <h3>${escapeHtml(module.name)}</h3>
     <p class="meta"><code>${escapeHtml(module.id)}</code> · ${escapeHtml(module.status)} · ${escapeHtml(module.docPath)}</p>
     <p><strong>${escapeHtml(messages.aliases)}:</strong> ${module.aliases.map((alias) => `<span class="pill">${escapeHtml(alias)}</span>`).join("") || escapeHtml(messages.notAvailable)}</p>
@@ -177,7 +184,7 @@ function renderModule(module: CmapViewData["modules"][number], messages: ViewMes
     <p><strong>${escapeHtml(messages.incomingRelations)}:</strong> ${escapeHtml(incomingText)}</p>
     ${module.verifyCommands.length > 0 ? `<p><strong>${escapeHtml(messages.moduleVerify)}:</strong> ${module.verifyCommands.map((command) => `<code>${escapeHtml(command)}</code>`).join(", ")}</p>` : ""}
     ${module.relatedCandidates.length > 0 ? `<p><strong>${escapeHtml(messages.relatedCandidates)}:</strong> ${module.relatedCandidates.map((candidate) => `<span class="pill">${escapeHtml(candidate.id)} · ${escapeHtml(candidate.type)}</span>`).join("")}</p>` : ""}
-    <p><strong>${escapeHtml(messages.freshnessLabel)}:</strong> ${escapeHtml(module.freshness.state)} · ${escapeHtml(module.freshness.lastReviewedAt)}</p>
+    <p><strong>${escapeHtml(messages.freshnessLabel)}:</strong> ${renderFreshnessBadge(module.freshness.badge)} <span class="meta">· ${escapeHtml(module.freshness.state)} · ${escapeHtml(module.freshness.lastReviewedAt)}${driftScore}</span></p>
     ${renderCommandButtons(module.suggestedCommands, messages)}
     <button type="button" data-open-module="${escapeAttr(module.id)}">${escapeHtml(messages.details)}</button>
   </article>`;
@@ -240,20 +247,16 @@ function renderFreshness(data: CmapViewData, messages: ViewMessages): string {
   if (data.modules.length === 0) {
     return `<p class="meta">${escapeHtml(messages.notAvailable)}.</p>`;
   }
-  return `<table><thead><tr><th>${escapeHtml(messages.moduleColumn)}</th><th>${escapeHtml(messages.state)}</th><th>${escapeHtml(messages.lastReview)}</th><th>${escapeHtml(messages.generatedEvidence)}</th><th>${escapeHtml(messages.pendingCandidatesColumn)}</th></tr></thead><tbody>${data.modules.map((module) => `<tr><td>${escapeHtml(module.id)}</td><td>${escapeHtml(freshnessLabel(module.freshness.state, module.freshness.pendingInboxCandidates.length, messages))}</td><td>${escapeHtml(module.freshness.lastReviewedAt)}</td><td>${escapeHtml(module.freshness.newestGeneratedEvidenceAt)}</td><td>${escapeHtml(module.freshness.pendingInboxCandidates.join(", ") || messages.none)}</td></tr>`).join("")}</tbody></table>`;
+  return `<table><thead><tr><th>${escapeHtml(messages.moduleColumn)}</th><th>${escapeHtml(messages.freshnessBadge)}</th><th>${escapeHtml(messages.state)}</th><th>${escapeHtml(messages.lastReview)}</th><th>${escapeHtml(messages.driftScore)}</th><th>${escapeHtml(messages.generatedEvidence)}</th><th>${escapeHtml(messages.pendingCandidatesColumn)}</th></tr></thead><tbody>${data.modules.map((module) => `<tr><td>${escapeHtml(module.id)}</td><td>${renderFreshnessBadge(module.freshness.badge)}</td><td>${escapeHtml(module.freshness.state)}</td><td>${escapeHtml(module.freshness.lastReviewedAt)}</td><td>${escapeHtml(formatDriftScore(module.freshness.driftScore, messages))}</td><td>${escapeHtml(module.freshness.newestGeneratedEvidenceAt)}</td><td>${escapeHtml(module.freshness.pendingInboxCandidates.join(", ") || messages.none)}</td></tr>`).join("")}</tbody></table>`;
 }
 
-function freshnessLabel(state: string, pendingCount: number, messages: ViewMessages): string {
-  if (pendingCount > 0) {
-    return messages.pendingCandidates;
-  }
-  if (state === "baseline") {
-    return messages.baselineOnly;
-  }
-  if (state === "reviewed") {
-    return messages.reviewedState;
-  }
-  return state || messages.notAvailable;
+function renderFreshnessBadge(badge: CmapViewData["modules"][number]["freshness"]["badge"]): string {
+  const className = badge.replace(/\s+/g, "-");
+  return `<span class="pill freshness-badge freshness-badge-${escapeAttr(className)}" data-drift-badge="${escapeAttr(badge)}">${escapeHtml(badge)}</span>`;
+}
+
+function formatDriftScore(score: number | undefined, messages: ViewMessages): string {
+  return score === undefined ? messages.none : String(score);
 }
 
 function renderEvidence(data: CmapViewData, messages: ViewMessages): string {
