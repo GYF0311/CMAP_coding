@@ -1,7 +1,8 @@
-# Freshness/Drift Review Signals 实现方案(v2)
+# Freshness/Drift Review Signals 实现方案(v3)
 
-> 起草:2026-06-12 · v2 修订:2026-06-12,吸收评审稿全部意见 · 状态:可开工
-> 评审稿:`docs/plans/2026-06-12-drift-detection-plan-review.md`(意见全部采纳,无保留分歧)
+> 起草:2026-06-12 · v2:吸收一审全部意见 · v3:吸收复审 6 条实现级约束 · 状态:Go(带条件已落实)
+> 评审稿:`docs/plans/2026-06-12-drift-detection-plan-review.md`(一审)、
+> `docs/plans/2026-06-12-drift-detection-plan-review-v2.md`(复审,意见全部采纳)
 > 前置调研:`docs/research/2026-06-12-feasibility/`
 
 ## 0. 一句话(按评审稿修正后的定位)
@@ -55,35 +56,59 @@ git 操作 spawn 系统 git。Phase 0.5/1 **零新依赖**;Phase 2 也零依赖(
 ```
 
 - 写入走现有 `freshness.json.lock` + atomic rename 通道,沿用并发测试。
-- v1 → v2 迁移:读到 v1 结构时升级写回,旧命令(`freshness snapshot/mark-reviewed`、
-  `verify --freshness`、`view --include-freshness`)行为不破(Phase 0.5 验收项)。
+- **v1 → v2 迁移(复审 P1):读取路径绝不写回。** `readFreshnessIndex()` 只做 in-memory
+  normalize,把 v1 当 v2-compatible 结构返回;落盘迁移只发生在写命令
+  (`freshness snapshot`、`freshness mark-reviewed`、`drift mark-reviewed`、显式 `drift migrate`)。
+  `verify --freshness` 与 `view --include-freshness` 保持只读,验收测试:手写 v1
+  `freshness.json` → 跑这两条命令 → 文件字节不变。
 - 卡片 frontmatter 最多保留人工语义字段 `reviewed_at`(可选),不放 commit watermark。
 
 ## 4. 评分:drift budget(替代固定阈值)
 
+**Phase 1 固定为可解释三因子(复审 P2):**
+
 ```
-driftScore = sourceChangeScore      # git 三类信号:committed 中权重 / uncommitted 中高 / test-only +0.05~0.1
-           + structureScore         # Phase 2,来自 source-facts provider(删 export 0.4 / 增 export 0.3 / import 边 0.1)
+driftScore = sourceChangeScore      # git 三类信号:committed 中权重 / uncommitted 中高
            + pendingCandidateScore  # 该模块有 high-risk inbox / relation candidate 时加分
-           + routeExposureScore     # 复用 route-usage stats:常被 route 命中的模块,误导面大,提示优先
-           + moduleRiskScore        # 预留:frontmatter 将来有 risk/layer 时,高风险模块降阈值
+           + testSignalScore        # test-only 变更 +0.05~0.1,默认不单独触发提示
 ```
 
-- 低分:只写 generated 层(sourceSignals),不提示。
+- `routeExposureScore` / `moduleRiskScore` / `structureScore`(Phase 2)第一版只作为
+  **debug 字段记录,不参与阈值**;等 5-10 个真实任务的 dogfooding 数据出来后再打开。
+  避免历史高频模块挤掉新模块,且保证每条提示的原因可解释。
+- **rename/deletion 高分信号(复审 P2,Phase 1 就做,不等 Phase 2)**:解析
+  `git diff --name-status` / `git log --name-status` 的 `R`/`D`;owned path 被删除或
+  rename 时直接高分提示 "owned path changed; review module paths before trusting this card",
+  `drift review` 的 read-first 列出旧 path、新 path、模块卡片。Phase 2 的结构比对只能覆盖
+  "事实成功归属"后的差异,不能解决归属丢失,所以这个信号必须在 git 层做。
+- 低分:仅内存计算结果可见(`--json`),不自动落盘(见 §5 读写拆分)。
 - 高分:进入 route/brief/UserPromptSubmit 的 drift block。
-- 参数与阈值放 `policy.yml` `drift:` 段,exclude 支持每模块 `paths.exclude` 定制。
+- **policy schema(复审 P1,Phase 0.5 必含)**:`ContextPolicy` 新增 `drift` 类型;
+  `defaultContextPolicy` / `renderDefaultPolicy()` 输出默认配置;`validateContextPolicy()`
+  识别 `drift.enabled / threshold / write_signals / test_weight / exclude`,避免
+  `verify --policy` 报 unknown section。测试覆盖:正常配置、未知 key warning、错误类型 error。
 
 ## 5. 命令面
 
 ```
-cmap drift check [--module <id>] [--json]      # 计算并落 sourceSignals,列出超阈值模块
+cmap drift check [--module <id>] [--json]      # 默认只读:内存计算并输出,不修改工作区
+cmap drift snapshot [--module <id>]            # 显式写 sourceSignals 到 freshness v2
+cmap drift check --write-signals               # snapshot 的 alias,文档不主推
 cmap drift review --module <id> [--out ...]    # 复核材料包:read-first、commits、changed files、建议命令
 cmap drift mark-reviewed --module <id> --evidence "..."   # 更新 freshness v2 review metadata + watermark
+cmap drift migrate                             # 显式 v1→v2 落盘迁移
 ```
 
+- **读写拆分(复审 P1)**:`check` 是纯检查命令,与项目里 `verify` 的只读语义对齐;
+  route/brief/UserPromptSubmit 调用只读计算路径,不因开工动作隐式弄脏
+  `.context/generated/freshness.json`。signal 落盘只发生在显式 `snapshot` 或
+  本就有写行为的 hook 场景(assist 模式已写 session brief/stats 的路径),后者 Phase 1 先不做。
 - `mark-reviewed` 本质是 `freshness mark-reviewed` 的语义化包装,同一份状态。
-- `--evidence` 必填;若 AI 判定无需改卡片,理由写入 evidence(如
-  "Only internal refactor; module purpose and verification unchanged"),供后续调参(Phase 3)。
+- **`--evidence` 分层(复审 P2)**:`drift mark-reviewed` 必填;旧 `freshness mark-reviewed`
+  保持 optional 不破契约,缺 evidence 时输出建议性 warning;底层 `markModuleReviewed()`
+  仍接受 optional evidence,强约束只在 drift command handler。
+  AI 判定无需改卡片时理由写入 evidence(如 "Only internal refactor; module purpose and
+  verification unchanged"),供 Phase 3 调参。
 - `cmap drift verify` 保留为隐藏 alias,文档不主推。
 - `verify --freshness` 增加 commit-aware warnings(warning 级,CI 不红),不新增 `verify --drift`。
 
@@ -99,14 +124,24 @@ cmap drift mark-reviewed --module <id> --evidence "..."   # 更新 freshness v2 
 
 ## 7. 分期与验收
 
-### Phase 0.5 — 收敛术语与 freshness(先行小切片)
-- freshness.json v2 schema + 迁移;`cmap drift check` 读同一份 index;计划/文档改名
-  "Freshness/Drift Review Signals"。
-- 验收:旧 freshness 全流程不破;新旧命令读写同一状态。
+### Phase 0.5 — schema 与读写边界切片(复审重写版)
+1. `FreshnessIndexV1 | FreshnessIndexV2` 读取兼容层,读路径不写回。
+2. 显式 migration/write path:只在 snapshot/mark-reviewed/migrate 中落盘。
+3. drift policy schema + 默认配置(`ContextPolicy`/`renderDefaultPolicy`/`validateContextPolicy`)。
+4. `drift check` 只读计算模型,先不落 sourceSignals。
+5. route/brief/UserPromptSubmit 只接入只读 drift block。
+
+验收:
+- `verify --freshness` 对 v1/v2 都只读(文件字节不变测试)。
+- `verify --policy` 对 `drift:` 不报 unknown section。
+- `drift check` 不修改工作区。
+- `drift mark-reviewed --evidence ...` 更新同一份 freshness index。
+- 旧 `freshness mark-reviewed`(无 evidence)用法不破。
 
 ### Phase 1 — commit-aware freshness MVP(预估 3-4 天)
-- 三类 git 信号合并;`drift check/review/mark-reviewed`;`verify --freshness` commit-aware
-  warnings;route/brief/UserPromptSubmit 注入;Review HTML badge。
+- 三类 git 信号合并 + rename/delete(R/D)高分信号;三因子评分;
+  `drift snapshot`(显式写);`verify --freshness` commit-aware warnings;
+  route/brief/UserPromptSubmit 注入;Review HTML badge。
 - 验收:临时 git 仓库集成测试(`tests/integration/m26-drift.test.ts`)覆盖真实 commit;
   **未提交变更也能触发提示**;并发 mark-reviewed 过 lock 测试;
   dogfooding——改 `src/commands/route.ts` 不更新卡片,下一会话 brief/route 出现提示,
@@ -139,5 +174,7 @@ Phase 1 落地后,用本仓库 5-10 个真实任务记录(命中模块、分数�
 
 ## 8. 风险(残余)
 - 行为语义漂移(签名不变语义变)静态方法不可覆盖——接受,Phase 3 checklist 兜底。
-- `git log -- <paths>` 对 rename 盲区——接受 Phase 1 漏报,Phase 2 结构比对覆盖。
-- drift budget 多因子初版参数靠拍——用 Phase 3 的 evidence 数据迭代,参数全部在 policy.yml 可调。
+- rename/delete 归属丢失——**Phase 1 用 `--name-status` 的 R/D 高分信号覆盖**(见 §4),
+  不再依赖 Phase 2 "天然覆盖"。
+- 三因子初版参数靠拍——用 Phase 3 的 evidence 数据迭代,参数全部在 policy.yml 可调;
+  routeExposure/moduleRisk/structure 因子以 debug 字段先行积累数据。
