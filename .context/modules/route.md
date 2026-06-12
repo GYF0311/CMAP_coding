@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:35:51+08:00
+updated_at: 2026-06-12T00:00:00+08:00
 confidence: ai-drafted
 module: route
 paths:
@@ -50,71 +50,30 @@ relation_explanations:
 # Module: route
 
 ## Purpose
-Recommend which `.context` files an AI should read first for a natural-language task, including direct module matches, graph-related context, and module-owned verification commands.
+route 是整个项目地图的"入口问询台":你用自然语言说一句要干什么,它告诉你应该先读哪几个模块卡片、哪些文件,以及改完后建议跑哪些验证命令。它让 AI 在上下文有限的情况下不必扫读全仓库。
 
-## Code Paths
-- `src/commands/route.ts`
-- `src/core/module-index.ts`
+## Value
+- 给 AI(下一个会话):任务 → 模块的定位能力,是 brief/pack 的入口,决定了"按需阅读"是否成立。
+- 给人(产品经理):验证模块命名和 aliases 是否符合人的语言习惯——route 命不中,说明地图的"产品词汇"和使用者脱节。
+- 给整个产品:route 命中率是 cmap 有没有用的核心指标,由 benchmark 模块度量。
 
-## Responsibilities
-- Read `.context/modules/*.md` frontmatter.
-- Use the shared module index so route, finish, brief, and Obsidian export agree on module ids/paths.
-- Score alias, module-name, and path-keyword matches.
-- Keep direct high-confidence matches separate from graph-related context modules.
-- Expand a bounded context pack from typed module relations such as `depends_on` and `used_by`.
-- Support `--graph` as an explicit graph-aware route output flag without changing direct route labels.
-- Respect `--max-context` so route output can stay compact for small handoffs.
-- Extract suggested verification commands from each selected module's `## Tests / Verification` section.
-- Record generated route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
-- Output a route card with likely modules, related context, read-first files, suggested verify commands, and low-confidence notes.
-- For low-confidence routes, suggest source inspection and `--write-alias-candidate` instead of inventing a module.
-- `--write-alias-candidate` writes a non-canonical `module.alias.request` candidate with `target: unresolved`.
-- Surface pending relation candidates only as non-canonical review warnings when that workflow exists.
-- De-duplicate relation candidate warnings by candidate id so `.json` + `.md` pairs count once.
-- Avoid inventing modules when no high-confidence match exists.
+## Connections
+- 读取:所有模块卡片的 frontmatter(paths/aliases/relations)是它唯一的事实来源——卡片质量直接决定路由质量。
+- 供给:brief(开工包)、obsidian-adapter(导航一致性)、relation-candidates(候选提醒)。
+- 不做:不调用模型、不做语义猜测、不消费未 promote 的候选;相关上下文只是阅读建议,不是直接命中。
 
-## Depends On
-- `gray-matter`
-- `core/module-index.ts`
-
-## Used By
-- `cmap route "<task>"`
-- `cmap route "<task>" --write-alias-candidate`
-- `cmap brief "<task>"`
-- Future `finish` and hooks as a hint source.
-- `cmap hooks test --event UserPromptSubmit --mode assist`
-
-## Data Flow
-Task text -> shared module index -> deterministic direct scoring -> bounded relation expansion -> verification command extraction from selected context modules -> optional generated route usage stats -> optional unresolved alias request candidate -> text/JSON route report.
-
-## State / Storage
-Writes generated `.context/generated/stats/route-usage.json` when policy allows stats updates. With `--write-alias-candidate`, writes `.context/inbox/candidates/*.json|md` as candidate-only review input. It does not write canonical context facts.
-
-## Constraints
-- No embeddings, no model calls, no semantic guessing.
-- ASCII aliases require word-like boundaries so `check` does not match `checkpoint`.
-- Non-ASCII aliases can use substring matching for Chinese task phrases.
-- Related context is a reading suggestion only; it must not be treated as a direct route match or edit target.
-- `--max-context` changes context pack size only; it must not change the direct `modules` ranking.
-- Unpromoted candidates must not affect `route.modules`, `route.contextModules`, or route benchmark scoring.
-- Low-confidence alias requests must use `target: unresolved`; source inspection decides the real module later.
-- Route does not consume generated evidence, import graphs, or test ownership candidates as route facts.
-
-## Traps
-- Short English aliases can create false positives inside longer words.
-- Route output is a reading suggestion, not a code modification plan.
-- Verification commands are parsed from module docs and can become stale; keep `.context/modules/*` updated when tests move.
-- Route v2 is a paused historical idea. Current roadmap only allows small warnings for pending candidates after human-review surfaces exist.
+## Boundaries
+- 确定性匹配:alias/模块名/路径关键词打分;英文 alias 要词边界,中文 alias 可子串匹配。
+- `--max-context` 只裁剪上下文包,不改变直接命中排序。
+- 低置信时建议 `--write-alias-candidate` 写候选,绝不发明不存在的模块。
 
 ## Tests / Verification
 - `pnpm test tests/integration/m2.test.ts`
-- `pnpm test tests/integration/m6-brief-obsidian.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
 - `pnpm test tests/integration/m14-graph-route.test.ts`
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`
-- `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm dev route "checkpoint 更新当前主线"`
 
 ## When to Update This Doc
-When scoring, output format, confidence rules, or alias parsing change.
+当 route 的产品角色变化(它回答什么问题、为谁服务)或验证方式变化时更新;打分细节、输出格式微调不需要更新本卡片,看代码。

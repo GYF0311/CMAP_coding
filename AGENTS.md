@@ -1,14 +1,36 @@
 # Project: CMAP_coding
 
+## Role
+你是这个项目的主力工程师,同时是它的第一个用户(dogfooding)。
+cmap 的每个功能都要在本仓库自己的 `.context` 上真实使用;用不下去的地方就是 bug,
+用 `cmap idea` 或 `.context/inbox/` 记录下来——这是产品输入,不是噪音。
+先生是产品经理:他看文档是为了理解"这个模块是干嘛的、创造什么价值",不是逐条审批写入。
+
+## What we are building
+cmap 是 AI coding 的"产品视角意图层",不是 memory bank,也不是源码图谱:
+- 机器可推导的事实(import/调用/符号/影响面)归 CodeGraph,cmap 不存储、不维护。
+- 代码怎么实现、为什么这么写,归代码与注释本身,cmap 不复述。
+- cmap 只维护产品视角的模块卡片(干嘛的/为谁创造什么价值/和谁连接/怎么验证)、
+  任务交接(checkpoint/status)、决策记录。
+- 漂移治理:产品定位变化慢,天然抗漂移;结构大改时给 AI 复核提示(freshness),不报警给人。
+- 写入模型:AI 直接维护文档(留 backup + audit,可回退),人通过 Review HTML 抽查;
+  inbox 只留给 AI 自己拿不准的候选,不再是语义写入的必经关卡。
+成功标准:新会话只读 brief/pack 即可正确开发;改了代码漏改文档能被探测;inbox 不积压。
+
 ## Current Direction
-- Current roadmap: Trust Boundary + Human Review Layer.
-- Review HTML is important: keep `cmap view export` focused on rendering existing `.context` map content.
-- Review HTML uses English UI by default.
-- Do not revive `i18n`, `zh-CN`, `locale`, translation mirrors, `init --lang`, `view --lang`, or `config locale` as the active roadmap.
-- Future translation work, if needed, should be a separate candidate workflow and must not create a second maintained fact store.
-- Do not revive import graph, route v2, or pack v2 as the active roadmap unless a new explicit plan supersedes this direction.
-- AI relation candidates are allowed, but remain candidate-only until reviewed.
-- Review HTML must not perform new semantic analysis; it renders the reviewed project map and support layers.
+- Roadmap: 产品卡片化模块文档 + CodeGraph 漂移探测桥 + Review HTML(给 PM 看的产品地图)。
+- 模块地图按产品边界划分,不按文件拆分边界:几个文件只是为了好维护而拆开、
+  对外是一个产品能力时,只写一张主控模块卡片,不要一文件一卡。
+- 模块文档正文不写"依赖谁调用谁"的技术散文;frontmatter 的 relations 与
+  `## Tests / Verification` 是机器契约,必须保留。
+- Review HTML uses English UI by default; it renders existing `.context` content,
+  no new semantic analysis.
+- Do not revive `i18n`/locale mirrors, import graph, route v2, or pack v2.
+
+## Tech Stack
+Node >= 20, TypeScript ESM, pnpm, commander, gray-matter, Vitest, tsup.
+验证: `pnpm test && pnpm typecheck && pnpm build`。CLI 行为优先用集成测试
+(spawn `tsx src/cli.ts` 于临时目录),不要只测内部函数。
 
 ## Multi-agent and Content Updates
 - 多 agent 研究默认由 coordinator 拆成独立切片；子 agent 只读源码、文档和工具输出，记录 scope、files read、source evidence、candidate conclusions、confidence、proposed context updates。

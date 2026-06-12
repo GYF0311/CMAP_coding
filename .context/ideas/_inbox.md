@@ -16,3 +16,12 @@ confidence: low
 **Why interesting:** The product's main promise is continuity and routing, so dogfooding should reveal whether `.context` reduces re-reading and drift.
 **Why not now:** M1 only creates and verifies the map; route/checkpoint are not implemented yet.
 **Revisit if:** M2 is complete and at least one non-trivial feature task starts.
+
+## 2026-06-12 — Idea
+
+**Idea:** verify 的 entrypoint 检查要求 AGENTS.md 与 CLAUDE.md 字节级一致,但本项目有意在 AGENTS.md 多一段 Multi-agent 章节;检查应改为只比对 cmap marker block 或共享区段
+**Status:** raw
+**Source:** explicit command
+**Why interesting:** Not recorded.
+**Why not now:** Not in current main thread.
+**Revisit if:** The idea becomes relevant to the active goal.
