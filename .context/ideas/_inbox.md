@@ -25,3 +25,12 @@ confidence: low
 **Why interesting:** Not recorded.
 **Why not now:** Not in current main thread.
 **Revisit if:** The idea becomes relevant to the active goal.
+
+## 2026-06-14 — Idea
+
+**Idea:** drift mark-reviewed 只移动 commit 水位线,能清除 committed 漂移,但清不掉 uncommitted working-tree 变更——因为改动还挂在工作区,git diff 仍能看到。复核循环只在 commit 之后才完全闭合。这对 AI 工作流是个 UX 细节:会话内边改边复核时,提示会持续显示直到提交。需评估:是否在提示文案里区分 committed/uncommitted,或 mark-reviewed 时记录 working-tree 快照哈希
+**Status:** raw
+**Source:** explicit command
+**Why interesting:** Not recorded.
+**Why not now:** Not in current main thread.
+**Revisit if:** The idea becomes relevant to the active goal.
