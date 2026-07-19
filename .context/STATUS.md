@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: status
 project: CMAP_coding
 source_commit: unknown
-updated_at: '2026-06-04T22:22:51+08:00'
+updated_at: '2026-07-19T17:35:00+08:00'
 confidence: ai-drafted
 ---
 # Status
@@ -14,6 +14,8 @@ confidence: ai-drafted
 Trust Boundary + Human Review Layer 继续作为 AI 写入上下文的安全纪律：生成证据、候选内容、已接受的模块解释必须分层；`.context` 更新要能看 diff、能验证、能审阅、能回退。当前路线是：CMAP 负责中文项目记忆和交接，CodeGraph 负责源码事实查询。
 
 ## Done Recently
+Issue #4 已在 0.3.2 修复：`finish --compact` 对 changed modules、unmapped paths 和单项长度设定稳定上限，完整细节仍可通过普通 `cmap finish` 或 MapPatch artifact 获取；`cmap codex finish` 默认使用 compact renderer，并只推荐聚合的 `cmap codex guard --changed`，guard 默认汇总 changed/stale/freshness/inbox，`--verbose` 保留完整报告。普通 `cmap route` 现在是 telemetry read-only，只有显式 `--record-usage` 或 assist prompt hook 才记录 usage stats。成功的 Codex `PostToolUse` 继续落 session journal，但不再返回 `additionalContext`。生成的 AI host/skill 说明统一使用 `cmap finish --compact`。
+
 `cmap install` 默认使用 `<!-- cmap:start -->` / `<!-- cmap:end -->` 标记块合并，保留 `AGENTS.md` / `CLAUDE.md` 中 CMAP 块外的原有规则。`--mode print` 只预览不写入，`--force` 是明确的全量覆盖逃生口，`--backup` 会把旧入口保存到 `.context/backups/install-*`。
 
 `cmap skill export` 会把项目本地说明包写到 `.cmap/skills/cmap/`，并支持 `--check` 检测是否过期。`cmap bootstrap` 默认仍不会凭空创建 `.context`；新项目需要显式使用 `cmap bootstrap --init --host both --skill`，先创建骨架，再执行非破坏式入口安装、可选 skill 导出和 `.context/out/start-here.md` 生成。
@@ -55,6 +57,7 @@ Unified candidate-store producers now cover MapPatch/update, low-confidence rout
 3. 代码变更影响耐用模块目的、依赖、数据流或验证路径时，用中文更新 CMAP。
 
 ## Changed Files
+- Issue #4 / 0.3.2：`src/commands/finish.ts`, `src/commands/codex.ts`, `src/commands/route.ts`, `src/commands/hooks.ts`, `src/cli.ts`, host/skill templates, CLI integration tests, README, package metadata, and routed CMAP module docs.
 - Entrypoint/onboarding: `AGENTS.md`, `CLAUDE.md`, `README.md`, `src/commands/install.ts`, `src/commands/skill.ts`, `src/commands/bootstrap.ts`, `src/host/*`, `src/skill/*`, install/skill tests.
 - Bootstrap/version slice: `package.json`, `src/cli.ts`, `src/commands/bootstrap.ts`, `tests/integration/m1.test.ts`, `tests/integration/m28-skill-bootstrap.test.ts`, `README.md`, `.context/MAP.md`, `.context/VERIFY.md`, and related module docs.
 - Cleanup/review docs: `.context/CHECKPOINT.md`, `.context/STATUS.md`, `.context/modules/*.md`, `.context/graph/*.json`.
@@ -69,4 +72,4 @@ Unified candidate-store producers now cover MapPatch/update, low-confidence rout
 `_cmap-view`, `_cmap`, `.context/generated/*`, `.context/out/*`, `.cmap/skills/*` 和 `.codegraph/*` 都是生成物或忽略的本地产物，不是可信项目记忆。候选请求在被审阅前都不是 canonical。`module.alias.request` 的 `target: unresolved` 是刻意设计，需要人工或后续 agent 看过源码后再转成明确模块。Freshness lock 只是简单文件锁，过期锁会明确失败，不会自动删除。`--ui-lang zh-CN` 只本地化 Review HTML 标签，不恢复 `.context/i18n`、locale config 或翻译镜像。
 
 ## Last Verified
-2026-06-07：`pnpm typecheck` 通过；相关集成测试 6 个文件 / 36 个测试通过；`pnpm build` 通过；`pnpm dev view export --ui-lang zh-CN --check --out _cmap-view` 通过；`pnpm dev verify --changed` 退出码 0，有 70 条 changed-file mapping warning，主要来自删除旧源码事实层文件和规划文档；`git diff --check` 通过。
+2026-07-19：`pnpm test` 32 个文件 / 179 个测试通过；`pnpm typecheck`、`pnpm build`、`pnpm smoke` 通过。临时仓库 107 个 dirty paths 下，compact finish 为 24 行 / 473 bytes，Codex finish 为 28 行 / 571 bytes；普通 route 前后 tracked stats SHA 不变；成功 PostToolUse 输出 55 bytes 且无 `additionalContext`；聚合 guard 摘要为 8 行 / 225 bytes。

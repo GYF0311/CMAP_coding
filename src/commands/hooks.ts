@@ -221,7 +221,7 @@ export async function runHookIngest(cwd: string, options: HookIngestOptions): Pr
 
   if (event === "PostToolUse") {
     await writeSessionEvent(cwd, eventLog(payload));
-    writeHookJson(host, event, `Recorded ${capitalize(host)} PostToolUse for ${payload.toolName ?? "unknown tool"}.`);
+    writeHookJson(host, event);
     return 0;
   }
 
@@ -515,10 +515,6 @@ function renderRouteAdditionalContext(route: RouteReport): string {
     lines.push("", driftBlock);
   }
   return lines.join("\n");
-}
-
-function capitalize(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
 async function readGitChangedFiles(cwd: string): Promise<string[]> {

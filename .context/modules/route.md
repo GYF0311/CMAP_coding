@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-06-12T00:00:00+08:00
+updated_at: 2026-07-19T17:35:00+08:00
 confidence: ai-drafted
 module: route
 paths:
@@ -30,7 +30,7 @@ relation_explanations:
       produces: "Likely modules, related context modules, read-first files, and suggested verification commands."
       impact: "Changes to module doc schema, relation fields, or verification headings may require updates in src/core/module-index.ts and src/commands/route.ts."
     evidence:
-      why: "route writes generated route usage stats and low-confidence alias requests into non-canonical support stores."
+      why: "route can explicitly write generated route usage stats with --record-usage and can write low-confidence alias requests into non-canonical support stores."
       produces: "Generated route usage telemetry and candidate-only module.alias.request files under .context/inbox/candidates/."
       impact: "Changes to candidate-store or generated stats contracts may require route output, inbox, and benchmark tests to change."
   used_by:
@@ -67,11 +67,13 @@ route 是整个项目地图的"入口问询台":你用自然语言说一句要�
 - 对直接命中的模块显示只读 drift review block;该计算不得写 `.context/generated/freshness.json` 或落 sourceSignals。
 - `--max-context` 只裁剪上下文包,不改变直接命中排序。
 - 低置信时建议 `--write-alias-candidate` 写候选,绝不发明不存在的模块。
+- 普通 `route` 查询不写 usage telemetry；只有显式 `--record-usage` 才在 policy 允许时更新 `.context/generated/stats/route-usage.json`。
 
 ## Tests / Verification
 - `pnpm test tests/integration/m2.test.ts`
 - `pnpm test tests/integration/m10-route-context-pack.test.ts`
 - `pnpm test tests/integration/m11-context-size-controls.test.ts`
+- `pnpm test tests/integration/m13-policy-stats.test.ts`
 - `pnpm test tests/integration/m14-graph-route.test.ts`
 - `pnpm test tests/integration/m20-relation-candidates.test.ts`
 - `pnpm test tests/integration/m26-drift.test.ts`

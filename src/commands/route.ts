@@ -13,6 +13,7 @@ type RouteOptions = {
   maxContext?: string | number;
   graph?: boolean;
   writeAliasCandidate?: boolean;
+  recordUsage?: boolean;
 };
 
 const DEFAULT_MAX_CONTEXT_MODULES = 6;
@@ -67,12 +68,14 @@ type AliasCandidateWriteSummary = {
 
 export async function runRoute(cwd: string, task: string, options: RouteOptions): Promise<void> {
   const report = await routeTask(cwd, task, options);
-  await recordRouteUsage(cwd, {
-    source: "route",
-    task,
-    modules: report.modules.map((module) => module.id),
-    contextModules: report.contextModules.map((module) => module.id)
-  });
+  if (options.recordUsage) {
+    await recordRouteUsage(cwd, {
+      source: "route",
+      task,
+      modules: report.modules.map((module) => module.id),
+      contextModules: report.contextModules.map((module) => module.id)
+    });
+  }
 
   if (options.format === "json") {
     process.stdout.write(`${JSON.stringify(toJsonReport(report), null, 2)}\n`);

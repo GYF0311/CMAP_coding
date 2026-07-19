@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-16T01:52:42+08:00
+updated_at: 2026-07-19T17:35:00+08:00
 confidence: ai-drafted
 module: evidence
 paths:
@@ -73,7 +73,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Append bounded generated evidence to `.context/generated/evidence/modules/<module>.jsonl`.
 - List and migrate legacy generated evidence blocks out of module docs.
 - Record deterministic module activity stats under `.context/generated/stats/module-activity.json` when policy allows `stats.update`.
-- Record deterministic route usage stats under `.context/generated/stats/route-usage.json` when policy allows `stats.update`.
+- Record deterministic route usage stats under `.context/generated/stats/route-usage.json` only for explicit `route --record-usage` or assist prompt hooks, and only when policy allows `stats.update`.
 - Maintain `.context/generated/freshness.json` snapshots, freshness review markers, and commit-aware drift `sourceSignals`.
 - Keep `drift check` read-only; only `drift snapshot`, `drift mark-reviewed`, and `drift migrate` write the freshness index.
 - Compute drift from committed, staged, unstaged, untracked, rename/delete, pending candidate, and test signals without creating a second source-fact store.
@@ -97,7 +97,7 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - Count simple high-risk inbox markers so semantic backlog remains visible.
 - Support `verify --stale` and `verify --freshness` by keeping evidence, freshness, and inbox maintenance as deterministic signals.
 - Expose internal append helpers so assist-mode hooks and MapPatch v2 can record generated evidence without rewriting module semantics.
-- Expose internal stats helpers so route commands, local assist prompt tests, and Codex assist prompt ingest can update generated counters without changing canonical facts.
+- Expose internal stats helpers so explicit route telemetry, local assist prompt tests, and Codex assist prompt ingest can update generated counters without changing canonical facts.
 
 ## Depends On
 - `core/module-index.ts` for module lookup and aliases.
@@ -129,18 +129,18 @@ Maintain deterministic support evidence, generated module/route usage stats, and
 - `cmap verify --stale`
 - `cmap verify --freshness`
 - `cmap hooks stop --profile assist --changed <files>`
-- `cmap route "<task>"`
+- `cmap route "<task>" --record-usage`
 - `cmap hooks test --event UserPromptSubmit --mode assist --prompt "..."`
 - `cmap hooks ingest --host codex --event UserPromptSubmit --mode assist`
 
 ## Data Flow
-User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Route commands, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry and may show read-only drift blocks without writing freshness/sourceSignals. `drift check` reads git plus freshness metadata in memory; `drift snapshot` stores the same sourceSignals shape under `.context/generated/freshness.json`. External AI/update/reconcile outputs, Obsidian pull diffs, and low-confidence route requests write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
+User, assist hook, or MapPatch v2 provides explicit evidence -> generated-store helper resolves module and evidence file -> command appends JSONL evidence under `.context/generated/evidence/` and updates generated stats -> `verify --stale`, `verify --freshness`, and human review can use that evidence as support, not as canonical semantics. Explicit `route --record-usage`, local assist prompt tests, and Codex assist prompt ingest can update route usage counters as generated telemetry; a normal route query remains read-only for telemetry and may still show read-only drift blocks without writing freshness/sourceSignals. `drift check` reads git plus freshness metadata in memory; `drift snapshot` stores the same sourceSignals shape under `.context/generated/freshness.json`. External AI/update/reconcile outputs, Obsidian pull diffs, and low-confidence route requests write structured candidate JSON+Markdown into `.context/inbox/candidates/` or specialized candidate stores such as `.context/inbox/relations/`; legacy top-level Markdown remains readable with a warning. Inbox commands count, triage, preview, apply allowed low-risk metadata, reject false candidates with reasons, and archive reviewed candidates without promoting semantic facts.
 
 ## State / Storage
 - Writes `.context/generated/evidence/modules/*.jsonl`.
 - Writes `.context/generated/evidence/verification.jsonl`.
 - Writes `.context/generated/stats/module-activity.json` when `stats.update` is enabled.
-- Writes `.context/generated/stats/route-usage.json` when `stats.update` is enabled.
+- Writes `.context/generated/stats/route-usage.json` for explicit route telemetry or assist prompt hooks when `stats.update` is enabled.
 - Writes `.context/generated/freshness.json` when snapshotting, marking reviewed freshness/drift state, migrating v1 to v2, or explicitly storing drift sourceSignals.
 - Creates `.context/generated/freshness.json.lock` briefly while updating the freshness index; stale locks cause a timeout error instead of an infinite wait.
 - Reads `.context/inbox/*.md` legacy candidates, `.context/inbox/candidates/*.json` structured candidates, and `.context/inbox/relations/*.json` relation candidates for backlog counts.

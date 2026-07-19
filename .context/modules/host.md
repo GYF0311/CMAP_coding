@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-17T22:06:00+08:00
+updated_at: 2026-07-19T17:35:00+08:00
 confidence: ai-drafted
 module: host
 paths:
@@ -31,6 +31,7 @@ Generate short host entrypoints and optional project-local hook templates for AI
 - Merge the cmap marker block into existing host entrypoints without overwriting project-owned rules by default.
 - Support print-only previews, explicit `--force` overwrites, and optional backups before entrypoint writes.
 - Keep entrypoints short and route-oriented.
+- Use `cmap finish --compact` in generated AI entrypoints so mandatory closeout output stays bounded.
 - Include Git Safety Rules inside the cmap marker block so AI agents know not to reset, restore, clean, delete, or overwrite user work.
 - Remind agents that `.context` section headings are stable English anchors while body prose can be written in the project's human language.
 - Allow proactive commits after coherent, verified work slices while still staging only task-related files and never committing unrelated user changes.

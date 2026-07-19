@@ -87,8 +87,9 @@ program
   .option("--format <format>", "Output format: text or json", "text")
   .option("--max-context <n>", "Maximum context modules to include in the route context pack", "6")
   .option("--graph", "Enable graph-aware route explanation")
+  .option("--record-usage", "Explicitly record generated route usage stats")
   .option("--write-alias-candidate", "Write a candidate-only alias request when no high-confidence module matches")
-  .action(async (task: string, options: { format?: string; maxContext?: string; graph?: boolean; writeAliasCandidate?: boolean }) => {
+  .action(async (task: string, options: { format?: string; maxContext?: string; graph?: boolean; recordUsage?: boolean; writeAliasCandidate?: boolean }) => {
     await runRoute(process.cwd(), task, options);
   });
 
@@ -398,7 +399,9 @@ program
   .option("--agent", "Write a MapPatch request for agent-maintained context")
   .option("--task <text>", "Task summary for --agent request")
   .option("--verified <text>", "Verification evidence for --agent request")
-  .action(async (options: { changed?: string; agent?: boolean; task?: string; verified?: string }) => {
+  .option("--compact", "Print a bounded AI-facing summary")
+  .option("--max-files <n>", "Maximum modules and unmapped paths shown in compact output", "8")
+  .action(async (options: { changed?: string; agent?: boolean; task?: string; verified?: string; compact?: boolean; maxFiles?: string }) => {
     await runFinish(process.cwd(), options);
   });
 
@@ -480,13 +483,16 @@ codex
   .requiredOption("--task <text>", "Task summary")
   .option("--verified <text>", "Verification evidence")
   .option("--apply-routine", "Apply the newest routine MapPatch request after finish")
-  .action(async (options: { task?: string; verified?: string; applyRoutine?: boolean }) => {
+  .option("--verbose", "Print the full unbounded finish report")
+  .option("--max-files <n>", "Maximum modules and unmapped paths shown in compact output", "8")
+  .action(async (options: { task?: string; verified?: string; applyRoutine?: boolean; verbose?: boolean; maxFiles?: string }) => {
     await runCodexFinish(process.cwd(), options);
   });
 codex
   .command("guard")
   .option("--changed", "Include changed-file coverage checks")
-  .action(async (options: { changed?: boolean }) => {
+  .option("--verbose", "Print full changed/stale/freshness/inbox reports")
+  .action(async (options: { changed?: boolean; verbose?: boolean }) => {
     const code = await runCodexGuard(process.cwd(), options);
     process.exitCode = code;
   });

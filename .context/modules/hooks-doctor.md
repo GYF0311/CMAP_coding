@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-15T22:30:02+08:00
+updated_at: 2026-07-19T17:35:00+08:00
 confidence: ai-drafted
 module: hooks-doctor
 paths:
@@ -59,8 +59,8 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `hooks test --event UserPromptSubmit --mode assist --prompt ...` writes `.context/out/session-brief.md`, generated route usage stats, and read-only drift blocks when routed modules exceed threshold.
 - `hooks ingest --host codex --event UserPromptSubmit --mode assist` writes `.context/out/session-brief.md`, updates generated route usage stats, returns Codex `additionalContext`, and does not write freshness/sourceSignals for drift.
 - `hooks ingest --host codex --event PreToolUse --mode strict` blocks direct semantic canonical context writes with Codex `permissionDecision: "deny"`.
-- `hooks ingest --host codex --event PostToolUse|Stop` records real tool/session events without mutating canonical context.
-- `codex start|finish|guard|handoff` provides the supported explicit Codex workflow while Codex hooks remain experimental/generic.
+- `hooks ingest --host codex --event PostToolUse` records real tool/session events silently on success, without injecting `additionalContext` or mutating canonical context; `Stop` retains its closeout system message.
+- `codex start|finish|guard|handoff` provides the supported explicit Codex workflow while Codex hooks remain experimental/generic; `codex finish` uses bounded output by default and recommends only `codex guard --changed`, whose default result is one compact changed/stale/freshness/inbox summary.
 - `codex start --write-brief --write-pack` can generate `.context/out/brief.md` and `.context/out/pack.md` alongside the startup handoff.
 - `codex finish --apply-routine` may apply the newest routine MapPatch request while keeping semantic candidates in inbox.
 - `codex handoff` writes a local `.context/out/codex-handoff.md` bundle from checkpoint, status, inbox, and next commands.
@@ -84,8 +84,10 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `cmap codex start "<task>"`
 - `cmap codex start "<task>" --write-brief --write-pack`
 - `cmap codex finish --task "..."`
+- `cmap codex finish --task "..." --verbose`
 - `cmap codex finish --task "..." --apply-routine`
 - `cmap codex guard --changed`
+- `cmap codex guard --changed --verbose`
 - `cmap codex handoff`
 - `cmap hooks render --host claude --mode assist`
 - `cmap hooks test --event PostToolUse --mode observe`
@@ -98,7 +100,7 @@ Provide optional hook templates, Codex-first lifecycle render/ingest utilities, 
 - `cmap doctor --release`
 
 ## Data Flow
-Install options -> hook JSON templates. Render options -> project-local lifecycle settings. Real host stdin JSON or simulated hook event -> normalized event -> stdout reminder/Codex JSON, non-canonical hook/session log, generated session brief, strict guard decision, or generated evidence append depending on mode/profile.
+Install options -> hook JSON templates. Render options -> project-local lifecycle settings. Real host stdin JSON or simulated hook event -> normalized event -> bounded or actionable stdout/Codex JSON, non-canonical hook/session log, generated session brief, strict guard decision, or generated evidence append depending on mode/profile. Successful `PostToolUse` produces only the minimum host event envelope.
 
 ## State / Storage
 - Writes `.context/hooks/*.json` only when install is called with hooks.

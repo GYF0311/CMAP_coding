@@ -50,7 +50,7 @@ This project uses cmap: a shared project map for humans and AI coding agents.
 2. Read `.context/CHECKPOINT.md` for the current handoff, then `.context/STATUS.md` for durable status.
 3. Use `cmap route "<task>"` to find relevant modules.
 4. Before editing a module, read its `.context/modules/<module>.md` file.
-5. Before claiming done, run `cmap finish` and `cmap verify --changed`.
+5. Before claiming done, run `cmap finish --compact` and `cmap verify --changed`.
 
 ## Rules
 - Do not read every `.context` file by default. Read by route.
@@ -93,7 +93,7 @@ Rollback safety:
 - `cmap route "task"` — locate relevant modules.
 - `cmap checkpoint read` — read the current handoff.
 - `cmap checkpoint write --task "..." --next "..."` — save the current handoff.
-- `cmap finish` — close the task and suggest context updates.
+- `cmap finish --compact` — close the task with bounded AI-facing output.
 - `cmap verify` — check project map consistency.
 - `cmap cp` — move/copy/delete existing line blocks losslessly.
 <!-- cmap:end -->

@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: map
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-06-04T22:22:51+08:00
+updated_at: 2026-07-19T17:35:00+08:00
 confidence: ai-drafted
 ---
 # Project Map
@@ -100,7 +100,7 @@ Trust Boundary + Human Review Layer 是围绕 AI 写入上下文的一套纪律�
 - `verify` reads `.context` files created by `context`, validates deterministic structure, warns on non-English structural heading anchors, checks stale/freshness warnings, and can render stable CI Markdown reports.
 - `host` generates entrypoint text used by `install`, merging cmap marker blocks by default so existing project rules outside the block are preserved.
 - `skill` exports a project-local instruction pack and bootstraps onboarding by delegating non-destructive host install plus optional skill export/start-here generation; new projects must opt in with `bootstrap --init`.
-- `route` reads the shared module index, recommends direct modules, expands bounded reviewed-relation context, surfaces module-owned verification commands plus read-only drift review signals, and records generated route usage stats when policy allows; it must not propose nonexistent modules, treat related context as direct matches, consume unpromoted relation candidates as route facts, or write freshness/sourceSignals while routing.
+- `route` reads the shared module index, recommends direct modules, expands bounded reviewed-relation context, and surfaces module-owned verification commands plus read-only drift review signals; normal queries do not write usage telemetry, while explicit `--record-usage` records generated stats when policy allows. It must not propose nonexistent modules, treat related context as direct matches, consume unpromoted relation candidates as route facts, or write freshness/sourceSignals while routing.
 - `graph` writes generated graph projections and explains typed module relations derived from reviewed module docs. It is a canonical module-relation projection, not an import graph or test ownership graph.
 - `brief` packages route result, bounded route context pack, read-only drift review signals, `CHECKPOINT.md` or `STATUS.md`, selected module docs, verification reminders, and optional Obsidian links into a task-local AI brief.
 - `pack` renders a redacted, budgeted task context pack from route's graph neighborhood, checkpoint/status, decisions, verify source, module docs, and inbox warnings.

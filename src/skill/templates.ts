@@ -81,7 +81,7 @@ See \`multi-agent.md\` for coordinator, research-agent, synthesis, context-updat
 - \`cmap view export --out _cmap-view\` - export the human review page.
 - \`cmap view export --ui-lang zh-CN --out _cmap-view\` - export Chinese UI labels without changing canonical facts.
 - \`cmap view export --include-support --out _cmap-view\` - include generated/freshness/inbox support layers.
-- \`cmap finish --agent --task "..."\` - write a closeout/update request.
+- \`cmap finish --compact --agent --task "..."\` - write a closeout/update request with bounded stdout.
 - \`cmap update --agent --from <file> --apply-routine\` - apply policy-approved routine updates and route semantic changes to inbox.
 - \`cmap inbox triage\` - review pending candidate context updates.
 - \`cmap freshness review --all --out .context/out/freshness-review.md\` - write a drift review report.
@@ -270,7 +270,7 @@ cmap brief "implement non-destructive install" --out .context/out/brief.md
 
 ## Finish a Task
 \`\`\`bash
-cmap finish --agent --task "implemented non-destructive install"
+cmap finish --compact --agent --task "implemented non-destructive install"
 cmap verify --changed
 \`\`\`
 `

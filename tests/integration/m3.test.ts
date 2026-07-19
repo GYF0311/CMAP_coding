@@ -112,4 +112,23 @@ confidence: ai-drafted
     expect(result.stdout).toContain("cmap verify --changed");
     await expect(readFile(path.join(cwd, ".context/STATUS.md"), "utf8")).resolves.toBe(statusBefore);
   });
+
+  test("finish --compact stays bounded with 100 changed paths", async () => {
+    const cwd = await createInitializedProject("m3-finish-compact");
+    const changed = Array.from(
+      { length: 100 },
+      (_, index) => `unmapped/feature-${String(index + 1).padStart(3, "0")}/representative-long-file-name.ts`
+    );
+
+    const result = await runCmap(["finish", "--compact", "--changed", changed.join(",")], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("# Finish Summary");
+    expect(result.stdout).toContain("Changed files: 100");
+    expect(result.stdout).toContain("Unmapped files: 100");
+    expect(result.stdout).toContain("... and 92 more");
+    expect(result.stdout).toContain("Full details: cmap finish");
+    expect(result.stdout.split("\n").length).toBeLessThan(40);
+    expect(Buffer.byteLength(result.stdout, "utf8")).toBeLessThan(2048);
+  });
 });

@@ -1,8 +1,11 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { spawn } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
+import { promisify } from "node:util";
 import { describe, expect, test } from "vitest";
 import { createTempProject, expectFile, runCmap, cliPath, tsxBin } from "../helpers.js";
+
+const execFileAsync = promisify(execFile);
 
 async function createCodexHookProject(name: string): Promise<string> {
   const cwd = await createTempProject(name);
@@ -88,6 +91,46 @@ describe("M17 Codex-first hook ingest", () => {
     const handoff = await expectFile(path.join(cwd, ".context/out/codex-handoff.md"));
     expect(handoff).toContain("# cmap Codex Handoff");
     expect(handoff).toContain("cmap codex guard --changed");
+  });
+
+  test("codex finish uses compact output and recommends one aggregated guard", async () => {
+    const cwd = await createCodexHookProject("m17-codex-finish-compact");
+    await execFileAsync("git", ["init", "-q"], { cwd });
+    await execFileAsync("git", ["config", "user.name", "CMAP Test"], { cwd });
+    await execFileAsync("git", ["config", "user.email", "cmap-test@example.invalid"], { cwd });
+    await execFileAsync("git", ["add", "."], { cwd });
+    await execFileAsync("git", ["commit", "-qm", "baseline"], { cwd });
+    await Promise.all(Array.from({ length: 100 }, (_, index) =>
+      writeFile(
+        path.join(cwd, `unmapped-${String(index + 1).padStart(3, "0")}-representative-long-file-name.ts`),
+        "export {};\n",
+        "utf8"
+      )
+    ));
+
+    const result = await runCmap(["codex", "finish", "--task", "Bound AI closeout output"], cwd);
+
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("# Finish Summary");
+    expect(result.stdout).toContain("Changed files: 100");
+    expect(result.stdout).toContain("Unmapped files: 100");
+    expect(result.stdout).toContain("cmap codex guard --changed");
+    expect(result.stdout).not.toContain("cmap verify --stale");
+    expect(result.stdout).not.toContain("cmap verify --freshness");
+    expect(result.stdout).not.toContain("cmap inbox status");
+    expect(result.stdout.split("\n").length).toBeLessThan(40);
+    expect(Buffer.byteLength(result.stdout, "utf8")).toBeLessThan(2048);
+
+    const guard = await runCmap(["codex", "guard", "--changed"], cwd);
+
+    expect(guard.code).toBe(0);
+    expect(guard.stdout).toContain("# Codex Guard Summary");
+    expect(guard.stdout).toContain("Changed coverage:");
+    expect(guard.stdout).toContain("Stale:");
+    expect(guard.stdout).toContain("Freshness:");
+    expect(guard.stdout).toContain("Full details: cmap codex guard --changed --verbose");
+    expect(guard.stdout.split("\n").length).toBeLessThan(20);
+    expect(Buffer.byteLength(guard.stdout, "utf8")).toBeLessThan(1024);
   });
 
   test("hooks render writes Codex lifecycle settings that call hooks ingest", async () => {
@@ -185,7 +228,8 @@ describe("M17 Codex-first hook ingest", () => {
     expect(result.code).toBe(0);
     const output = JSON.parse(result.stdout) as { hookSpecificOutput?: { hookEventName?: string; additionalContext?: string } };
     expect(output.hookSpecificOutput?.hookEventName).toBe("PostToolUse");
-    expect(output.hookSpecificOutput?.additionalContext).toContain("Recorded Codex PostToolUse");
+    expect(output.hookSpecificOutput?.additionalContext).toBeUndefined();
+    expect(Buffer.byteLength(result.stdout, "utf8")).toBeLessThan(100);
     const journal = await expectFile(path.join(cwd, ".context/logs/session-events.jsonl"));
     expect(journal).toContain("\"tool\":\"Bash\"");
     expect(journal).toContain("sed -n");

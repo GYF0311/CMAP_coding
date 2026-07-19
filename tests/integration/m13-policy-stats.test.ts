@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { createTempProject, expectFile, runCmap } from "../helpers.js";
@@ -103,10 +103,17 @@ describe("M13 policy and generated stats foundations", () => {
     expect(stats.modules.route.commands["pnpm test tests/integration/m13-policy-stats.test.ts"]).toBe(1);
   });
 
-  test("route records generated route usage stats when policy allows stats updates", async () => {
+  test("route records usage only when explicitly requested", async () => {
     const cwd = await createPolicyProject("m13-route-stats");
 
-    const result = await runCmap(["route", "route 模块定位"], cwd);
+    const query = await runCmap(["route", "route 模块定位"], cwd);
+
+    expect(query.code).toBe(0);
+    await expect(readFile(path.join(cwd, ".context/generated/stats/route-usage.json"), "utf8")).rejects.toMatchObject({
+      code: "ENOENT"
+    });
+
+    const result = await runCmap(["route", "route 模块定位", "--record-usage"], cwd);
 
     expect(result.code).toBe(0);
     const stats = JSON.parse(await expectFile(path.join(cwd, ".context/generated/stats/route-usage.json"))) as {
@@ -120,6 +127,12 @@ describe("M13 policy and generated stats foundations", () => {
     expect(stats.modules.route).toBe(1);
     expect(stats.recent[0].task).toBe("route 模块定位");
     expect(stats.recent[0].modules).toEqual(["route"]);
+
+    const recorded = await readFile(path.join(cwd, ".context/generated/stats/route-usage.json"), "utf8");
+    const secondQuery = await runCmap(["route", "route 模块第二次查询"], cwd);
+
+    expect(secondQuery.code).toBe(0);
+    await expect(readFile(path.join(cwd, ".context/generated/stats/route-usage.json"), "utf8")).resolves.toBe(recorded);
   });
 
   test("verify stale uses policy inbox thresholds", async () => {

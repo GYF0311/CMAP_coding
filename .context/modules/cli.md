@@ -3,7 +3,7 @@ cmap_version: 0.1
 context_type: module
 project: CMAP_coding
 source_commit: unknown
-updated_at: 2026-05-17T22:06:00+08:00
+updated_at: 2026-07-19T17:35:00+08:00
 confidence: ai-drafted
 module: cli
 paths:
@@ -53,6 +53,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `obsidian export --check` while keeping view drift comparison in `obsidian-adapter`.
 - Register route/brief `--max-context` options while keeping context-pack policy in `route`.
 - Register `route --graph` and `graph build/explain` while keeping graph projection logic outside `cli.ts`.
+- Register explicit `route --record-usage` telemetry opt-in so query-like route calls remain read-only by default.
 - Register `route --write-alias-candidate` while keeping candidate-only request writing in `route`.
 - Register `verify --ci --format markdown` while keeping report formatting in `verify`.
 - Register `checkpoint` actions while keeping the legacy option-only STATUS update path compatible.
@@ -68,6 +69,7 @@ Own the public `cmap` command surface: command registration, option parsing, com
 - Register `view export --ui-lang en|zh-CN` and `--include-support` while keeping localization presentation-only.
 - Register `relate request/ingest/promote` while keeping RelationPatch validation and candidate-only behavior in `relation-candidates`.
 - Register `codex start/finish/guard/handoff` as explicit Codex workflow commands without relying on strict hook parity.
+- Register `finish --compact/--max-files`, `codex finish --verbose`, and `codex guard --verbose` while keeping output budgeting in the finish/Codex workflow modules.
 - Register `skill export` and `bootstrap --init` as host-neutral IDE onboarding commands without embedding skill template rendering in `cli.ts`.
 - Register `verify --policy` and `doctor --release` without embedding policy or package checks in `cli.ts`.
 - Register hook observe/assist/strict profile options plus `hooks render`, `hooks ingest`, and `hooks test` while keeping hook behavior in `hooks-doctor`.

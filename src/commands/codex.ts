@@ -18,10 +18,21 @@ type CodexFinishOptions = {
   task?: string;
   verified?: string;
   applyRoutine?: boolean;
+  verbose?: boolean;
+  maxFiles?: string;
 };
 
 type CodexGuardOptions = {
   changed?: boolean;
+  verbose?: boolean;
+};
+
+type GuardCheck = {
+  label: string;
+  code: number;
+  output: string;
+  errors: number;
+  warnings: number;
 };
 
 type CodexStartOptions = {
@@ -73,14 +84,12 @@ export async function runCodexFinish(cwd: string, options: CodexFinishOptions): 
     changed: changed.join(","),
     agent: true,
     task: options.task,
-    verified: options.verified
+    verified: options.verified,
+    compact: !options.verbose,
+    maxFiles: options.maxFiles
   });
-  process.stdout.write("\n## Codex Finish Next Checks\n");
-  process.stdout.write("- cmap update --agent --from .context/out/update-request-<timestamp>.md --dry-run\n");
-  process.stdout.write("- cmap verify --changed\n");
-  process.stdout.write("- cmap verify --stale\n");
-  process.stdout.write("- cmap verify --freshness\n");
-  process.stdout.write("- cmap inbox status\n");
+  process.stdout.write("\n## Codex Finish Check\n");
+  process.stdout.write("- cmap codex guard --changed\n");
   if (options.applyRoutine) {
     const request = await newestUpdateRequest(cwd);
     if (!request) {
@@ -97,16 +106,39 @@ export async function runCodexFinish(cwd: string, options: CodexFinishOptions): 
 }
 
 export async function runCodexGuard(cwd: string, options: CodexGuardOptions): Promise<number> {
-  let exitCode = 0;
   const changedFiles = await readGitChangedFiles(cwd);
   const changedArgs = options.changed && changedFiles.length > 0
     ? { changedFiles: changedFiles.join(",") }
     : {};
-  process.stdout.write("# Codex Guard\n\n");
-  exitCode = Math.max(exitCode, await runVerify(cwd, { changed: Boolean(options.changed), ...changedArgs }));
-  exitCode = Math.max(exitCode, await runVerify(cwd, { stale: true }));
-  exitCode = Math.max(exitCode, await runVerify(cwd, { freshness: true }));
-  await printInboxStatus(cwd);
+  const checks = [
+    await captureGuardCheck("Changed coverage", () => runVerify(cwd, { changed: Boolean(options.changed), ...changedArgs })),
+    await captureGuardCheck("Stale", () => runVerify(cwd, { stale: true })),
+    await captureGuardCheck("Freshness", () => runVerify(cwd, { freshness: true }))
+  ];
+  const inbox = await inboxStatusText(cwd);
+  const exitCode = Math.max(...checks.map((check) => check.code));
+
+  if (options.verbose) {
+    process.stdout.write("# Codex Guard\n\n");
+    for (const check of checks) {
+      process.stdout.write(check.output);
+    }
+    process.stdout.write(`\n${inbox}`);
+    return exitCode;
+  }
+
+  const totalWarnings = checks.reduce((sum, check) => sum + check.warnings, 0);
+  const result = exitCode > 0 ? "failed" : totalWarnings > 0 ? "passed with warnings" : "passed";
+  const verboseCommand = `cmap codex guard${options.changed ? " --changed" : ""} --verbose`;
+  process.stdout.write([
+    "# Codex Guard Summary",
+    "",
+    ...checks.map((check) => `- ${check.label}: ${guardCheckStatus(check)}`),
+    `- Inbox: ${summarizeInbox(inbox)}`,
+    `- Result: ${result}`,
+    `- Full details: ${verboseCommand}`,
+    ""
+  ].join("\n"));
   return exitCode;
 }
 
@@ -142,8 +174,38 @@ export async function runCodexHandoff(cwd: string): Promise<void> {
   process.stdout.write(body);
 }
 
-async function printInboxStatus(cwd: string): Promise<void> {
-  process.stdout.write(`\n${await inboxStatusText(cwd)}`);
+async function captureGuardCheck(label: string, fn: () => Promise<number>): Promise<GuardCheck> {
+  let code = 0;
+  const output = await captureStdout(async () => {
+    code = await fn();
+  });
+  const counts = [...output.matchAll(/Errors: (\d+), Warnings: (\d+)/g)].at(-1);
+  return {
+    label,
+    code,
+    output,
+    errors: Number(counts?.[1] ?? (code > 0 ? 1 : 0)),
+    warnings: Number(counts?.[2] ?? 0)
+  };
+}
+
+function guardCheckStatus(check: GuardCheck): string {
+  if (check.code > 0 || check.errors > 0) {
+    return `failed (${check.errors} errors, ${check.warnings} warnings)`;
+  }
+  if (check.warnings > 0) {
+    return `warnings (${check.warnings})`;
+  }
+  return "passed";
+}
+
+function summarizeInbox(output: string): string {
+  const total = /Total candidates: (\d+)/.exec(output)?.[1];
+  const highRisk = /High-risk candidates: (\d+)/.exec(output)?.[1];
+  if (total !== undefined && highRisk !== undefined) {
+    return `${total} candidates, ${highRisk} high-risk`;
+  }
+  return output.includes("no candidate inbox directory") ? "not initialized" : "see verbose details";
 }
 
 async function inboxStatusText(cwd: string): Promise<string> {
@@ -195,11 +257,12 @@ async function captureStdout(fn: () => Promise<void>): Promise<string> {
 
 async function readGitChangedFiles(cwd: string): Promise<string[]> {
   try {
-    const [unstaged, staged] = await Promise.all([
-      execFileAsync("git", ["diff", "--name-only"], { cwd, encoding: "utf8" }),
-      execFileAsync("git", ["diff", "--name-only", "--cached"], { cwd, encoding: "utf8" })
-    ]);
-    return uniqueLines(`${unstaged.stdout}\n${staged.stdout}`);
+    const result = await execFileAsync("git", ["status", "--short"], { cwd, encoding: "utf8" });
+    return uniqueLines(result.stdout
+      .split(/\r?\n/)
+      .map((line) => line.slice(3).trim())
+      .filter(Boolean)
+      .join("\n"));
   } catch {
     return [];
   }

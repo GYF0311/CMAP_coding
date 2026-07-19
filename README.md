@@ -58,11 +58,12 @@ Daily task:
 
 ```bash
 cmap route "多人对话页面消息发不出去" --max-context 4
+cmap route "多人对话页面消息发不出去" --record-usage
 cmap checkpoint write --task "多人对话页面消息发不出去" --next "Read routed module docs"
 cmap brief "多人对话页面消息发不出去" --max-context 4 --out .context/out/brief.md
 cmap pack "多人对话页面消息发不出去" --budget 1200 --format markdown --out .context/out/pack.md
-cmap finish
-cmap finish --agent --task "多人对话页面消息发不出去"
+cmap finish --compact
+cmap finish --compact --agent --task "多人对话页面消息发不出去"
 cmap update --agent --from .context/out/update-request-xxxx.md --apply-routine
 cmap evidence append --module route --file src/commands/route.ts --summary "Route behavior verified"
 cmap evidence list --module route
@@ -122,9 +123,10 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap hooks ingest --host codex --event <event> --mode observe\|assist\|strict` | Read a real host hook JSON payload from stdin, write session logs/briefs, and return Codex-compatible JSON. |
 | `cmap hooks test --event <event> --mode observe\|assist\|strict` | Simulate hook lifecycle events and strict guard decisions locally. |
 | `cmap codex start "<task>"` | Run the supported explicit Codex startup workflow without relying on hook parity. |
-| `cmap codex finish --task ... --verified ...` | Close a Codex task through finish/update/verify reminders. |
-| `cmap codex guard --changed` | Run changed/stale/freshness/inbox guard checks for Codex handoff. |
+| `cmap codex finish --task ... --verified ...` | Close a Codex task with compact output and one aggregated guard recommendation; add `--verbose` for full detail. |
+| `cmap codex guard --changed` | Run changed/stale/freshness/inbox checks and print one compact summary; add `--verbose` for full reports. |
 | `cmap route "<task>" --max-context 4` | Recommend direct modules, bounded related context files, and suggested verification commands. |
+| `cmap route "<task>" --record-usage` | Explicitly record generated route-usage telemetry when policy allows it. |
 | `cmap route "<task>" --graph` | Enable explicit graph-aware route explanation while keeping direct matches separate from related context. |
 | `cmap brief "<task>" --max-context 4` | Render an AI coding brief from route, checkpoint/status, bounded context pack, and module docs. |
 | `cmap pack "<task>" --budget 1200 --format markdown` | Render a redacted, budgeted context pack from the routed graph neighborhood. |
@@ -135,8 +137,9 @@ cmap reconcile --adapter gsd-v1 --from .planning
 | `cmap checkpoint --goal ... --next ...` | Legacy-compatible update of `.context/STATUS.md`. |
 | `cmap verify [--changed]` | Check context structure, heading anchors, and changed-file coverage. |
 | `cmap verify --ci --format markdown` | Print a stable CI-friendly Markdown report for GitHub Actions or PR logs. |
-| `cmap finish [--changed files]` | Print a QA-lite context closeout report. |
-| `cmap finish --agent --task ...` | Write a local MapPatch request artifact under `.context/out/`. |
+| `cmap finish [--changed files]` | Print the full QA-lite context closeout report. |
+| `cmap finish --compact [--max-files 8]` | Print a bounded AI-facing closeout summary; full detail remains available without `--compact`. |
+| `cmap finish --compact --agent --task ...` | Write a full local MapPatch request artifact under `.context/out/` while keeping stdout bounded. |
 | `cmap update --agent --from <json>` | Classify an AI-authored MapPatch without changing canonical facts. |
 | `cmap update --agent --from <json> --apply-routine` | Apply routine/generated MapPatch v2 operations; route semantic candidates to `.context/inbox/`. |
 | `cmap update rollback <backupId>` | Restore files from a backup printed by `update --apply-routine`. |
@@ -197,10 +200,11 @@ cmap CLI does not generate trusted project semantics.
 - `update --agent` can process AI-authored MapPatch JSON; routine checkpoint/generated evidence/stats operations can auto-apply with policy gates, while module semantics and decisions go to `.context/inbox/`.
 - `evidence append` writes generated support evidence only. It does not make module responsibilities, dependencies, or decisions canonical.
 - `.context/policy.yml` controls bounded routine/generated maintenance defaults such as stats updates and inbox thresholds; semantic and decision auto-writes remain disabled.
-- Route commands and assist hook prompt events may update generated `.context/generated/stats/route-usage.json` when policy allows `stats.update`; these counters are not canonical semantics.
+- `route --record-usage` and assist hook prompt events may update generated `.context/generated/stats/route-usage.json` when policy allows `stats.update`; a normal `route` query is read-only with respect to usage telemetry.
 - `inbox status`, `inbox triage`, `inbox promote --dry-run`, `inbox promote --apply`, `inbox reject`, `verify --stale`, and `verify --freshness` keep candidate backlog and map drift visible. Only low-risk alias/path/evidence candidates can be promoted automatically.
 - Reminder/maintain hooks only remind. Observe hooks write non-canonical hook logs/session events. Assist hooks may write generated evidence under `.context/generated/` or generated session briefs, and strict Codex ingest / local hook tests can block direct semantic canonical writes, but hooks do not update `MAP.md`, `CHECKPOINT.md`, `STATUS.md`, `DECISIONS.md`, module responsibilities, or decisions.
 - `hooks ingest --host codex --event UserPromptSubmit --mode assist` and `hooks test --event UserPromptSubmit --mode assist --prompt ...` write `.context/out/session-brief.md` as a generated startup artifact, not trusted project memory.
+- Successful Codex `PostToolUse` ingest records its session event without injecting `additionalContext`; actionable strict denials and startup guidance remain visible.
 - `logs/`, `ideas/`, `inbox/`, and `.context/generated/` are not canonical project facts.
 
 ## Route Benchmark Fixtures
