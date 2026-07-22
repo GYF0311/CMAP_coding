@@ -187,6 +187,19 @@ function cloneDefaultPolicy(): ContextPolicy {
 }
 
 function parseScalar(value: string): string | number | boolean {
+  if (value.length >= 2 && value.startsWith("'") && value.endsWith("'")) {
+    return value.slice(1, -1).replace(/''/g, "'");
+  }
+  if (value.length >= 2 && value.startsWith('"') && value.endsWith('"')) {
+    try {
+      const parsed = JSON.parse(value) as unknown;
+      if (typeof parsed === "string") {
+        return parsed;
+      }
+    } catch {
+      return value;
+    }
+  }
   if (value === "true") {
     return true;
   }

@@ -101,6 +101,10 @@ describe("M26 drift schema and read/write boundaries", () => {
     expect(valid.stdout).toContain("Errors: 0");
     expect(valid.stdout).not.toContain("unknown policy section drift");
 
+    const shown = await runCmap(["policy", "show"], cwd);
+    const shownPolicy = JSON.parse(shown.stdout) as { drift: { excludeGlobs: string } };
+    expect(shownPolicy.drift.excludeGlobs).toBe("dist/**,.context/generated/**");
+
     await writeFile(path.join(cwd, ".context/policy.yml"), ["version: 2", "drift:", "  exclude_globs: false", ""].join("\n"), "utf8");
     const invalid = await runCmap(["verify", "--policy"], cwd);
     expect(invalid.code).toBe(1);
