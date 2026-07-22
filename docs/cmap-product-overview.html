@@ -1273,7 +1273,7 @@ cmap brief "你要做的任务" --max-context 4</code></pre>
               <p class="kicker">Install</p>
               <h2>安装到本机，再给 Codex 或 Claude Code 一个清晰入口。</h2>
             </div>
-            <p>当前仓库名是 `cmap`，可从 GitHub 源码构建后安装成本机 CLI。下面的命令偏向源码安装，适合现在这个阶段使用。</p>
+            <p>正式 npm 包是 <a href="https://www.npmjs.com/package/@xiaowuovo/cmapcoding"><code>@xiaowuovo/cmapcoding</code></a>，安装后的命令仍是 <code>cmap</code>。也可以从 GitHub 源码构建安装。</p>
           </div>
           <div class="install-grid">
             <article class="install-card">
@@ -1282,18 +1282,13 @@ cmap brief "你要做的任务" --max-context 4</code></pre>
                 <h3>Codex 接入</h3>
                 <p>先把 `cmap` 安装成本机命令，再进入你的业务仓库执行 Codex host 安装。它会生成 `AGENTS.md`，提醒 Codex 先读 `.context/MAP.md`、`CHECKPOINT.md` 和相关模块文档。</p>
                 <div class="code">
-                  <pre><code>git clone https://github.com/GYF0311/CMAP_coding.git
-cd CMAP_coding
-corepack enable
-pnpm install
-pnpm build
-npm install -g .
+                  <pre><code>npm install -g @xiaowuovo/cmapcoding
 
 cd /path/to/your-project
 cmap init --auto
 cmap install --host codex
 cmap verify</code></pre>
-                  <button class="copy" type="button" data-copy="git clone https://github.com/GYF0311/CMAP_coding.git&#10;cd CMAP_coding&#10;corepack enable&#10;pnpm install&#10;pnpm build&#10;npm install -g .&#10;&#10;cd /path/to/your-project&#10;cmap init --auto&#10;cmap install --host codex&#10;cmap verify">复制 Codex 命令</button>
+                  <button class="copy" type="button" data-copy="npm install -g @xiaowuovo/cmapcoding&#10;&#10;cd /path/to/your-project&#10;cmap init --auto&#10;cmap install --host codex&#10;cmap verify">复制 Codex 命令</button>
                 </div>
               </div>
             </article>
@@ -1303,18 +1298,13 @@ cmap verify</code></pre>
                 <h3>Claude Code 接入</h3>
                 <p>Claude Code 侧入口是 `CLAUDE.md`。如果你口头说 Cloud Code，这里对应的是 Claude Code 这个 AI coding 宿主；CMAP 仍然保持 host-neutral，只写项目本地入口。</p>
                 <div class="code">
-                  <pre><code>git clone https://github.com/GYF0311/CMAP_coding.git
-cd CMAP_coding
-corepack enable
-pnpm install
-pnpm build
-npm install -g .
+                  <pre><code>npm install -g @xiaowuovo/cmapcoding
 
 cd /path/to/your-project
 cmap adopt
 cmap install --host claude
 cmap verify</code></pre>
-                  <button class="copy" type="button" data-copy="git clone https://github.com/GYF0311/CMAP_coding.git&#10;cd CMAP_coding&#10;corepack enable&#10;pnpm install&#10;pnpm build&#10;npm install -g .&#10;&#10;cd /path/to/your-project&#10;cmap adopt&#10;cmap install --host claude&#10;cmap verify">复制 Claude Code 命令</button>
+                  <button class="copy" type="button" data-copy="npm install -g @xiaowuovo/cmapcoding&#10;&#10;cd /path/to/your-project&#10;cmap adopt&#10;cmap install --host claude&#10;cmap verify">复制 Claude Code 命令</button>
                 </div>
               </div>
             </article>

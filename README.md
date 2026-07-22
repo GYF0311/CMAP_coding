@@ -24,10 +24,25 @@ Current v0.2 direction is **Trust Boundary + Human Review Layer**:
 
 ## Install
 
+From npm (recommended):
+
 ```bash
+npm install -g @xiaowuovo/cmapcoding
+cmap version
+```
+
+The npm package is named `@xiaowuovo/cmapcoding`; the installed CLI command remains `cmap`.
+
+From source:
+
+```bash
+git clone https://github.com/GYF0311/CMAP_coding.git
+cd CMAP_coding
+corepack enable
 pnpm install
 pnpm build
-node dist/cli.js version
+npm install -g .
+cmap version
 ```
 
 During local development:

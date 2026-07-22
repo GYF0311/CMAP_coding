@@ -1,11 +1,25 @@
 {
-  "name": "cmap",
+  "name": "@xiaowuovo/cmapcoding",
   "version": "0.3.2",
   "description": "Repo-local project memory map CLI for AI coding",
+  "keywords": [
+    "ai-coding",
+    "project-memory",
+    "cli",
+    "codex",
+    "claude-code"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/GYF0311/CMAP_coding.git"
+    "url": "git+https://github.com/GYF0311/CMAP_coding.git"
+  },
+  "homepage": "https://github.com/GYF0311/CMAP_coding#readme",
+  "bugs": {
+    "url": "https://github.com/GYF0311/CMAP_coding/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "engines": {
     "node": ">=20"
